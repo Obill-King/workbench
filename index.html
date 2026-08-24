@@ -235,9 +235,9 @@ svg.chart{width:100%;height:auto;display:block;}
 .bc-txn{display:flex;justify-content:space-between;align-items:center;font-size:13px;color:var(--muted);padding:4px 0;border-top:1px dashed var(--line);}
 .bc-txn .out{color:var(--text);font-variant-numeric:tabular-nums;}
 .reward{border:1px solid var(--line);border-radius:11px;padding:12px;display:flex;align-items:center;gap:10px;margin-bottom:10px;}
-.reward .rn{flex:1;font-size:14px;}
-.reward .rc{font-size:13px;color:var(--amber);font-weight:600;}
-.reward .del{width:28px;height:28px;border-radius:8px;color:var(--muted);background:transparent;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+.reward .rn{flex:1;font-size:14px;min-width:0;}
+.reward .rc{font-size:13px;color:var(--amber);font-weight:600;white-space:nowrap;}
+.reward .del{width:28px;height:28px;border-radius:8px;color:var(--muted);background:transparent;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;}
 .reward .del:hover{background:var(--danger-soft);color:var(--danger);}
 .logrow{display:flex;align-items:center;gap:8px;font-size:13px;padding:6px 0;border-bottom:1px solid var(--line);}
 .logrow .lv{font-weight:600;}
@@ -314,9 +314,13 @@ svg.chart{width:100%;height:auto;display:block;}
   .todo .del{flex:0 0 28px;height:28px;margin-left:auto;}
   .todo .pill,.todo .tm,.todo .done-tag{flex:0 0 auto;}
   .todo .tm{white-space:normal;}
-  .reward{flex-wrap:wrap;gap:6px 8px;}
+  .reward{flex-wrap:wrap;gap:8px 10px;padding:14px;}
   .reward .rn{flex:1 1 100%;font-size:15px;}
-  .reward .rc{flex:0 0 auto;}
+  .reward .rc{flex:0 0 auto;margin-right:auto;font-size:14px;padding:6px 0;}
+  .reward .btn{min-height:40px;padding:8px 14px;}
+  .reward .del{flex:0 0 40px;width:40px;height:40px;border-radius:10px;}
+  .rw-form{flex-direction:column;gap:10px;}
+  .rw-form>*{flex:none!important;width:100%;box-sizing:border-box;}
   html{overflow-x:hidden;}
 }
 </style>
@@ -480,7 +484,7 @@ svg.chart{width:100%;height:auto;display:block;}
       <div class="card">
         <h3><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12v10H4V12M2 7h20v5H2zM12 22V7M12 7S10 2 7 4l5 3 5-3c-3-2-5 3-5 3z"/></svg>娱乐奖励</h3>
         <div id="rewardList"></div>
-        <div class="row" style="margin-top:10px;">
+        <div class="row rw-form" style="margin-top:10px;">
           <input type="text" id="rwName" placeholder="奖励名，如看一集剧" style="flex:1 1 auto;min-width:0;">
           <input type="number" id="rwCost" min="1" placeholder="积分" style="flex:0 0 90px;width:90px;">
           <button class="btn primary" id="rwAdd" style="flex:0 0 auto;">添加</button>
@@ -1782,7 +1786,7 @@ function switchTab(name){
 document.querySelectorAll('.sidebar button.nav').forEach(function(b){if(!b.dataset.tab)return;b.onclick=function(){switchTab(b.dataset.tab);};});
 function renderAll(){renderOverview();renderTasks();renderFit();renderFun();renderFin();renderRest();renderGoal();renderFakao();renderEng();renderFakaoCheckin();}
 /* 版本号：每次发布改动后在此 +0.1，便于核对 Chrome 是否为最新版 */
-var APP_VER='1.42';
+var APP_VER='1.43';
 var _av=document.getElementById('appVer');if(_av)_av.textContent='v'+APP_VER;
 /* 清理已弃用的习惯打卡旧数据（v1.28 起不再使用，仅清孤立 key，不影响任何功能） */
 try{localStorage.removeItem('wb_hab_habits');localStorage.removeItem('wb_hab_seeded');}catch(e){}
