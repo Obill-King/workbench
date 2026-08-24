@@ -1744,7 +1744,7 @@ document.getElementById('fileInput').addEventListener('change',function(e){var f
 });
 document.getElementById('btnClear').onclick=function(){showModal('清空全部数据','将删除所有模块数据（不可恢复），确定吗？',function(){S.tasks=[];S.fit=[];S.bar=[];S.fun=null;S.spend={};S.txns=[];S.goals=[];S.reviews=[];S.eng={logs:{}};S.seededA=S.seededF=S.seededG=false;persist();renderAll();toast('已清空');});};
 /* 背景图：上传单张照片作为整页背景，存本地、可清除、随导出带走 */
-function applyBg(){var b=document.getElementById('btnBgClear');if(S.bg){document.body.style.backgroundImage='linear-gradient(rgba(255,255,255,.55),rgba(255,255,255,.55)), url("'+S.bg+'")';document.body.style.backgroundSize='cover';document.body.style.backgroundPosition='center';document.body.style.backgroundAttachment='fixed';if(b)b.style.display='';}else{document.body.style.backgroundImage='';if(b)b.style.display='none';}}
+function applyBg(){var b=document.getElementById('btnBgClear');if(S.bg){document.body.style.backgroundImage='url("'+S.bg+'")';document.body.style.backgroundSize='cover';document.body.style.backgroundPosition='center';document.body.style.backgroundAttachment='fixed';if(b)b.style.display='';}else{document.body.style.backgroundImage='';if(b)b.style.display='none';}}
 document.getElementById('btnBg').onclick=function(){document.getElementById('bgInput').click();};
 document.getElementById('bgInput').addEventListener('change',function(e){var f=e.target.files[0];if(!f)return;if(f.size>3*1024*1024){toast('图片太大，请选 3MB 以内');e.target.value='';return;}var r=new FileReader();r.onload=function(){try{S.bg=r.result;applyBg();persist();toast('已设置背景');}catch(err){toast('图片读取失败');}};r.readAsDataURL(f);e.target.value='';});
 document.getElementById('btnBgClear').onclick=function(){S.bg=null;applyBg();persist();toast('已清除背景');};
@@ -1771,7 +1771,7 @@ function switchTab(name){
 document.querySelectorAll('.sidebar button.nav').forEach(function(b){if(!b.dataset.tab)return;b.onclick=function(){switchTab(b.dataset.tab);};});
 function renderAll(){renderOverview();renderTasks();renderFit();renderFun();renderFin();renderRest();renderGoal();renderFakao();renderEng();renderFakaoCheckin();}
 /* 版本号：每次发布改动后在此 +0.1，便于核对 Chrome 是否为最新版 */
-var APP_VER='1.40';
+var APP_VER='1.41';
 var _av=document.getElementById('appVer');if(_av)_av.textContent='v'+APP_VER;
 /* 清理已弃用的习惯打卡旧数据（v1.28 起不再使用，仅清孤立 key，不影响任何功能） */
 try{localStorage.removeItem('wb_hab_habits');localStorage.removeItem('wb_hab_seeded');}catch(e){}
