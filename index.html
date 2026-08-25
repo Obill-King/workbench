@@ -335,12 +335,12 @@ svg.chart{width:100%;height:auto;display:block;}
   .rec-item .rbody{flex:1 1 calc(100% - 90px);min-width:0;}
   .rec-item .rhide{flex:0 0 80px;padding:4px 8px;font-size:11px;}
   /* 健身打卡：手机端改 2 列，日期/体重不再重叠，热身与记录按钮同排 */
-  .fit-grid{grid-template-columns:1fr 1fr;gap:10px;}
+  .fit-grid{grid-template-columns:1fr 1fr;gap:16px;}
   .fit-grid .field{min-width:0;}
   .fit-grid .field.w-wide{grid-column:1 / -1;}
-  .fit-grid .warm-field{grid-column:1;flex-direction:row;align-items:center;justify-content:flex-start;gap:10px;align-self:center;margin-bottom:12px;}
+  .fit-grid .warm-field{grid-column:1;flex-direction:row;align-items:center;justify-content:flex-start;gap:10px;align-self:center;margin-bottom:0;}
   .fit-grid .warm-field>label:not(.switch){margin-bottom:0;}
-  .fit-grid>.field.fit-btn{grid-column:2;align-self:end;}
+  .fit-grid>.field.fit-btn{grid-column:2;align-self:center;}
   .fit-grid .fit-btn .btn{width:100%;}
   .fit-grid input,.fit-grid select{width:100%;box-sizing:border-box;}
   /* 表单字段在窄屏撑满容器，date 框不再超出 */
@@ -1817,7 +1817,7 @@ function switchTab(name){
 document.querySelectorAll('.sidebar button.nav').forEach(function(b){if(!b.dataset.tab)return;b.onclick=function(){switchTab(b.dataset.tab);};});
 function renderAll(){renderOverview();renderTasks();renderFit();renderFun();renderFin();renderRest();renderGoal();renderFakao();renderEng();renderFakaoCheckin();}
 /* 版本号：每次发布改动后在此 +0.1，便于核对 Chrome 是否为最新版 */
-var APP_VER='1.50';
+var APP_VER='1.51';
 var _av=document.getElementById('appVer');if(_av)_av.textContent='v'+APP_VER;
 /* 清理已弃用的习惯打卡旧数据（v1.28 起不再使用，仅清孤立 key，不影响任何功能） */
 try{localStorage.removeItem('wb_hab_habits');localStorage.removeItem('wb_hab_seeded');}catch(e){}
