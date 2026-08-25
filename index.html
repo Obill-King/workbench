@@ -45,6 +45,7 @@ section.panel.active{display:block;animation:fade .2s ease;}
 .field label{display:block;font-size:12px;color:var(--muted);margin-bottom:5px;}
 input,select,textarea{width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:9px;font-size:15px;font-family:inherit;background:#fff;color:var(--text);}
 textarea{min-height:80px;resize:vertical;}
+input[type=date],input[type=datetime-local]{min-width:0;}
 .row{display:flex;gap:10px;}
 .row>*{flex:1;}
 .switch{position:relative;display:inline-block;width:46px;height:26px;flex:0 0 auto;}
@@ -72,7 +73,7 @@ textarea{min-height:80px;resize:vertical;}
 .ov-card .v.ok{color:var(--ok);} .ov-card .v.danger{color:var(--danger);}
 .today{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px;box-shadow:var(--shadow);margin-bottom:24px;}
 .today h2{font-size:15px;display:flex;align-items:center;gap:8px;margin:0 0 12px;}
-.today h2 svg{width:18px;height:18px;color:var(--primary);}
+.today h2 svg{width:18px;height:18px;color:var(--primary);margin-right:6px;}
 .todo{display:grid;grid-template-columns:20px minmax(0,1fr) 56px 104px 64px 56px 30px;align-items:center;gap:12px;padding:8px 14px;border-bottom:1px solid var(--line);}
 .todo:last-child{border-bottom:none;}
 .todo .ck{width:20px;height:20px;border-radius:6px;border:2px solid var(--line);cursor:pointer;display:flex;align-items:center;justify-content:center;}
@@ -323,8 +324,11 @@ svg.chart{width:100%;height:auto;display:block;}
   .reward .rw-btns{flex:1 1 auto;justify-content:flex-end;margin-left:0;}
   .reward .rw-btns .btn{min-height:38px;padding:7px 14px;font-size:14px;}
   .reward .del{flex:0 0 38px;width:38px;height:38px;border-radius:10px;}
-  .rw-form{flex-direction:column;gap:10px;}
-  .rw-form>*{flex:none!important;width:100%;box-sizing:border-box;}
+  .rw-form{flex-wrap:wrap;gap:10px;}
+  .rw-form>*{box-sizing:border-box;}
+  .rw-form #rwName{flex:1 1 100%!important;width:100%!important;}
+  .rw-form #rwCost{flex:1 1 auto!important;width:auto!important;min-width:60px!important;}
+  .rw-form #rwAdd{flex:0 0 auto!important;}
   .rec-item{gap:10px;align-items:flex-start;}
   .rec-item .rbody{flex:1 1 calc(100% - 90px);min-width:0;}
   .rec-item .rhide{flex:0 0 80px;padding:4px 8px;font-size:11px;}
@@ -1544,6 +1548,7 @@ var REST_LIST=[
    {n:'束脚坐/蝴蝶式开髋拉伸 3 分钟（久坐髋紧救星）',s:'定时 3 分钟',g:'打开髋部、缓解久坐塌腰盆骨前倾'},
    {n:'踮脚提踵 30 次（手扶椅背，慢起慢落）',s:'数完 30 次即停',g:'促进小腿静脉回流、防久坐腿肿脚胀'},
    {n:'趴地做「猫牛式」脊柱流动 + 眼镜蛇/婴儿式交替 3 轮（瑜伽垫上）',s:'做完 3 轮即停',g:'逐节活动整条脊柱、对抗久坐含胸塌腰（区别于站立扩胸，给脊柱松绑）'}
+   ,{n:'单脚站立平衡 2 分钟（扶椅背，左右脚各 1 分钟）',s:'左右各做完 1 分钟即停',g:'激活核心+改善久坐导致的平衡退化'}
  ]},
  {cat:'感官沉浸',sub:'有集数，天然结束',color:'#06b6d4',items:[
    {n:'听几首喜欢的歌 / 一张歌单',s:'歌单播完',g:'情绪调节'},
@@ -1798,7 +1803,7 @@ function switchTab(name){
 document.querySelectorAll('.sidebar button.nav').forEach(function(b){if(!b.dataset.tab)return;b.onclick=function(){switchTab(b.dataset.tab);};});
 function renderAll(){renderOverview();renderTasks();renderFit();renderFun();renderFin();renderRest();renderGoal();renderFakao();renderEng();renderFakaoCheckin();}
 /* 版本号：每次发布改动后在此 +0.1，便于核对 Chrome 是否为最新版 */
-var APP_VER='1.44';
+var APP_VER='1.45';
 var _av=document.getElementById('appVer');if(_av)_av.textContent='v'+APP_VER;
 /* 清理已弃用的习惯打卡旧数据（v1.28 起不再使用，仅清孤立 key，不影响任何功能） */
 try{localStorage.removeItem('wb_hab_habits');localStorage.removeItem('wb_hab_seeded');}catch(e){}
