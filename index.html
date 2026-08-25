@@ -327,11 +327,22 @@ svg.chart{width:100%;height:auto;display:block;}
   .rw-form{flex-wrap:wrap;gap:10px;}
   .rw-form>*{box-sizing:border-box;}
   .rw-form #rwName{flex:1 1 100%!important;width:100%!important;}
-  .rw-form #rwCost{flex:1 1 auto!important;width:auto!important;min-width:60px!important;}
+  .rw-form #rwCost{flex:0 0 90px!important;width:90px!important;}
   .rw-form #rwAdd{flex:0 0 auto!important;}
   .rec-item{gap:10px;align-items:flex-start;}
   .rec-item .rbody{flex:1 1 calc(100% - 90px);min-width:0;}
   .rec-item .rhide{flex:0 0 80px;padding:4px 8px;font-size:11px;}
+  /* 健身打卡：手机端改 2 列，日期/体重不再重叠，热身与记录按钮同排 */
+  .fit-grid{grid-template-columns:1fr 1fr;gap:10px;}
+  .fit-grid .field.w-wide{grid-column:1 / -1;}
+  .fit-grid .warm-field{grid-column:1;flex-direction:row;align-items:center;justify-content:flex-start;gap:10px;align-self:center;margin-bottom:12px;}
+  .fit-grid .warm-field>label:not(.switch){margin-bottom:0;}
+  .fit-grid .fit-btn{grid-column:2;align-self:end;}
+  .fit-grid .fit-btn .btn{width:100%;}
+  /* 表单行手机端允许换行，date 框不再超出容器 */
+  .row{flex-wrap:wrap;}
+  .row>.field{flex:1 1 140px;min-width:0;}
+  .row>.field.no-label{flex:1 1 100%;}
   html{overflow-x:hidden;}
 }
 </style>
@@ -1803,7 +1814,7 @@ function switchTab(name){
 document.querySelectorAll('.sidebar button.nav').forEach(function(b){if(!b.dataset.tab)return;b.onclick=function(){switchTab(b.dataset.tab);};});
 function renderAll(){renderOverview();renderTasks();renderFit();renderFun();renderFin();renderRest();renderGoal();renderFakao();renderEng();renderFakaoCheckin();}
 /* 版本号：每次发布改动后在此 +0.1，便于核对 Chrome 是否为最新版 */
-var APP_VER='1.45';
+var APP_VER='1.46';
 var _av=document.getElementById('appVer');if(_av)_av.textContent='v'+APP_VER;
 /* 清理已弃用的习惯打卡旧数据（v1.28 起不再使用，仅清孤立 key，不影响任何功能） */
 try{localStorage.removeItem('wb_hab_habits');localStorage.removeItem('wb_hab_seeded');}catch(e){}
