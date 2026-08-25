@@ -54,8 +54,9 @@ input[type=date],input[type=datetime-local]{-webkit-appearance:none;appearance:n
 .field.optional label{font-size:12px;}
 .field.optional input{padding:8px 10px;}
 .field.optional select{padding:8px 28px 8px 10px;}
-/* PC 端：优先级/截止日期/积分/重复 收窄为固定短框，事项与备注仍占满 */
-.field.short{flex:0 0 auto;width:160px;}
+/* PC 端：新增待办的四个短字段并排铺满整行；截止日期略宽 */
+.field.short{flex:1 1 0;min-width:0;width:auto;}
+.field.short#tDue{flex:1.35 1 0;}
 /* 新增待办：添加按钮置于表单末尾，PC 端靠右不拉伸 */
 .todo-actions{justify-content:flex-end;margin-top:6px;}
 .todo-actions .btn{flex:0 0 auto;height:42px;padding:8px 24px;font-size:14px;}
@@ -1846,7 +1847,7 @@ function switchTab(name){
 document.querySelectorAll('.sidebar button.nav').forEach(function(b){if(!b.dataset.tab)return;b.onclick=function(){switchTab(b.dataset.tab);};});
 function renderAll(){renderOverview();renderTasks();renderFit();renderFun();renderFin();renderRest();renderGoal();renderFakao();renderEng();renderFakaoCheckin();}
 /* 版本号：每次发布改动后在此 +0.1，便于核对 Chrome 是否为最新版 */
-var APP_VER='1.58';
+var APP_VER='1.59';
 var _av=document.getElementById('appVer');if(_av)_av.textContent='v'+APP_VER;
 /* 清理已弃用的习惯打卡旧数据（v1.28 起不再使用，仅清孤立 key，不影响任何功能） */
 try{localStorage.removeItem('wb_hab_habits');localStorage.removeItem('wb_hab_seeded');}catch(e){}
