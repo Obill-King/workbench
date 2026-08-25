@@ -234,9 +234,10 @@ svg.chart{width:100%;height:auto;display:block;}
 .bc-items{padding:0 12px 10px;}
 .bc-txn{display:flex;justify-content:space-between;align-items:center;font-size:13px;color:var(--muted);padding:4px 0;border-top:1px dashed var(--line);}
 .bc-txn .out{color:var(--text);font-variant-numeric:tabular-nums;}
-.reward{border:1px solid var(--line);border-radius:11px;padding:12px;display:flex;align-items:center;gap:10px;margin-bottom:10px;}
-.reward .rn{flex:1;font-size:14px;min-width:0;}
+.reward{border:1px solid var(--line);border-radius:11px;padding:12px;display:flex;align-items:center;gap:10px;margin-bottom:10px;flex-wrap:wrap;}
+.reward .rn{flex:1 1 auto;font-size:14px;min-width:0;}
 .reward .rc{font-size:13px;color:var(--amber);font-weight:600;white-space:nowrap;}
+.reward .rw-btns{display:flex;align-items:center;gap:8px;margin-left:auto;flex-wrap:wrap;}
 .reward .del{width:28px;height:28px;border-radius:8px;color:var(--muted);background:transparent;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;}
 .reward .del:hover{background:var(--danger-soft);color:var(--danger);}
 .logrow{display:flex;align-items:center;gap:8px;font-size:13px;padding:6px 0;border-bottom:1px solid var(--line);}
@@ -294,7 +295,9 @@ svg.chart{width:100%;height:auto;display:block;}
   .fit-grid>.field.fit-btn .btn{width:100%;}
   .row{flex-direction:column;gap:0;}
   .row>*{flex:none;}
-  .row .field{margin-bottom:12px;}
+  .field{margin-bottom:8px;}
+  .field.no-label{margin-bottom:0;}
+  .field.no-label label{display:none;}
   .chart-row{flex-direction:column;}
   .chart-row>*{width:100%;}
   input,select,textarea{min-height:44px;font-size:16px;}
@@ -314,13 +317,17 @@ svg.chart{width:100%;height:auto;display:block;}
   .todo .del{flex:0 0 28px;height:28px;margin-left:auto;}
   .todo .pill,.todo .tm,.todo .done-tag{flex:0 0 auto;}
   .todo .tm{white-space:normal;}
-  .reward{flex-wrap:wrap;gap:8px 10px;padding:14px;}
+  .reward{flex-wrap:wrap;gap:10px;padding:14px;align-items:flex-start;}
   .reward .rn{flex:1 1 100%;font-size:15px;}
-  .reward .rc{flex:0 0 auto;margin-right:auto;font-size:14px;padding:6px 0;}
-  .reward .btn{min-height:40px;padding:8px 14px;}
-  .reward .del{flex:0 0 40px;width:40px;height:40px;border-radius:10px;}
+  .reward .rc{flex:0 0 auto;font-size:14px;padding:6px 0;}
+  .reward .rw-btns{flex:1 1 auto;justify-content:flex-end;margin-left:0;}
+  .reward .rw-btns .btn{min-height:38px;padding:7px 14px;font-size:14px;}
+  .reward .del{flex:0 0 38px;width:38px;height:38px;border-radius:10px;}
   .rw-form{flex-direction:column;gap:10px;}
   .rw-form>*{flex:none!important;width:100%;box-sizing:border-box;}
+  .rec-item{gap:10px;align-items:flex-start;}
+  .rec-item .rbody{flex:1 1 calc(100% - 90px);min-width:0;}
+  .rec-item .rhide{flex:0 0 80px;padding:4px 8px;font-size:11px;}
   html{overflow-x:hidden;}
 }
 </style>
@@ -422,7 +429,7 @@ svg.chart{width:100%;height:auto;display:block;}
           <div class="row">
             <div class="field"><label>截止日期</label><input type="date" id="tDue"></div>
             <div class="field"><label>积分</label><input type="number" id="tPts" min="0" step="1" placeholder="完成后奖励(可空)"></div>
-            <div class="field"><label>&nbsp;</label><button class="btn primary" type="submit" style="width:100%;justify-content:center;height:42px;">添加</button></div>
+            <div class="field no-label"><label>&nbsp;</label><button class="btn primary" type="submit" style="width:100%;justify-content:center;height:42px;">添加</button></div>
           </div>
           <div class="row">
             <div class="field"><label>备注</label><input type="text" id="tNote" placeholder="补充说明（可选）" style="font-size:14px;"></div>
@@ -1246,9 +1253,10 @@ function renderFun(){
   document.getElementById('rewardList').innerHTML=S.fun.rewards.map(function(r){
     var can=p>=r.cost;
     return '<div class="reward"><span class="rn">'+r.name+'</span><span class="rc">'+r.cost+' 分</span>'+
+      '<span class="rw-btns">'+
       '<button class="btn '+(can?'primary':'')+'" '+(can?'':'disabled')+' data-rw="'+r.id+'">'+(can?'兑换':'积分不足')+'</button>'+
-      '<button class="btn" data-editrw="'+r.id+'" style="margin-left:6px;">编辑</button>'+
-      '<button class="del" data-delrw="'+r.id+'"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18M6 6l12 12"/></svg></button></div>';
+      '<button class="btn" data-editrw="'+r.id+'">编辑</button>'+
+      '<button class="del" data-delrw="'+r.id+'"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18M6 6l12 12"/></svg></button></span></div>';
   }).join('');
   var log=S.fun.log.slice().sort(function(a,b){return a.date<b.date?1:-1;}).slice(0,20);
   if(log.length){
@@ -1552,6 +1560,7 @@ var REST_LIST=[
    {n:'渐进式肌肉放松（从脚趾到头皮逐组「紧 5 秒→松」躺/坐皆可，定时 10 分）',s:'做完一轮即停',g:'全身物理松弛、睡前/午休极佳（比冥想更"动手"，防滑手机）'},
    {n:'戴耳机听一张完整专辑的 A 面（不切歌、不点开视频）',s:'A 面播完即停',g:'音乐沉浸+仪式感，按专辑分面天然有终点（贴合听歌偏好，防滑成漫刷）'},
    {n:'闭眼听一首 5 分钟以上的纯音乐/后摇（不做别的事，曲终即止）',s:'曲终即停（不循环、不切歌）',g:'不被歌词带跑、来一场纯粹听觉洗澡（区别于听歌跟唱/随机歌单，给明确终点）'}
+   ,{n:'听一张「黑胶/磁带」质感的怀旧老歌歌单（不点开视频）',s:'歌单播完即停',g:'怀旧沉浸+情绪流动（区别于完整专辑A面的"分面"，这里主打老歌松弛质感）'}
  ]},
  {cat:'轻连接',sub:'有度则充电',color:'#a855f7',items:[
    {n:'给朋友发条消息',s:'发完即止',g:'社会资本（关系感）'},
@@ -1566,6 +1575,7 @@ var REST_LIST=[
    {n:'手写一张明信片 / 便条给远方亲友（写一张即止）',s:'写一张即停',g:'慢连接+心意表达，区别于即时消息的快餐感'},
    {n:'给一个正在努力的朋友发句真诚的鼓励/夸夸（不期待回复）',s:'发完即止',g:'正向连接+利他感（区别于闲聊消耗）'},
    {n:'给一起玩 Switch/游戏的网友发一句今日战绩或吐槽（一句即止）',s:'发完一句即停',g:'游戏圈轻连接+共鸣释放（区别于整段开黑消耗）'}
+   ,{n:'给一位久未联系的老友发「今天突然想到你」一句话（不期待回复）',s:'发完一句即停',g:'真实连接+温暖释放，零压力（区别于闲聊/点赞消耗）'}
  ]},
  {cat:'小成就',sub:'给满足感，专治"歇完更空"',color:'#f59e0b',items:[
    {n:'5 分钟小家务（理桌面 / 叠衣）',s:'做完一件',g:'掌控感+环境变好'},
@@ -1580,6 +1590,7 @@ var REST_LIST=[
    {n:'退掉一批不看的通知订阅 / 清掉 App 红点（一批即止）',s:'退一批/清一轮即停',g:'数字减负+掌控感（区别于整理实体杂物）'},
    {n:'整理钱包/卡包，清掉过期小票和不再用的卡（一轮即止）',s:'整理完一轮即停',g:'随身杂物减负+掌控感（区别于整理桌面/抽屉，聚焦天天带在身上的小物）'},
    {n:'关掉浏览器里闲置的标签页，只留 ≤5 个',s:'关到 ≤5 个即停',g:'数字减负+掌控感（区别于整理实体/相册，聚焦"开太多网页"的隐形消耗）'}
+   ,{n:'给冰箱做一轮「过期清理」（扔掉过期酱料/食材）',s:'一轮清完即停',g:'物理减负+掌控感（区别于整理抽屉/桌面，聚焦厨房隐形堆积）'}
  ]},
  {cat:'创意随手',sub:'好玩、有终点',color:'#ec4899',items:[
    {n:'随手涂鸦 / 画画 5 分钟',s:'定时',g:'表达即放松'},
@@ -1596,6 +1607,7 @@ var REST_LIST=[
    {n:'玩一局 Switch 节奏/音游（如《Just Dance》《太鼓之达人》，单局定时 15 分）',s:'一局或钟响即停',g:'跟着节拍动起来、愉悦释放（定局数/定时，严禁续局滑成漫刷）'},
    {n:'用 Orm 角色/物料编一段 3 句迷你小剧场或对话（写 3 句即停）',s:'写满 3 句即停',g:'IP 代入创作+轻表达释放（区别于拼贴/涂鸦，纯文字脑洞，只看不囤）'},
    {n:'用手机录音机留一段 15 秒即兴哼唱/口哨小样（录一段即停）',s:'录满一段即停',g:'轻创作释放+留下声音碎片（区别于随口哼歌，这里是"留存"；区别于音游，纯个人表达零评判）'}
+   ,{n:'玩一局 Switch 棋牌/桌游类（如《围棋》《麻将》《黑白棋》独立游戏，单局定时 15 分）',s:'一局或钟响即停',g:'动脑博弈+愉悦释放（定局数/定时，严禁续局滑成漫刷；区别于健身环/解谜/音游）'}
  ]},
  {cat:'输入滋养',sub:'不费眼、补脑子',color:'#5b9bf3',items:[
    {n:'读几页喜欢的非虚构 / 杂志',s:'定页数',g:'轻松输入'},
@@ -1786,7 +1798,7 @@ function switchTab(name){
 document.querySelectorAll('.sidebar button.nav').forEach(function(b){if(!b.dataset.tab)return;b.onclick=function(){switchTab(b.dataset.tab);};});
 function renderAll(){renderOverview();renderTasks();renderFit();renderFun();renderFin();renderRest();renderGoal();renderFakao();renderEng();renderFakaoCheckin();}
 /* 版本号：每次发布改动后在此 +0.1，便于核对 Chrome 是否为最新版 */
-var APP_VER='1.43';
+var APP_VER='1.44';
 var _av=document.getElementById('appVer');if(_av)_av.textContent='v'+APP_VER;
 /* 清理已弃用的习惯打卡旧数据（v1.28 起不再使用，仅清孤立 key，不影响任何功能） */
 try{localStorage.removeItem('wb_hab_habits');localStorage.removeItem('wb_hab_seeded');}catch(e){}
