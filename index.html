@@ -45,7 +45,7 @@ section.panel.active{display:block;animation:fade .2s ease;}
 .field label{display:block;font-size:12px;color:var(--muted);margin-bottom:5px;}
 input,select,textarea{width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:9px;font-size:15px;font-family:inherit;background:#fff;color:var(--text);}
 textarea{min-height:80px;resize:vertical;}
-input[type=date],input[type=datetime-local]{min-width:0;}
+input[type=date],input[type=datetime-local]{-webkit-appearance:none;appearance:none;min-width:0;width:100%;box-sizing:border-box;background:#fff;border:1px solid var(--line);border-radius:9px;}
 .row{display:flex;gap:10px;flex-wrap:wrap;}
 .row>.field{min-width:0;}
 .row>*{flex:1;}
@@ -1819,7 +1819,7 @@ function switchTab(name){
 document.querySelectorAll('.sidebar button.nav').forEach(function(b){if(!b.dataset.tab)return;b.onclick=function(){switchTab(b.dataset.tab);};});
 function renderAll(){renderOverview();renderTasks();renderFit();renderFun();renderFin();renderRest();renderGoal();renderFakao();renderEng();renderFakaoCheckin();}
 /* 版本号：每次发布改动后在此 +0.1，便于核对 Chrome 是否为最新版 */
-var APP_VER='1.52';
+var APP_VER='1.53';
 var _av=document.getElementById('appVer');if(_av)_av.textContent='v'+APP_VER;
 /* 清理已弃用的习惯打卡旧数据（v1.28 起不再使用，仅清孤立 key，不影响任何功能） */
 try{localStorage.removeItem('wb_hab_habits');localStorage.removeItem('wb_hab_seeded');}catch(e){}
