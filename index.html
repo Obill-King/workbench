@@ -51,7 +51,7 @@ input[type=date],input[type=datetime-local]{-webkit-appearance:none;appearance:n
 .row>*{flex:1;}
 /* 新增待办：可选字段弱化（比必填事项小） */
 .field.optional label{font-size:11px;}
-.field.optional input,.field.optional select{font-size:13px;padding:8px 10px;}
+.field.optional input,.field.optional select{font-size:12px;padding:6px 9px;}
 /* 新增待办：添加按钮置于表单末尾，PC 端靠右不拉伸 */
 .todo-actions{justify-content:flex-end;margin-top:6px;}
 .todo-actions .btn{flex:0 0 auto;height:42px;padding:8px 24px;font-size:14px;}
@@ -453,11 +453,11 @@ svg.chart{width:100%;height:auto;display:block;}
         <form id="taskForm">
           <div class="row">
             <div class="field"><label>事项 *</label><input type="text" id="tTitle" placeholder="今天要做什么" required></div>
-            <div class="field"><label>优先级</label><select id="tPrio"><option value="p0">P0 重要</option><option value="p1" selected>P1 一般</option><option value="p2">P2 次要</option></select></div>
+            <div class="field optional"><label>优先级</label><select id="tPrio"><option value="p0">P0 重要</option><option value="p1" selected>P1 一般</option><option value="p2">P2 次要</option></select></div>
           </div>
           <div class="row">
             <div class="field optional"><label>截止日期</label><input type="date" id="tDue"></div>
-            <div class="field optional"><label>积分</label><input type="number" id="tPts" min="0" step="1" placeholder="完成后奖励"></div>
+            <div class="field optional"><label>积分</label><input type="text" id="tPts" inputmode="numeric" placeholder="完成后奖励" autocomplete="off" oninput="this.value=this.value.replace(/\D/g,'').replace(/^0+/,'')"></div>
           </div>
           <div class="row">
             <div class="field optional"><label>备注</label><input type="text" id="tNote" placeholder="补充说明（可选）"></div>
@@ -1830,7 +1830,7 @@ function switchTab(name){
 document.querySelectorAll('.sidebar button.nav').forEach(function(b){if(!b.dataset.tab)return;b.onclick=function(){switchTab(b.dataset.tab);};});
 function renderAll(){renderOverview();renderTasks();renderFit();renderFun();renderFin();renderRest();renderGoal();renderFakao();renderEng();renderFakaoCheckin();}
 /* 版本号：每次发布改动后在此 +0.1，便于核对 Chrome 是否为最新版 */
-var APP_VER='1.54';
+var APP_VER='1.55';
 var _av=document.getElementById('appVer');if(_av)_av.textContent='v'+APP_VER;
 /* 清理已弃用的习惯打卡旧数据（v1.28 起不再使用，仅清孤立 key，不影响任何功能） */
 try{localStorage.removeItem('wb_hab_habits');localStorage.removeItem('wb_hab_seeded');}catch(e){}
