@@ -279,7 +279,7 @@ svg.chart{width:100%;height:auto;display:block;}
 /* 手机顶栏 + 抽屉（窄屏） */
 .mbar{display:none;}
 .drawer-bg{display:none;}
-@media (max-width:760px){
+@media (max-width:1024px){
   .layout{flex-direction:column;}
   .sidebar{position:fixed;top:0;left:0;height:100vh;width:240px;max-width:80vw;z-index:60;transform:translateX(-100%);transition:transform .25s ease;box-shadow:0 0 40px rgba(0,0,0,.2);}
   .sidebar.open{transform:translateX(0);}
@@ -1815,7 +1815,7 @@ function switchTab(name){
 document.querySelectorAll('.sidebar button.nav').forEach(function(b){if(!b.dataset.tab)return;b.onclick=function(){switchTab(b.dataset.tab);};});
 function renderAll(){renderOverview();renderTasks();renderFit();renderFun();renderFin();renderRest();renderGoal();renderFakao();renderEng();renderFakaoCheckin();}
 /* 版本号：每次发布改动后在此 +0.1，便于核对 Chrome 是否为最新版 */
-var APP_VER='1.47';
+var APP_VER='1.48';
 var _av=document.getElementById('appVer');if(_av)_av.textContent='v'+APP_VER;
 /* 清理已弃用的习惯打卡旧数据（v1.28 起不再使用，仅清孤立 key，不影响任何功能） */
 try{localStorage.removeItem('wb_hab_habits');localStorage.removeItem('wb_hab_seeded');}catch(e){}
