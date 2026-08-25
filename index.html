@@ -295,8 +295,9 @@ svg.chart{width:100%;height:auto;display:block;}
   .fit-grid .field.w-wide{grid-column:1/-1;}
   .fit-grid>.field.fit-btn{grid-column:1/-1;}
   .fit-grid>.field.fit-btn .btn{width:100%;}
-  .row{flex-direction:column;gap:0;}
-  .row>*{flex:none;}
+  .row{display:flex;gap:10px;flex-wrap:wrap;}
+  .row>.field{flex:1 1 140px;min-width:0;box-sizing:border-box;}
+  .row>.field.no-label{flex:1 1 100%;}
   .field{margin-bottom:8px;}
   .field.no-label{margin-bottom:0;}
   .field.no-label label{display:none;}
@@ -325,7 +326,7 @@ svg.chart{width:100%;height:auto;display:block;}
   .reward .rw-btns{flex:1 1 auto;justify-content:flex-end;margin-left:0;}
   .reward .rw-btns .btn{min-height:38px;padding:7px 14px;font-size:14px;}
   .reward .del{flex:0 0 38px;width:38px;height:38px;border-radius:10px;}
-  .rw-form{flex-wrap:wrap;gap:10px;}
+  .rw-form{flex-wrap:wrap;gap:10px;align-items:flex-end;}
   .rw-form>*{box-sizing:border-box;}
   .rw-form #rwName{flex:1 1 100%!important;width:100%!important;}
   .rw-form #rwCost{flex:0 0 90px!important;width:90px!important;}
@@ -335,15 +336,16 @@ svg.chart{width:100%;height:auto;display:block;}
   .rec-item .rhide{flex:0 0 80px;padding:4px 8px;font-size:11px;}
   /* 健身打卡：手机端改 2 列，日期/体重不再重叠，热身与记录按钮同排 */
   .fit-grid{grid-template-columns:1fr 1fr;gap:10px;}
+  .fit-grid .field{min-width:0;}
   .fit-grid .field.w-wide{grid-column:1 / -1;}
   .fit-grid .warm-field{grid-column:1;flex-direction:row;align-items:center;justify-content:flex-start;gap:10px;align-self:center;margin-bottom:12px;}
   .fit-grid .warm-field>label:not(.switch){margin-bottom:0;}
   .fit-grid>.field.fit-btn{grid-column:2;align-self:end;}
   .fit-grid .fit-btn .btn{width:100%;}
-  /* 表单行手机端允许换行，date 框不再超出容器 */
-  .row{flex-wrap:wrap;}
-  .row>.field{flex:1 1 140px;min-width:0;}
-  .row>.field.no-label{flex:1 1 100%;}
+  .fit-grid input,.fit-grid select{width:100%;box-sizing:border-box;}
+  /* 表单字段在窄屏撑满容器，date 框不再超出 */
+  .field input,.field select,.field textarea{width:100%;box-sizing:border-box;}
+  .row.rw-form{flex-direction:row;align-items:flex-end;}
   html{overflow-x:hidden;}
 }
 </style>
@@ -1815,7 +1817,7 @@ function switchTab(name){
 document.querySelectorAll('.sidebar button.nav').forEach(function(b){if(!b.dataset.tab)return;b.onclick=function(){switchTab(b.dataset.tab);};});
 function renderAll(){renderOverview();renderTasks();renderFit();renderFun();renderFin();renderRest();renderGoal();renderFakao();renderEng();renderFakaoCheckin();}
 /* 版本号：每次发布改动后在此 +0.1，便于核对 Chrome 是否为最新版 */
-var APP_VER='1.49';
+var APP_VER='1.50';
 var _av=document.getElementById('appVer');if(_av)_av.textContent='v'+APP_VER;
 /* 清理已弃用的习惯打卡旧数据（v1.28 起不再使用，仅清孤立 key，不影响任何功能） */
 try{localStorage.removeItem('wb_hab_habits');localStorage.removeItem('wb_hab_seeded');}catch(e){}
