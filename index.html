@@ -46,12 +46,13 @@ section.panel.active{display:block;animation:fade .2s ease;}
 input,select,textarea{width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:9px;font-size:15px;font-family:inherit;background:#fff;color:var(--text);}
 textarea{min-height:80px;resize:vertical;}
 input[type=date],input[type=datetime-local]{-webkit-appearance:none;appearance:none;min-width:0;width:100%;box-sizing:border-box;background:#fff;border:1px solid var(--line);border-radius:9px;}
+.field select{-webkit-appearance:none;appearance:none;background:#fff url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'><path d='M1 1l4 4 4-4' fill='none' stroke='%23999' stroke-width='1.6' stroke-linecap='round'/></svg>") no-repeat right 10px center;background-size:10px 6px;padding-right:28px;}
 .row{display:flex;gap:10px;flex-wrap:wrap;}
 .row>.field{min-width:0;}
 .row>*{flex:1;}
 /* 新增待办：可选字段弱化（比必填事项小） */
 .field.optional label{font-size:11px;}
-.field.optional input,.field.optional select{font-size:12px;padding:6px 9px;}
+.field.optional input,.field.optional select{font-size:12px;padding:6px 28px 6px 9px;}
 /* 新增待办：添加按钮置于表单末尾，PC 端靠右不拉伸 */
 .todo-actions{justify-content:flex-end;margin-top:6px;}
 .todo-actions .btn{flex:0 0 auto;height:42px;padding:8px 24px;font-size:14px;}
@@ -1830,7 +1831,7 @@ function switchTab(name){
 document.querySelectorAll('.sidebar button.nav').forEach(function(b){if(!b.dataset.tab)return;b.onclick=function(){switchTab(b.dataset.tab);};});
 function renderAll(){renderOverview();renderTasks();renderFit();renderFun();renderFin();renderRest();renderGoal();renderFakao();renderEng();renderFakaoCheckin();}
 /* 版本号：每次发布改动后在此 +0.1，便于核对 Chrome 是否为最新版 */
-var APP_VER='1.55';
+var APP_VER='1.56';
 var _av=document.getElementById('appVer');if(_av)_av.textContent='v'+APP_VER;
 /* 清理已弃用的习惯打卡旧数据（v1.28 起不再使用，仅清孤立 key，不影响任何功能） */
 try{localStorage.removeItem('wb_hab_habits');localStorage.removeItem('wb_hab_seeded');}catch(e){}
