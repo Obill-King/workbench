@@ -1815,7 +1815,7 @@ function switchTab(name){
 document.querySelectorAll('.sidebar button.nav').forEach(function(b){if(!b.dataset.tab)return;b.onclick=function(){switchTab(b.dataset.tab);};});
 function renderAll(){renderOverview();renderTasks();renderFit();renderFun();renderFin();renderRest();renderGoal();renderFakao();renderEng();renderFakaoCheckin();}
 /* 版本号：每次发布改动后在此 +0.1，便于核对 Chrome 是否为最新版 */
-var APP_VER='1.48';
+var APP_VER='1.49';
 var _av=document.getElementById('appVer');if(_av)_av.textContent='v'+APP_VER;
 /* 清理已弃用的习惯打卡旧数据（v1.28 起不再使用，仅清孤立 key，不影响任何功能） */
 try{localStorage.removeItem('wb_hab_habits');localStorage.removeItem('wb_hab_seeded');}catch(e){}
@@ -1833,6 +1833,16 @@ window.onerror=function(msg,url,line,col,err){showInitErr(err||msg,'window.onerr
 window.onunhandledrejection=function(e){showInitErr(e.reason,'unhandledrejection');};
 try{console.log('[init] start v'+APP_VER);autoSettle();console.log('[init] autoSettle ok');applyBg();console.log('[init] applyBg ok');renderAll();console.log('[init] renderAll ok');switchTab('overview');console.log('[init] switchTab ok');}catch(e){showInitErr(e,'init');}
 console.log('[init] done');
+</script>
+<div id="vwdbg" style="display:none;position:fixed;left:8px;bottom:8px;z-index:99999;background:rgba(0,0,0,.82);color:#39ff14;font:12px/1.4 monospace;padding:5px 9px;border-radius:7px;pointer-events:none;"></div>
+<script>
+try{
+  if(location.search.indexOf('debug=1')>=0){
+    var _d=document.getElementById('vwdbg');_d.style.display='block';
+    function _up(){var w=document.documentElement.clientWidth;_d.textContent='宽'+w+'px · '+(w<=1024?'手机模式':'电脑模式');}
+    _up();window.addEventListener('resize',_up);
+  }
+}catch(e){}
 </script>
 </body>
 </html>
