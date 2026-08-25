@@ -55,10 +55,15 @@ input[type=date],input[type=datetime-local]{-webkit-appearance:none;appearance:n
 .field.optional input{padding:8px 10px;}
 .field.optional select{padding:8px 28px 8px 10px;}
 /* PC 端：优先级/截止日期/积分/重复 收窄为固定短框，事项与备注仍占满 */
-.field.short{flex:0 0 auto;width:180px;}
+.field.short{flex:0 0 auto;width:160px;}
 /* 新增待办：添加按钮置于表单末尾，PC 端靠右不拉伸 */
 .todo-actions{justify-content:flex-end;margin-top:6px;}
 .todo-actions .btn{flex:0 0 auto;height:42px;padding:8px 24px;font-size:14px;}
+/* 记每日花销：金额、备注、添加记录按钮同一行；金额短，备注填充中间 */
+.fin-actions{align-items:flex-end;}
+.fin-actions .fin-amt{flex:0 0 auto;width:140px;}
+.fin-actions .fin-note{flex:1 1 auto;min-width:0;}
+.fin-actions .btn{flex:0 0 auto;height:42px;}
 .switch{position:relative;display:inline-block;width:46px;height:26px;flex:0 0 auto;}
 .switch input{opacity:0;width:0;height:0;}
 .switch .slider{position:absolute;inset:0;background:#cbd5e1;border-radius:999px;transition:.2s;cursor:pointer;}
@@ -319,6 +324,11 @@ svg.chart{width:100%;height:auto;display:block;}
   /* 新增待办（H5）：添加按钮放最后且占满整行 */
   .todo-actions{justify-content:flex-start;}
   .todo-actions .btn{flex:1 1 100%;width:100%;}
+  /* 记每日花销（H5）：金额、备注、按钮各自撑满 */
+  .fin-actions{flex-wrap:wrap;}
+  .fin-actions .fin-amt{flex:1 1 120px;width:auto;}
+  .fin-actions .fin-note{flex:1 1 100%;}
+  .fin-actions .btn{flex:1 1 100%;width:100%;}
   .ov-card{padding:14px;}
   /* 手机端补齐未适配的容器 */
   .ring-wrap{flex-direction:column;align-items:flex-start;}
@@ -457,15 +467,15 @@ svg.chart{width:100%;height:auto;display:block;}
         <form id="taskForm">
           <div class="row">
             <div class="field"><label>事项 *</label><input type="text" id="tTitle" placeholder="今天要做什么" required></div>
-            <div class="field optional short"><label>优先级</label><select id="tPrio"><option value="p0">P0 重要</option><option value="p1" selected>P1 一般</option><option value="p2">P2 次要</option></select></div>
           </div>
-          <div class="row">
+          <div class="row task-opts">
             <div class="field optional short"><label>截止日期</label><input type="date" id="tDue"></div>
+            <div class="field optional short"><label>优先级</label><select id="tPrio"><option value="p0">P0 重要</option><option value="p1" selected>P1 一般</option><option value="p2">P2 次要</option></select></div>
             <div class="field optional short"><label>积分</label><input type="text" id="tPts" inputmode="numeric" placeholder="完成后奖励" autocomplete="off" oninput="this.value=this.value.replace(/\D/g,'').replace(/^0+/,'')"></div>
+            <div class="field optional short"><label>重复</label><select id="tRepeat"><option value="none" selected>不重复</option><option value="daily">每天</option><option value="weekly">每周</option><option value="monthly">每月</option><option value="yearly">每年</option></select></div>
           </div>
           <div class="row">
             <div class="field optional"><label>备注</label><input type="text" id="tNote" placeholder="补充说明（可选）"></div>
-            <div class="field optional short"><label>重复</label><select id="tRepeat"><option value="none" selected>不重复</option><option value="daily">每天</option><option value="weekly">每周</option><option value="monthly">每月</option><option value="yearly">每年</option></select></div>
           </div>
           <div class="row todo-actions">
             <button class="btn primary" type="submit">添加</button>
@@ -548,9 +558,11 @@ svg.chart{width:100%;height:auto;display:block;}
             <div class="field"><label>类型</label><select id="dailyType"><option value="exp">支出</option><option value="inc">收入</option></select></div>
             <div class="field"><label>分类</label><span id="catWrap"></span></div>
           </div>
-          <div class="field"><label>金额 ¥</label><input type="number" id="dailyAmt" min="0" step="0.01" placeholder="0.00"></div>
-          <div class="field"><label>备注</label><input type="text" id="dailyNote" placeholder="如：午饭 / 地铁"></div>
-          <div style="display:flex;justify-content:flex-end;margin-top:2px;"><button class="btn primary" type="submit">添加记录</button></div>
+          <div class="row fin-actions">
+            <div class="field fin-amt"><label>金额 ¥</label><input type="number" id="dailyAmt" min="0" step="0.01" placeholder="0.00"></div>
+            <div class="field fin-note"><label>备注</label><input type="text" id="dailyNote" placeholder="如：午饭 / 地铁"></div>
+            <button class="btn primary" type="submit">添加记录</button>
+          </div>
         </form>
         <div id="dailyHint" style="font-size:12px;color:var(--muted);margin-top:10px;"></div>
       </div>
@@ -1834,7 +1846,7 @@ function switchTab(name){
 document.querySelectorAll('.sidebar button.nav').forEach(function(b){if(!b.dataset.tab)return;b.onclick=function(){switchTab(b.dataset.tab);};});
 function renderAll(){renderOverview();renderTasks();renderFit();renderFun();renderFin();renderRest();renderGoal();renderFakao();renderEng();renderFakaoCheckin();}
 /* 版本号：每次发布改动后在此 +0.1，便于核对 Chrome 是否为最新版 */
-var APP_VER='1.57';
+var APP_VER='1.58';
 var _av=document.getElementById('appVer');if(_av)_av.textContent='v'+APP_VER;
 /* 清理已弃用的习惯打卡旧数据（v1.28 起不再使用，仅清孤立 key，不影响任何功能） */
 try{localStorage.removeItem('wb_hab_habits');localStorage.removeItem('wb_hab_seeded');}catch(e){}
