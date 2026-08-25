@@ -46,7 +46,8 @@ section.panel.active{display:block;animation:fade .2s ease;}
 input,select,textarea{width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:9px;font-size:15px;font-family:inherit;background:#fff;color:var(--text);}
 textarea{min-height:80px;resize:vertical;}
 input[type=date],input[type=datetime-local]{min-width:0;}
-.row{display:flex;gap:10px;}
+.row{display:flex;gap:10px;flex-wrap:wrap;}
+.row>.field{min-width:0;}
 .row>*{flex:1;}
 .switch{position:relative;display:inline-block;width:46px;height:26px;flex:0 0 auto;}
 .switch input{opacity:0;width:0;height:0;}
@@ -337,7 +338,7 @@ svg.chart{width:100%;height:auto;display:block;}
   .fit-grid .field.w-wide{grid-column:1 / -1;}
   .fit-grid .warm-field{grid-column:1;flex-direction:row;align-items:center;justify-content:flex-start;gap:10px;align-self:center;margin-bottom:12px;}
   .fit-grid .warm-field>label:not(.switch){margin-bottom:0;}
-  .fit-grid .fit-btn{grid-column:2;align-self:end;}
+  .fit-grid>.field.fit-btn{grid-column:2;align-self:end;}
   .fit-grid .fit-btn .btn{width:100%;}
   /* 表单行手机端允许换行，date 框不再超出容器 */
   .row{flex-wrap:wrap;}
@@ -1814,7 +1815,7 @@ function switchTab(name){
 document.querySelectorAll('.sidebar button.nav').forEach(function(b){if(!b.dataset.tab)return;b.onclick=function(){switchTab(b.dataset.tab);};});
 function renderAll(){renderOverview();renderTasks();renderFit();renderFun();renderFin();renderRest();renderGoal();renderFakao();renderEng();renderFakaoCheckin();}
 /* 版本号：每次发布改动后在此 +0.1，便于核对 Chrome 是否为最新版 */
-var APP_VER='1.46';
+var APP_VER='1.47';
 var _av=document.getElementById('appVer');if(_av)_av.textContent='v'+APP_VER;
 /* 清理已弃用的习惯打卡旧数据（v1.28 起不再使用，仅清孤立 key，不影响任何功能） */
 try{localStorage.removeItem('wb_hab_habits');localStorage.removeItem('wb_hab_seeded');}catch(e){}
