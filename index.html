@@ -334,9 +334,11 @@ svg.chart{width:100%;height:auto;display:block;}
   .fin-actions .btn{flex:1 1 100%;width:100%;}
   .ov-card{padding:14px;}
   /* 手机端补齐未适配的容器 */
-  .ring-wrap{flex-direction:row-reverse;align-items:center;gap:12px;}
-  .ring-wrap>#ringBox{flex:0 0 84px;width:84px;}
+  .ring-wrap{flex-direction:row-reverse;align-items:center;gap:14px;}
+  .ring-wrap>#ringBox{flex:0 0 104px;width:104px;}
+  .ring-wrap>#ringBox svg{width:100%;height:100%;display:block;}
   .ring-wrap>div:last-child{flex:1 1 auto;min-width:0;}
+  .ring-wrap #budgetInput{width:120px;max-width:120px;}
   svg,canvas,img{max-width:100%;height:auto;}
   .chart-row>*,.txn-list,.bc-group,.cat-box{max-width:100%;}
   .card table{display:block;overflow-x:auto;white-space:nowrap;}
@@ -1856,7 +1858,7 @@ function switchTab(name){
 document.querySelectorAll('.sidebar button.nav').forEach(function(b){if(!b.dataset.tab)return;b.onclick=function(){switchTab(b.dataset.tab);};});
 function renderAll(){renderOverview();renderTasks();renderFit();renderFun();renderFin();renderRest();renderGoal();renderFakao();renderEng();renderFakaoCheckin();}
 /* 版本号：每次发布改动后在此 +0.1，便于核对 Chrome 是否为最新版 */
-var APP_VER='1.62';
+var APP_VER='1.63';
 var _av=document.getElementById('appVer');if(_av)_av.textContent='v'+APP_VER;
 /* 清理已弃用的习惯打卡旧数据（v1.28 起不再使用，仅清孤立 key，不影响任何功能） */
 try{localStorage.removeItem('wb_hab_habits');localStorage.removeItem('wb_hab_seeded');}catch(e){}
