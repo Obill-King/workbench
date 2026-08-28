@@ -41,6 +41,43 @@ section.panel.active{display:block;animation:fade .2s ease;}
 .card h3{font-size:15px;display:flex;align-items:center;gap:8px;margin:0 0 14px;}
 .card h3 svg{width:17px;height:17px;flex:0 0 auto;color:var(--primary);}
 .card.full{margin-bottom:24px;}
+/* 总览：天气(2/3) + 日历(1/3) 双栏 */
+.ov-top-row{display:flex;gap:16px;align-items:stretch;margin-bottom:24px;}
+.ov-top-row>.card{margin-bottom:0;}
+.ov-top-row #weatherCard{flex:1.9 1 0;min-width:0;}
+.ov-top-row #calendarCard{flex:1 1 0;min-width:0;}
+.wx-hscroll{overflow-x:auto;-webkit-overflow-scrolling:touch;touch-action:pan-x;padding-bottom:2px;}
+#wxHourly{min-width:500px;}
+.wx-date{display:none;margin-left:6px;padding-left:14px;border-left:1px solid var(--line);}
+.wx-date-d{font-size:13px;color:var(--muted);}
+.wx-date-l{font-size:14px;font-weight:600;margin-top:2px;}
+/* 日历 */
+.cal{display:flex;flex-direction:column;}
+.cal-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;}
+.cal-title{font-size:15px;font-weight:700;}
+.cal-nav{display:flex;gap:6px;}
+.cal-nav button{width:30px;height:30px;border:1px solid var(--line);background:var(--card);border-radius:8px;cursor:pointer;color:var(--text);font-size:14px;line-height:1;}
+.cal-nav button:hover{border-color:var(--primary);color:var(--primary);}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;}
+.cal-dow{font-size:11px;color:var(--muted);text-align:center;padding:2px 0;}
+.cal-cell{position:relative;border:1px solid var(--line);border-radius:8px;padding:4px 2px;min-height:42px;text-align:center;background:#fff;}
+.cal-cell .cd{font-size:13px;font-weight:600;line-height:1.1;color:var(--text);}
+.cal-cell .cl{font-size:10px;line-height:1.2;margin-top:2px;color:var(--muted);}
+.cal-cell.out{background:transparent;border-color:transparent;color:var(--muted);}
+.cal-cell.out .cd{color:var(--muted);}
+.cal-cell.fest .cl{color:#d97706;font-weight:600;}
+.cal-cell.term .cl{color:#ef4444;font-weight:600;}
+.cal-cell.hol .cd{color:#ef4444;}
+.cal-cell.today{background:var(--primary-soft);border-color:var(--primary);}
+.cal-cell.today .cd{color:var(--primary);}
+.cal-legend{font-size:11px;color:var(--muted);margin-top:8px;display:flex;gap:12px;flex-wrap:wrap;}
+.lg-hol,.lg-fest,.lg-term{display:inline-block;width:9px;height:9px;border-radius:3px;margin-right:4px;vertical-align:middle;}
+.lg-hol{background:#ef4444;} .lg-fest{background:#d97706;} .lg-term{background:#5b9bf3;}
+@media (max-width:768px){
+  .ov-top-row{flex-direction:column;}
+  .ov-top-row>.card{margin-bottom:24px;}
+  .wx-date{display:block;}
+}
 .field{margin-bottom:12px;}
 .field label{display:block;font-size:12px;color:var(--muted);margin-bottom:5px;}
 input,select,textarea{width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:9px;font-size:15px;font-family:inherit;background:#fff;color:var(--text);}
@@ -410,22 +447,40 @@ svg.chart{width:100%;height:auto;display:block;}
 
     <!-- 总览 -->
     <section class="panel active" id="panel-overview">
-      <div class="card" id="weatherCard">
-        <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap;">
-          <div style="flex:1;min-width:200px;display:flex;align-items:center;gap:14px;">
-            <div id="wxBadge" style="min-width:62px;height:62px;border-radius:14px;background:var(--primary-soft);color:var(--primary);display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:700;text-align:center;padding:6px;flex:0 0 auto;">--</div>
-            <div>
-              <div style="font-size:26px;font-weight:800;line-height:1.1;" id="wxTemp">--°C</div>
-              <div style="font-size:13px;color:var(--muted);" id="wxDesc">点击刷新获取天气</div>
+      <div class="ov-top-row">
+        <div class="card" id="weatherCard">
+          <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap;">
+            <div style="flex: 1;min-width:200px;display:flex;align-items:center;gap:14px;">
+              <div id="wxBadge" style="min-width:62px;height:62px;border-radius:14px;background:var(--primary-soft);color:var(--primary);display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:700;text-align:center;padding:6px;flex:0 0 auto;">--</div>
+              <div>
+                <div style="font-size:26px;font-weight:800;line-height:1.1;" id="wxTemp">--°C</div>
+                <div style="font-size:13px;color:var(--muted);" id="wxDesc">点击刷新获取天气</div>
+              </div>
+              <div class="wx-date" id="wxDate">
+                <div class="wx-date-d" id="wxDateSun">--</div>
+                <div class="wx-date-l" id="wxDateLun">--</div>
+              </div>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px;">
+              <input type="text" id="wxCity" placeholder="城市名" style="width:120px;font-size:13px;padding:8px 10px;">
+              <button class="btn" id="wxRefresh">刷新</button>
             </div>
           </div>
-          <div style="display:flex;align-items:center;gap:8px;">
-            <input type="text" id="wxCity" placeholder="城市名" style="width:120px;font-size:13px;padding:8px 10px;">
-            <button class="btn" id="wxRefresh">刷新</button>
+          <div class="wx-hscroll" style="margin-top:12px;">
+            <div id="wxHourly" style="position:relative;"></div>
+          </div>
+          <div id="wxForecast" style="display:flex;gap:10px;margin-top:14px;flex-wrap:wrap;"></div>
+        </div>
+        <div class="card" id="calendarCard">
+          <div class="cal">
+            <div class="cal-head">
+              <div class="cal-title" id="calTitle">日历</div>
+              <div class="cal-nav"><button id="calPrev" aria-label="上个月">‹</button><button id="calNext" aria-label="下个月">›</button></div>
+            </div>
+            <div class="cal-grid" id="calGrid"></div>
+            <div class="cal-legend"><span><i class="lg-hol"></i>法定假日</span><span><i class="lg-fest"></i>传统节日</span><span><i class="lg-term"></i>节气</span></div>
           </div>
         </div>
-        <div id="wxHourly" style="position:relative;margin-top:12px;"></div>
-        <div id="wxForecast" style="display:flex;gap:10px;margin-top:14px;flex-wrap:wrap;"></div>
       </div>
       <div class="ov-grid" id="ovGrid"></div>
       <div class="today">
@@ -770,9 +825,28 @@ function defaultRecs(){return [
   {id:uid(),type:'game',title:'《逆转裁判123 成步堂精选集》',note:'你已想入，Switch 逻辑庭审，爽'},
   {id:uid(),type:'game',title:'《十三机兵防卫圈》',note:'Switch 叙事逻辑神作'},
   {id:uid(),type:'eng',title:'新概念第一册 跟读 1 课',note:'每天 ≤30 分钟，主打开口；先课文跟读 ≥80 分再睡觉'},
-  {id:uid(),type:'tip',title:'床头放一本书，睡前读 20 分钟',note:'替代刷微博/抖音，用环境设计把读书变成最省力默认'}
+  {id:uid(),type:'tip',title:'床头放一本书，睡前读 20 分钟',note:'替代刷微博/抖音，用环境设计把读书变成最省力默认'},
+  {id:uid(),type:'drama',title:'《漫长的季节》',note:'三条时间线最后闭环扣死；生活流真实、不端着；逻辑闭环+真的标杆'},
+  {id:uid(),type:'drama',title:'《沉默的真相》',note:'社会派逻辑极硬、自洽、真；白宇/廖凡'},
+  {id:uid(),type:'drama',title:'《信号》（韩剧 Signal）',note:'时间闭环+硬逻辑案件+人性真实'},
+  {id:uid(),type:'drama',title:'《我的天才女友》',note:'长篇成长（HP式过程派），核心友谊「互相理解、不用费力解释」正中你的关系入口'},
+  {id:uid(),type:'anime',title:'《钢之炼金术师 FA》',note:'长篇+角色成长丰富（HP过程派）、等价交换可迁移现实、热血真不装'},
+  {id:uid(),type:'novel',title:'《字母表谜案》',note:'东野圭吾逻辑闭环、智商在线'},
+  {id:uid(),type:'novel',title:'《三体》',note:'宏大逻辑闭环、硬科幻不装、世界观自洽'},
+  {id:uid(),type:'book',title:'《原子习惯》',note:'可迁移的「降低启动摩擦/用系统代替意志力」智慧'},
+  {id:uid(),type:'book',title:'《认知觉醒》',note:'方法/现实智慧类，降低启动摩擦'},
+  {id:uid(),type:'book',title:'《The War of Art》',note:'方法/现实智慧类，对抗启动阻力'},
+  {id:uid(),type:'book',title:'《深度工作》',note:'方法/现实智慧类，深度专注'},
+  {id:uid(),type:'game',title:'《传送门 2》（Portal 2）',note:'解谜逻辑闭环、黑色幽默真·灵动'},
+  {id:uid(),type:'movie',title:'《点球成金》（Moneyball）',note:'数据系统撬局、基于真实、逻辑'}
 ];}
 if(S.recs===null){S.recs=defaultRecs();sv('wb_recs',S.recs);}
+else{
+  /* 合并默认池新增项：按标题去重，让已加载过的旧实例也能同步到新推荐 */
+  var _def=defaultRecs(),_has={};S.recs.forEach(function(r){_has[r.title]=1;});
+  _def.forEach(function(r){if(!_has[r.title]){S.recs.push(r);}});
+  sv('wb_recs',S.recs);
+}
 if(!S.weather._mig){S.weather._mig=true;if(S.weather.city==='北京')S.weather.city='大连';sv('wb_weather',S.weather);}
 var CATS=['餐饮','交通','购物','居住','娱乐','学习','医疗','其他'];
 var CAT_COLOR={'餐饮':'#5b9bf3','交通':'#f59e0b','购物':'#ef4444','居住':'#16a34a','娱乐':'#a855f7','学习':'#06b6d4','医疗':'#ec4899','其他':'#9ca3af'};
@@ -1032,6 +1106,603 @@ function renderRecs(){
 }
 document.getElementById('ovGrid').addEventListener('click',function(e){var c=e.target.closest('.ov-card');if(c)switchTab(c.dataset.go);});
 document.getElementById('ovTodo').addEventListener('click',function(e){var k=e.target.closest('.ck');if(!k)return;var id=k.dataset.id;var t=S.tasks.find(function(x){return x.id===id;});if(t&&!t.done){t.done=true;t.doneAt=Date.now();var rw=+t.reward||0;if(rw>0&&!t.awarded){earn(t.title,rw);t.awarded=true;}spawnRepeat(t);persist();renderOverview();renderTasks();toast('已完成');}});
+
+var solarLunar = {
+
+    /**
+     * 农历1900-2100的润大小信息表
+     * @Array Of Property
+     * @return Hex
+     */
+    lunarInfo: [0x04bd8, 0x04ae0, 0x0a570, 0x054d5, 0x0d260, 0x0d950, 0x16554, 0x056a0, 0x09ad0, 0x055d2,//1900-1909
+        0x04ae0, 0x0a5b6, 0x0a4d0, 0x0d250, 0x1d255, 0x0b540, 0x0d6a0, 0x0ada2, 0x095b0, 0x14977,//1910-1919
+        0x04970, 0x0a4b0, 0x0b4b5, 0x06a50, 0x06d40, 0x1ab54, 0x02b60, 0x09570, 0x052f2, 0x04970,//1920-1929
+        0x06566, 0x0d4a0, 0x0ea50, 0x06e95, 0x05ad0, 0x02b60, 0x186e3, 0x092e0, 0x1c8d7, 0x0c950,//1930-1939
+        0x0d4a0, 0x1d8a6, 0x0b550, 0x056a0, 0x1a5b4, 0x025d0, 0x092d0, 0x0d2b2, 0x0a950, 0x0b557,//1940-1949
+        0x06ca0, 0x0b550, 0x15355, 0x04da0, 0x0a5b0, 0x14573, 0x052b0, 0x0a9a8, 0x0e950, 0x06aa0,//1950-1959
+        0x0aea6, 0x0ab50, 0x04b60, 0x0aae4, 0x0a570, 0x05260, 0x0f263, 0x0d950, 0x05b57, 0x056a0,//1960-1969
+        0x096d0, 0x04dd5, 0x04ad0, 0x0a4d0, 0x0d4d4, 0x0d250, 0x0d558, 0x0b540, 0x0b6a0, 0x195a6,//1970-1979
+        0x095b0, 0x049b0, 0x0a974, 0x0a4b0, 0x0b27a, 0x06a50, 0x06d40, 0x0af46, 0x0ab60, 0x09570,//1980-1989
+        0x04af5, 0x04970, 0x064b0, 0x074a3, 0x0ea50, 0x06b58, 0x055c0, 0x0ab60, 0x096d5, 0x092e0,//1990-1999
+        0x0c960, 0x0d954, 0x0d4a0, 0x0da50, 0x07552, 0x056a0, 0x0abb7, 0x025d0, 0x092d0, 0x0cab5,//2000-2009
+        0x0a950, 0x0b4a0, 0x0baa4, 0x0ad50, 0x055d9, 0x04ba0, 0x0a5b0, 0x15176, 0x052b0, 0x0a930,//2010-2019
+        0x07954, 0x06aa0, 0x0ad50, 0x05b52, 0x04b60, 0x0a6e6, 0x0a4e0, 0x0d260, 0x0ea65, 0x0d530,//2020-2029
+        0x05aa0, 0x076a3, 0x096d0, 0x04bd7, 0x04ad0, 0x0a4d0, 0x1d0b6, 0x0d250, 0x0d520, 0x0dd45,//2030-2039
+        0x0b5a0, 0x056d0, 0x055b2, 0x049b0, 0x0a577, 0x0a4b0, 0x0aa50, 0x1b255, 0x06d20, 0x0ada0,//2040-2049
+    /**Add By JJonline@JJonline.Cn**/
+        0x14b63, 0x09370, 0x049f8, 0x04970, 0x064b0, 0x168a6, 0x0ea50, 0x06b20, 0x1a6c4, 0x0aae0,//2050-2059
+        0x0a2e0, 0x0d2e3, 0x0c960, 0x0d557, 0x0d4a0, 0x0da50, 0x05d55, 0x056a0, 0x0a6d0, 0x055d4,//2060-2069
+        0x052d0, 0x0a9b8, 0x0a950, 0x0b4a0, 0x0b6a6, 0x0ad50, 0x055a0, 0x0aba4, 0x0a5b0, 0x052b0,//2070-2079
+        0x0b273, 0x06930, 0x07337, 0x06aa0, 0x0ad50, 0x14b55, 0x04b60, 0x0a570, 0x054e4, 0x0d160,//2080-2089
+        0x0e968, 0x0d520, 0x0daa0, 0x16aa6, 0x056d0, 0x04ae0, 0x0a9d4, 0x0a2d0, 0x0d150, 0x0f252,//2090-2099
+        0x0d520],//2100
+
+
+    /**
+     * 公历每个月份的天数普通表
+     * @Array Of Property
+     * @return Number
+     */
+    solarMonth: [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31],
+
+
+    /**
+     * 天干地支之天干速查表
+     * @Array Of Property trans["甲","乙","丙","丁","戊","己","庚","辛","壬","癸"]
+     * @return Cn string
+     */
+    gan: ["\u7532", "\u4e59", "\u4e19", "\u4e01", "\u620a", "\u5df1", "\u5e9a", "\u8f9b", "\u58ec", "\u7678"],
+
+
+    /**
+     * 天干地支之地支速查表
+     * @Array Of Property
+     * @trans["子","丑","寅","卯","辰","巳","午","未","申","酉","戌","亥"]
+     * @return Cn string
+     */
+    zhi: ["\u5b50", "\u4e11", "\u5bc5", "\u536f", "\u8fb0", "\u5df3", "\u5348", "\u672a", "\u7533", "\u9149", "\u620c", "\u4ea5"],
+
+
+    /**
+     * 天干地支之地支速查表<=>生肖
+     * @Array Of Property
+     * @trans["鼠","牛","虎","兔","龙","蛇","马","羊","猴","鸡","狗","猪"]
+     * @return Cn string
+     */
+    animals: ["\u9f20", "\u725b", "\u864e", "\u5154", "\u9f99", "\u86c7", "\u9a6c", "\u7f8a", "\u7334", "\u9e21", "\u72d7", "\u732a"],
+
+
+    /**
+     * 24节气速查表
+     * @Array Of Property
+     * @trans["小寒","大寒","立春","雨水","惊蛰","春分","清明","谷雨","立夏","小满","芒种","夏至","小暑","大暑","立秋","处暑","白露","秋分","寒露","霜降","立冬","小雪","大雪","冬至"]
+     * @return Cn string
+     */
+    lunarTerm: ["\u5c0f\u5bd2", "\u5927\u5bd2", "\u7acb\u6625", "\u96e8\u6c34", "\u60ca\u86f0", "\u6625\u5206", "\u6e05\u660e", "\u8c37\u96e8", "\u7acb\u590f", "\u5c0f\u6ee1", "\u8292\u79cd", "\u590f\u81f3", "\u5c0f\u6691", "\u5927\u6691", "\u7acb\u79cb", "\u5904\u6691", "\u767d\u9732", "\u79cb\u5206", "\u5bd2\u9732", "\u971c\u964d", "\u7acb\u51ac", "\u5c0f\u96ea", "\u5927\u96ea", "\u51ac\u81f3"],
+
+
+    /**
+     * 1900-2100各年的24节气日期速查表
+     * @Array Of Property
+     * @return 0x string For splice
+     */
+    lTermInfo: ['9778397bd097c36b0b6fc9274c91aa', '97b6b97bd19801ec9210c965cc920e', '97bcf97c3598082c95f8c965cc920f',
+        '97bd0b06bdb0722c965ce1cfcc920f', 'b027097bd097c36b0b6fc9274c91aa', '97b6b97bd19801ec9210c965cc920e',
+        '97bcf97c359801ec95f8c965cc920f', '97bd0b06bdb0722c965ce1cfcc920f', 'b027097bd097c36b0b6fc9274c91aa',
+        '97b6b97bd19801ec9210c965cc920e', '97bcf97c359801ec95f8c965cc920f', '97bd0b06bdb0722c965ce1cfcc920f',
+        'b027097bd097c36b0b6fc9274c91aa', '9778397bd19801ec9210c965cc920e', '97b6b97bd19801ec95f8c965cc920f',
+        '97bd09801d98082c95f8e1cfcc920f', '97bd097bd097c36b0b6fc9210c8dc2', '9778397bd197c36c9210c9274c91aa',
+        '97b6b97bd19801ec95f8c965cc920e', '97bd09801d98082c95f8e1cfcc920f', '97bd097bd097c36b0b6fc9210c8dc2',
+        '9778397bd097c36c9210c9274c91aa', '97b6b97bd19801ec95f8c965cc920e', '97bcf97c3598082c95f8e1cfcc920f',
+        '97bd097bd097c36b0b6fc9210c8dc2', '9778397bd097c36c9210c9274c91aa', '97b6b97bd19801ec9210c965cc920e',
+        '97bcf97c3598082c95f8c965cc920f', '97bd097bd097c35b0b6fc920fb0722', '9778397bd097c36b0b6fc9274c91aa',
+        '97b6b97bd19801ec9210c965cc920e', '97bcf97c3598082c95f8c965cc920f', '97bd097bd097c35b0b6fc920fb0722',
+        '9778397bd097c36b0b6fc9274c91aa', '97b6b97bd19801ec9210c965cc920e', '97bcf97c359801ec95f8c965cc920f',
+        '97bd097bd097c35b0b6fc920fb0722', '9778397bd097c36b0b6fc9274c91aa', '97b6b97bd19801ec9210c965cc920e',
+        '97bcf97c359801ec95f8c965cc920f', '97bd097bd097c35b0b6fc920fb0722', '9778397bd097c36b0b6fc9274c91aa',
+        '97b6b97bd19801ec9210c965cc920e', '97bcf97c359801ec95f8c965cc920f', '97bd097bd07f595b0b6fc920fb0722',
+        '9778397bd097c36b0b6fc9210c8dc2', '9778397bd19801ec9210c9274c920e', '97b6b97bd19801ec95f8c965cc920f',
+        '97bd07f5307f595b0b0bc920fb0722', '7f0e397bd097c36b0b6fc9210c8dc2', '9778397bd097c36c9210c9274c920e',
+        '97b6b97bd19801ec95f8c965cc920f', '97bd07f5307f595b0b0bc920fb0722', '7f0e397bd097c36b0b6fc9210c8dc2',
+        '9778397bd097c36c9210c9274c91aa', '97b6b97bd19801ec9210c965cc920e', '97bd07f1487f595b0b0bc920fb0722',
+        '7f0e397bd097c36b0b6fc9210c8dc2', '9778397bd097c36b0b6fc9274c91aa', '97b6b97bd19801ec9210c965cc920e',
+        '97bcf7f1487f595b0b0bb0b6fb0722', '7f0e397bd097c35b0b6fc920fb0722', '9778397bd097c36b0b6fc9274c91aa',
+        '97b6b97bd19801ec9210c965cc920e', '97bcf7f1487f595b0b0bb0b6fb0722', '7f0e397bd097c35b0b6fc920fb0722',
+        '9778397bd097c36b0b6fc9274c91aa', '97b6b97bd19801ec9210c965cc920e', '97bcf7f1487f531b0b0bb0b6fb0722',
+        '7f0e397bd097c35b0b6fc920fb0722', '9778397bd097c36b0b6fc9274c91aa', '97b6b97bd19801ec9210c965cc920e',
+        '97bcf7f1487f531b0b0bb0b6fb0722', '7f0e397bd07f595b0b6fc920fb0722', '9778397bd097c36b0b6fc9274c91aa',
+        '97b6b97bd19801ec9210c9274c920e', '97bcf7f0e47f531b0b0bb0b6fb0722', '7f0e397bd07f595b0b0bc920fb0722',
+        '9778397bd097c36b0b6fc9210c91aa', '97b6b97bd197c36c9210c9274c920e', '97bcf7f0e47f531b0b0bb0b6fb0722',
+        '7f0e397bd07f595b0b0bc920fb0722', '9778397bd097c36b0b6fc9210c8dc2', '9778397bd097c36c9210c9274c920e',
+        '97b6b7f0e47f531b0723b0b6fb0722', '7f0e37f5307f595b0b0bc920fb0722', '7f0e397bd097c36b0b6fc9210c8dc2',
+        '9778397bd097c36b0b70c9274c91aa', '97b6b7f0e47f531b0723b0b6fb0721', '7f0e37f1487f595b0b0bb0b6fb0722',
+        '7f0e397bd097c35b0b6fc9210c8dc2', '9778397bd097c36b0b6fc9274c91aa', '97b6b7f0e47f531b0723b0b6fb0721',
+        '7f0e27f1487f595b0b0bb0b6fb0722', '7f0e397bd097c35b0b6fc920fb0722', '9778397bd097c36b0b6fc9274c91aa',
+        '97b6b7f0e47f531b0723b0b6fb0721', '7f0e27f1487f531b0b0bb0b6fb0722', '7f0e397bd097c35b0b6fc920fb0722',
+        '9778397bd097c36b0b6fc9274c91aa', '97b6b7f0e47f531b0723b0b6fb0721', '7f0e27f1487f531b0b0bb0b6fb0722',
+        '7f0e397bd097c35b0b6fc920fb0722', '9778397bd097c36b0b6fc9274c91aa', '97b6b7f0e47f531b0723b0b6fb0721',
+        '7f0e27f1487f531b0b0bb0b6fb0722', '7f0e397bd07f595b0b0bc920fb0722', '9778397bd097c36b0b6fc9274c91aa',
+        '97b6b7f0e47f531b0723b0787b0721', '7f0e27f0e47f531b0b0bb0b6fb0722', '7f0e397bd07f595b0b0bc920fb0722',
+        '9778397bd097c36b0b6fc9210c91aa', '97b6b7f0e47f149b0723b0787b0721', '7f0e27f0e47f531b0723b0b6fb0722',
+        '7f0e397bd07f595b0b0bc920fb0722', '9778397bd097c36b0b6fc9210c8dc2', '977837f0e37f149b0723b0787b0721',
+        '7f07e7f0e47f531b0723b0b6fb0722', '7f0e37f5307f595b0b0bc920fb0722', '7f0e397bd097c35b0b6fc9210c8dc2',
+        '977837f0e37f14998082b0787b0721', '7f07e7f0e47f531b0723b0b6fb0721', '7f0e37f1487f595b0b0bb0b6fb0722',
+        '7f0e397bd097c35b0b6fc9210c8dc2', '977837f0e37f14998082b0787b06bd', '7f07e7f0e47f531b0723b0b6fb0721',
+        '7f0e27f1487f531b0b0bb0b6fb0722', '7f0e397bd097c35b0b6fc920fb0722', '977837f0e37f14998082b0787b06bd',
+        '7f07e7f0e47f531b0723b0b6fb0721', '7f0e27f1487f531b0b0bb0b6fb0722', '7f0e397bd097c35b0b6fc920fb0722',
+        '977837f0e37f14998082b0787b06bd', '7f07e7f0e47f531b0723b0b6fb0721', '7f0e27f1487f531b0b0bb0b6fb0722',
+        '7f0e397bd07f595b0b0bc920fb0722', '977837f0e37f14998082b0787b06bd', '7f07e7f0e47f531b0723b0b6fb0721',
+        '7f0e27f1487f531b0b0bb0b6fb0722', '7f0e397bd07f595b0b0bc920fb0722', '977837f0e37f14998082b0787b06bd',
+        '7f07e7f0e47f149b0723b0787b0721', '7f0e27f0e47f531b0b0bb0b6fb0722', '7f0e397bd07f595b0b0bc920fb0722',
+        '977837f0e37f14998082b0723b06bd', '7f07e7f0e37f149b0723b0787b0721', '7f0e27f0e47f531b0723b0b6fb0722',
+        '7f0e397bd07f595b0b0bc920fb0722', '977837f0e37f14898082b0723b02d5', '7ec967f0e37f14998082b0787b0721',
+        '7f07e7f0e47f531b0723b0b6fb0722', '7f0e37f1487f595b0b0bb0b6fb0722', '7f0e37f0e37f14898082b0723b02d5',
+        '7ec967f0e37f14998082b0787b0721', '7f07e7f0e47f531b0723b0b6fb0722', '7f0e37f1487f531b0b0bb0b6fb0722',
+        '7f0e37f0e37f14898082b0723b02d5', '7ec967f0e37f14998082b0787b06bd', '7f07e7f0e47f531b0723b0b6fb0721',
+        '7f0e37f1487f531b0b0bb0b6fb0722', '7f0e37f0e37f14898082b072297c35', '7ec967f0e37f14998082b0787b06bd',
+        '7f07e7f0e47f531b0723b0b6fb0721', '7f0e27f1487f531b0b0bb0b6fb0722', '7f0e37f0e37f14898082b072297c35',
+        '7ec967f0e37f14998082b0787b06bd', '7f07e7f0e47f531b0723b0b6fb0721', '7f0e27f1487f531b0b0bb0b6fb0722',
+        '7f0e37f0e366aa89801eb072297c35', '7ec967f0e37f14998082b0787b06bd', '7f07e7f0e47f149b0723b0787b0721',
+        '7f0e27f1487f531b0b0bb0b6fb0722', '7f0e37f0e366aa89801eb072297c35', '7ec967f0e37f14998082b0723b06bd',
+        '7f07e7f0e47f149b0723b0787b0721', '7f0e27f0e47f531b0723b0b6fb0722', '7f0e37f0e366aa89801eb072297c35',
+        '7ec967f0e37f14998082b0723b06bd', '7f07e7f0e37f14998083b0787b0721', '7f0e27f0e47f531b0723b0b6fb0722',
+        '7f0e37f0e366aa89801eb072297c35', '7ec967f0e37f14898082b0723b02d5', '7f07e7f0e37f14998082b0787b0721',
+        '7f07e7f0e47f531b0723b0b6fb0722', '7f0e36665b66aa89801e9808297c35', '665f67f0e37f14898082b0723b02d5',
+        '7ec967f0e37f14998082b0787b0721', '7f07e7f0e47f531b0723b0b6fb0722', '7f0e36665b66a449801e9808297c35',
+        '665f67f0e37f14898082b0723b02d5', '7ec967f0e37f14998082b0787b06bd', '7f07e7f0e47f531b0723b0b6fb0721',
+        '7f0e36665b66a449801e9808297c35', '665f67f0e37f14898082b072297c35', '7ec967f0e37f14998082b0787b06bd',
+        '7f07e7f0e47f531b0723b0b6fb0721', '7f0e26665b66a449801e9808297c35', '665f67f0e37f1489801eb072297c35',
+        '7ec967f0e37f14998082b0787b06bd', '7f07e7f0e47f531b0723b0b6fb0721', '7f0e27f1487f531b0b0bb0b6fb0722'],
+
+
+    /**
+     * 数字转中文速查表
+     * @Array Of Property
+     * @trans ['日','一','二','三','四','五','六','七','八','九','十']
+     * @return Cn string
+     */
+    nStr1: ["\u65e5", "\u4e00", "\u4e8c", "\u4e09", "\u56db", "\u4e94", "\u516d", "\u4e03", "\u516b", "\u4e5d", "\u5341"],
+
+
+    /**
+     * 日期转农历称呼速查表
+     * @Array Of Property
+     * @trans ['初','十','廿','卅']
+     * @return Cn string
+     */
+    nStr2: ["\u521d", "\u5341", "\u5eff", "\u5345"],
+
+
+    /**
+     * 月份转农历称呼速查表
+     * @Array Of Property
+     * @trans ['正','一','二','三','四','五','六','七','八','九','十','冬','腊']
+     * @return Cn string
+     */
+    nStr3: ["\u6b63", "\u4e8c", "\u4e09", "\u56db", "\u4e94", "\u516d", "\u4e03", "\u516b", "\u4e5d", "\u5341", "\u51ac", "\u814a"],
+
+
+    /**
+     * 返回农历y年一整年的总天数
+     * @param lunar Year
+     * @return Number
+     * @eg:var count = solarLunar.lYearDays(1987) ;//count=387
+     */
+    lYearDays: function (y) {
+        var i, sum = 348;
+        for (i = 0x8000; i > 0x8; i >>= 1) {
+            sum += (solarLunar.lunarInfo[y - 1900] & i) ? 1 : 0;
+        }
+        return (sum + solarLunar.leapDays(y));
+    },
+
+
+    /**
+     * 返回农历y年闰月是哪个月；若y年没有闰月 则返回0
+     * @param lunar Year
+     * @return Number (0-12)
+     * @eg:var leapMonth = solarLunar.leapMonth(1987) ;//leapMonth=6
+     */
+    leapMonth: function (y) { //闰字编码 \u95f0
+        return (solarLunar.lunarInfo[y - 1900] & 0xf);
+    },
+
+
+    /**
+     * 返回农历y年闰月的天数 若该年没有闰月则返回0
+     * @param lunar Year
+     * @return Number (0、29、30)
+     * @eg:var leapMonthDay = solarLunar.leapDays(1987) ;//leapMonthDay=29
+     */
+    leapDays: function (y) {
+        if (solarLunar.leapMonth(y)) {
+            return ((solarLunar.lunarInfo[y - 1900] & 0x10000) ? 30 : 29);
+        }
+        return (0);
+    },
+
+
+    /**
+     * 返回农历y年m月（非闰月）的总天数，计算m为闰月时的天数请使用leapDays方法
+     * @param lunar Year
+     * @return Number (-1、29、30)
+     * @eg:var MonthDay = solarLunar.monthDays(1987,9) ;//MonthDay=29
+     */
+    monthDays: function (y, m) {
+        if (m > 12 || m < 1) {
+            return -1
+        }//月份参数从1至12，参数错误返回-1
+        return ( (solarLunar.lunarInfo[y - 1900] & (0x10000 >> m)) ? 30 : 29 );
+    },
+
+
+    /**
+     * 返回公历(!)y年m月的天数
+     * @param solar Year
+     * @return Number (-1、28、29、30、31)
+     * @eg:var solarMonthDay = solarLunar.leapDays(1987) ;//solarMonthDay=30
+     */
+    solarDays: function (y, m) {
+        if (m > 12 || m < 1) {
+            return -1
+        } //若参数错误 返回-1
+        var ms = m - 1;
+        if (ms == 1) { //2月份的闰平规律测算后确认返回28或29
+            return (((y % 4 == 0) && (y % 100 != 0) || (y % 400 == 0)) ? 29 : 28);
+        } else {
+            return (solarLunar.solarMonth[ms]);
+        }
+    },
+
+
+    /**
+     * 传入offset偏移量返回干支
+     * @param offset 相对甲子的偏移量
+     * @return Cn string
+     */
+    toGanZhi: function (offset) {
+        return (solarLunar.gan[offset % 10] + solarLunar.zhi[offset % 12]);
+    },
+
+
+    /**
+     * 传入公历(!)y年获得该年第n个节气的公历日期
+     * @param y公历年(1900-2100)；n二十四节气中的第几个节气(1~24)；从n=1(小寒)算起
+     * @return number Number
+     * @eg:var _24 = solarLunar.getTerm(1987,3) ;//_24=4;意即1987年2月4日立春
+     */
+    getTerm: function (y, n) {
+        if (y < 1900 || y > 2100) {
+            return -1;
+        }
+        if (n < 1 || n > 24) {
+            return -1;
+        }
+        var _table = solarLunar.lTermInfo[y - 1900];
+        var _info = [
+            parseInt('0x' + _table.substr(0, 5)).toString(),
+            parseInt('0x' + _table.substr(5, 5)).toString(),
+            parseInt('0x' + _table.substr(10, 5)).toString(),
+            parseInt('0x' + _table.substr(15, 5)).toString(),
+            parseInt('0x' + _table.substr(20, 5)).toString(),
+            parseInt('0x' + _table.substr(25, 5)).toString()
+        ];
+        var _calDay = [
+            _info[0].substr(0, 1),
+            _info[0].substr(1, 2),
+            _info[0].substr(3, 1),
+            _info[0].substr(4, 2),
+
+            _info[1].substr(0, 1),
+            _info[1].substr(1, 2),
+            _info[1].substr(3, 1),
+            _info[1].substr(4, 2),
+
+            _info[2].substr(0, 1),
+            _info[2].substr(1, 2),
+            _info[2].substr(3, 1),
+            _info[2].substr(4, 2),
+
+            _info[3].substr(0, 1),
+            _info[3].substr(1, 2),
+            _info[3].substr(3, 1),
+            _info[3].substr(4, 2),
+
+            _info[4].substr(0, 1),
+            _info[4].substr(1, 2),
+            _info[4].substr(3, 1),
+            _info[4].substr(4, 2),
+
+            _info[5].substr(0, 1),
+            _info[5].substr(1, 2),
+            _info[5].substr(3, 1),
+            _info[5].substr(4, 2)
+        ];
+        return parseInt(_calDay[n - 1]);
+    },
+
+
+    /**
+     * 传入农历数字月份返回汉语通俗表示法
+     * @param lunar month
+     * @return number string
+     * @eg:var cnMonth = solarLunar.toChinaMonth(12) ;//cnMonth='腊月'
+     */
+    toChinaMonth: function (m) { // 月 => \u6708
+        if (m > 12 || m < 1) {
+            return -1
+        } //若参数错误 返回-1
+        var s = solarLunar.nStr3[m - 1];
+        s += "\u6708";//加上月字
+        return s;
+    },
+
+
+    /**
+     * 传入农历日期数字返回汉字表示法
+     * @param lunar day
+     * @return Cn string
+     * @eg:var cnDay = solarLunar.toChinaDay(21) ;//cnMonth='廿一'
+     */
+    toChinaDay: function (d) { //日 => \u65e5
+        var s;
+        switch (d) {
+            case 10:
+                s = '\u521d\u5341';
+                break;
+            case 20:
+                s = '\u4e8c\u5341';
+                break;
+                break;
+            case 30:
+                s = '\u4e09\u5341';
+                break;
+                break;
+            default :
+                s = solarLunar.nStr2[Math.floor(d / 10)];
+                s += solarLunar.nStr1[d % 10];
+        }
+        return (s);
+    },
+
+
+    /**
+     * 年份转生肖[!仅能大致转换] => 精确划分生肖分界线是“立春”
+     * @param y year
+     * @return Cn string
+     * @eg:var animal = solarLunar.getAnimal(1987) ;//animal='兔'
+     * todo 生肖需要精确转换
+     */
+    getAnimal: function (y) {
+        return solarLunar.animals[(y - 4) % 12]
+    },
+
+
+    /**
+     * 传入公历年月日获得详细的公历、农历object信息 <=>JSON
+     * @param y  solar year
+     * @param m solar month
+     * @param d  solar day
+     * @return JSON object
+     * @eg:console.log(solarLunar.solar2lunar(1987,11,01));
+     */
+    solar2lunar: function (y, m, d) { //参数区间1900.1.31~2100.12.31
+        if (y < 1900 || y > 2100) {
+            return -1;
+        }//年份限定、上限
+        if (y == 1900 && m == 1 && d < 31) {
+            return -1;
+        }//下限
+        if (!y) { //未传参 获得当天
+            var objDate = new Date();
+        } else {
+            var objDate = new Date(y, parseInt(m) - 1, d)
+        }
+        var i, leap = 0, temp = 0;
+        //修正ymd参数
+        var y = objDate.getFullYear(), m = objDate.getMonth() + 1, d = objDate.getDate();
+        var offset = (Date.UTC(objDate.getFullYear(), objDate.getMonth(), objDate.getDate()) - Date.UTC(1900, 0, 31)) / 86400000;
+        for (i = 1900; i < 2101 && offset > 0; i++) {
+            temp = solarLunar.lYearDays(i);
+            offset -= temp;
+        }
+        if (offset < 0) {
+            offset += temp;
+            i--;
+        }
+
+        //是否今天
+        var isTodayObj = new Date(), isToday = false;
+        if (isTodayObj.getFullYear() == y && isTodayObj.getMonth() + 1 == m && isTodayObj.getDate() == d) {
+            isToday = true;
+        }
+        //星期几
+        var nWeek = objDate.getDay(), cWeek = solarLunar.nStr1[nWeek];
+        if (nWeek == 0) {
+            nWeek = 7;
+        }//数字表示周几顺应天朝周一开始的惯例
+        //农历年
+        var year = i;
+
+        var leap = solarLunar.leapMonth(i); //闰哪个月
+        var isLeap = false;
+
+        //效验闰月
+        for (i = 1; i < 13 && offset > 0; i++) {
+            //闰月
+            if (leap > 0 && i == (leap + 1) && isLeap == false) {
+                --i;
+                isLeap = true;
+                temp = solarLunar.leapDays(year); //计算农历闰月天数
+            }
+            else {
+                temp = solarLunar.monthDays(year, i);//计算农历普通月天数
+            }
+            //解除闰月
+            if (isLeap == true && i == (leap + 1)) {
+                isLeap = false;
+            }
+            offset -= temp;
+        }
+
+        if (offset == 0 && leap > 0 && i == leap + 1)
+            if (isLeap) {
+                isLeap = false;
+            } else {
+                isLeap = true;
+                --i;
+            }
+        if (offset < 0) {
+            offset += temp;
+            --i;
+        }
+        //农历月
+        var month = i;
+        //农历日
+        var day = offset + 1;
+
+        //天干地支处理
+        var sm = m - 1;
+        var term3 = solarLunar.getTerm(year, 3); //该农历年立春日期
+        var gzY = solarLunar.toGanZhi(year - 4);//普通按年份计算，下方尚需按立春节气来修正
+
+        //依据立春日进行修正gzY
+        if (sm < 2 && d < term3) {
+            gzY = solarLunar.toGanZhi(year - 5);
+        } else {
+            gzY = solarLunar.toGanZhi(year - 4);
+        }
+
+        //月柱 1900年1月小寒以前为 丙子月(60进制12)
+        var firstNode = solarLunar.getTerm(y, (m * 2 - 1));//返回当月「节」为几日开始
+        var secondNode = solarLunar.getTerm(y, (m * 2));//返回当月「节」为几日开始
+
+        //依据12节气修正干支月
+        var gzM = solarLunar.toGanZhi((y - 1900) * 12 + m + 11);
+        if (d >= firstNode) {
+            gzM = solarLunar.toGanZhi((y - 1900) * 12 + m + 12);
+        }
+
+        //传入的日期的节气与否
+        var isTerm = false;
+        var term = "";
+        if (firstNode == d) {
+            isTerm = true;
+            term = solarLunar.lunarTerm[m * 2 - 2];
+        }
+        if (secondNode == d) {
+            isTerm = true;
+            term = solarLunar.lunarTerm[m * 2 - 1];
+        }
+        //日柱 当月一日与 1900/1/1 相差天数
+        var dayCyclical = Date.UTC(y, sm, 1, 0, 0, 0, 0) / 86400000 + 25567 + 10;
+        var gzD = solarLunar.toGanZhi(dayCyclical + d - 1);
+
+        return {
+            'lYear': year,
+            'lMonth': month,
+            'lDay': day,
+            'animal': solarLunar.getAnimal(year),
+            'monthCn': (isLeap ? "\u95f0" : '') + solarLunar.toChinaMonth(month),
+            'dayCn': solarLunar.toChinaDay(day),
+            'cYear': y,
+            'cMonth': m,
+            'cDay': d,
+            'gzYear': gzY,
+            'gzMonth': gzM,
+            'gzDay': gzD,
+            'isToday': isToday,
+            'isLeap': isLeap,
+            'nWeek': nWeek,
+            'ncWeek': "\u661f\u671f" + cWeek,
+            'isTerm': isTerm,
+            'term': term
+        };
+    },
+
+
+    /**
+     * 传入公历年月日以及传入的月份是否闰月获得详细的公历、农历object信息 <=>JSON
+     * @param y  lunar year
+     * @param m lunar month
+     * @param d  lunar day
+     * @param isLeapMonth  lunar month is leap or not.
+     * @return JSON object
+     * @eg:console.log(solarLunar.lunar2solar(1987,9,10));
+     */
+};
+
+/* ---------- 农历/节气/节假日 辅助 ---------- */
+function getDayLabels(y,m,d){
+  var o = solarLunar.solar2lunar(y,m,d);
+  var festival='';
+  if(o.lMonth===1&&o.lDay===1)festival='春节';
+  else if(o.lMonth===1&&o.lDay===15)festival='元宵';
+  else if(o.lMonth===2&&o.lDay===2)festival='龙抬头';
+  else if(o.lMonth===5&&o.lDay===5)festival='端午';
+  else if(o.lMonth===7&&o.lDay===7)festival='七夕';
+  else if(o.lMonth===7&&o.lDay===15)festival='中元';
+  else if(o.lMonth===8&&o.lDay===15)festival='中秋';
+  else if(o.lMonth===9&&o.lDay===9)festival='重阳';
+  else if(o.lMonth===12&&o.lDay===8)festival='腊八';
+  else if(o.lMonth===12&&o.lDay===23)festival='小年';
+  var holiday='';
+  var md=m+'-'+d;
+  if(md==='1-1')holiday='元旦';
+  else if(md==='5-1')holiday='劳动节';
+  else if(md==='10-1')holiday='国庆节';
+  else if(md==='4-5'&&o.term==='清明')holiday='清明';
+  else if(festival==='春节')holiday='春节';
+  else if(festival==='端午')holiday='端午';
+  else if(festival==='中秋')holiday='中秋';
+  var wk=['日','一','二','三','四','五','六'][new Date(y,m-1,d).getDay()];
+  var sun=m+'月'+d+'日 周'+wk;
+  var lun = o.term || festival || (o.monthCn+o.dayCn);
+  return {sun:sun, lun:lun, term:o.term, festival:festival, holiday:holiday, monthCn:o.monthCn, dayCn:o.dayCn, lMonth:o.lMonth, lDay:o.lDay};
+}
+var calY=new Date().getFullYear(), calM=new Date().getMonth()+1;
+function renderCalendar(){
+  var grid=document.getElementById('calGrid'); if(!grid)return;
+  var title=document.getElementById('calTitle'); if(title)title.textContent=calY+'年'+calM+'月';
+  var first=new Date(calY,calM-1,1);
+  var startDow=(first.getDay()+6)%7; // 周一为首列
+  var daysInMonth=new Date(calY,calM,0).getDate();
+  var prevDays=new Date(calY,calM-1,0).getDate();
+  var cells=[];
+  for(var i=0;i<startDow;i++){cells.push({out:true,d:prevDays-startDow+1+i});}
+  for(var d=1;d<=daysInMonth;d++){cells.push({out:false,d:d});}
+  while(cells.length%7!==0){cells.push({out:true,d:0});}
+  var t=todayStr();
+  var html='<div class="cal-dow">一</div><div class="cal-dow">二</div><div class="cal-dow">三</div><div class="cal-dow">四</div><div class="cal-dow">五</div><div class="cal-dow">六</div><div class="cal-dow">日</div>';
+  cells.forEach(function(c){
+    if(c.out){
+      html+='<div class="cal-cell out"><div class="cd"></div></div>';
+    }else{
+      var L=getDayLabels(calY,calM,c.d);
+      var cls='cal-cell';
+      if(L.holiday)cls+=' hol';
+      if(L.festival)cls+=' fest';
+      if(L.term)cls+=' term';
+      var key=calY+'-'+String(calM).padStart(2,'0')+'-'+String(c.d).padStart(2,'0');
+      if(key===t)cls+=' today';
+      var sub = L.term || L.festival || L.holiday || L.dayCn;
+      html+='<div class="'+cls+'"><div class="cd">'+c.d+'</div><div class="cl">'+sub+'</div></div>';
+    }
+  });
+  grid.innerHTML=html;
+}
+document.getElementById('calPrev').onclick=function(){calM--;if(calM<1){calM=12;calY--;}renderCalendar();};
+document.getElementById('calNext').onclick=function(){calM++;if(calM>12){calM=1;calY++;}renderCalendar();};
+
+/* H5 天气模块：温度右侧日期/农历/节气块（≤768px 显示） */
+function renderWxDate(){
+  var sun=document.getElementById('wxDateSun'), lun=document.getElementById('wxDateLun');
+  if(!sun||!lun)return;
+  var n=new Date();
+  var L=getDayLabels(n.getFullYear(),n.getMonth()+1,n.getDate());
+  sun.textContent=L.sun;
+  lun.textContent=L.lun;
+}
 
 /* ---------- 天气（Open-Meteo 免 key / CORS 友好） ---------- */
 var WX_DESC={0:'晴',1:'多云',2:'多云',3:'阴',45:'雾',48:'雾凇',51:'毛毛雨',53:'小雨',55:'中雨',56:'冻雨',57:'冻雨',61:'小雨',63:'中雨',65:'大雨',66:'冻雨',67:'冻雨',71:'小雪',73:'中雪',75:'大雪',77:'雪粒',80:'阵雨',81:'阵雨',82:'强阵雨',85:'阵雪',86:'强阵雪',95:'雷阵雨',96:'雷阵雨',99:'雷阵雨'};
@@ -1600,7 +2271,9 @@ var REST_LIST=[
    {n:'趴地做「猫牛式」脊柱流动 + 眼镜蛇/婴儿式交替 3 轮（瑜伽垫上）',s:'做完 3 轮即停',g:'逐节活动整条脊柱、对抗久坐含胸塌腰（区别于站立扩胸，给脊柱松绑）'}
    ,{n:'单脚站立平衡 2 分钟（扶椅背，左右脚各 1 分钟）',s:'左右各做完 1 分钟即停',g:'激活核心+改善久坐导致的平衡退化'}
    ,{n:'臀桥 20 次（躺地，慢起慢落）',s:'数完 20 次即停',g:'激活臀肌、对抗久坐塌臀（区别于深蹲/静蹲，给臀部专项发力）'}
- ]},
+   ,{n:'靠墙「W 字」开肩：手肘贴墙、肩胛下压慢滑 3 分钟（手扶墙，慢起慢落）',s:'定时 3 分钟',g:'打开肩胸前侧、对抗含胸圆肩（站姿贴墙滑动，区别于站立扩胸和地面猫牛式）'}
+   ,{n:'做颈椎「米字操」2 分钟（缓慢用头写米字，不快转）',s:'做完一组即停',g:'松解久坐僵硬的颈椎、缓解低头脖颈紧（区别于扩胸/开肩，聚焦颈椎活动度）'}
+   ]},
  {cat:'感官沉浸',sub:'有集数，天然结束',color:'#06b6d4',items:[
    {n:'听几首喜欢的歌 / 一张歌单',s:'歌单播完',g:'情绪调节'},
    {n:'听一集播客 / 有声书',s:'一集结束',g:'输入不费眼'},
@@ -1618,7 +2291,8 @@ var REST_LIST=[
    {n:'闭眼听一首 5 分钟以上的纯音乐/后摇（不做别的事，曲终即止）',s:'曲终即停（不循环、不切歌）',g:'不被歌词带跑、来一场纯粹听觉洗澡（区别于听歌跟唱/随机歌单，给明确终点）'}
    ,{n:'听一张「黑胶/磁带」质感的怀旧老歌歌单（不点开视频）',s:'歌单播完即停',g:'怀旧沉浸+情绪流动（区别于完整专辑A面的"分面"，这里主打老歌松弛质感）'}
    ,{n:'闭眼用指尖轮流感受 3 种材质（绒布/木纹/石头，各 1 分钟，定时）',s:'三种摸完即停',g:'开辟触觉感官通道、锚定当下（区别于听觉/嗅觉沉浸，纯触觉）'}
- ]},
+   ,{n:'闭眼闻一杯热茶/咖啡的香气 3 分钟（只闻不刷、不拍照）',s:'钟响即停',g:'嗅觉通道放松+仪式感，开辟听觉之外的感官（区别于点香薰/听歌，主打"饮品香气"）'}
+   ]},
  {cat:'轻连接',sub:'有度则充电',color:'#a855f7',items:[
    {n:'给朋友发条消息',s:'发完即止',g:'社会资本（关系感）'},
    {n:'打一个 10 分钟短电话',s:'约好时长',g:'真实连接'},
@@ -1634,7 +2308,9 @@ var REST_LIST=[
    {n:'给一起玩 Switch/游戏的网友发一句今日战绩或吐槽（一句即止）',s:'发完一句即停',g:'游戏圈轻连接+共鸣释放（区别于整段开黑消耗）'}
    ,{n:'给一位久未联系的老友发「今天突然想到你」一句话（不期待回复）',s:'发完一句即停',g:'真实连接+温暖释放，零压力（区别于闲聊/点赞消耗）'}
    ,{n:'给一位远方朋友发一张今日天气/窗外截图 + 一句话「这边下雨/出太阳了」',s:'发完一句即停',g:'日常共享+轻连接，零压力（区别于给家人发随手拍，这里是远方+天气共时感）'}
- ]},
+   ,{n:'给家人/好友发起一段 5 分钟视频通话（定时，只聊一会儿）',s:'定时 5 分钟',g:'真人有画面的连接感（区别于语音短电话和文字消息，更近一步）'}
+   ,{n:'给家人/室友发一句「今晚一起看部片子或散个步？」邀约（不强求成行）',s:'发完一句即止',g:'发起真实连接的主动姿态、零压力（区别于闲聊消耗，聚焦"邀约"动作）'}
+   ]},
  {cat:'小成就',sub:'给满足感，专治"歇完更空"',color:'#f59e0b',items:[
    {n:'5 分钟小家务（理桌面 / 叠衣）',s:'做完一件',g:'掌控感+环境变好'},
    {n:'写一句今日进度到本子',s:'写一句',g:'记录即确认'},
@@ -1650,7 +2326,9 @@ var REST_LIST=[
    {n:'关掉浏览器里闲置的标签页，只留 ≤5 个',s:'关到 ≤5 个即停',g:'数字减负+掌控感（区别于整理实体/相册，聚焦"开太多网页"的隐形消耗）'}
    ,{n:'给冰箱做一轮「过期清理」（扔掉过期酱料/食材）',s:'一轮清完即停',g:'物理减负+掌控感（区别于整理抽屉/桌面，聚焦厨房隐形堆积）'}
    ,{n:'整理下载文件夹，删掉/归档 10 个旧文件（一批即止）',s:'处理完 10 个即停',g:'数字减负+掌控感（区别于关标签页/桌面文件，聚焦下载堆积的隐形消耗）'}
- ]},
+   ,{n:'给阳台/窗台换一处小布置（挪一盆绿植/摆一件小物，一件即停）',s:'一件做完即停',g:'微环境更新+掌控感（聚焦常被忽略的窗台/阳台角落，区别于桌面/抽屉/冰箱）'}
+   ,{n:'把玄关/门口乱堆的鞋摆齐（一双即停）',s:'摆齐一双即停',g:'微环境掌控感+进门顺眼（区别于理桌面/叠衣，聚焦常被忽略的玄关）'}
+   ]},
  {cat:'创意随手',sub:'好玩、有终点',color:'#ec4899',items:[
    {n:'随手涂鸦 / 画画 5 分钟',s:'定时',g:'表达即放松'},
    {n:'拼图 / 乐高玩几分钟',s:'定时间',g:'动手静心'},
@@ -1668,6 +2346,7 @@ var REST_LIST=[
    {n:'用手机录音机留一段 15 秒即兴哼唱/口哨小样（录一段即停）',s:'录满一段即停',g:'轻创作释放+留下声音碎片（区别于随口哼歌，这里是"留存"；区别于音游，纯个人表达零评判）'}
    ,{n:'玩一局 Switch 棋牌/桌游类（如《围棋》《麻将》《黑白棋》独立游戏，单局定时 15 分）',s:'一局或钟响即停',g:'动脑博弈+愉悦释放（定局数/定时，严禁续局滑成漫刷；区别于健身环/解谜/音游）'}
    ,{n:'玩一局 Switch 种田/模拟经营类（如《动物森友会》《星露谷物语》，单局定时 15 分）',s:'一局或钟响即停',g:'慢节奏经营+愉悦释放（定局数/定时，严禁续局滑成漫刷；区别于健身环/解谜/音游/棋牌）'}
+   ,{n:'玩一局 Switch 射击/竞技类（如《斯普拉遁》，单局定时 15 分）',s:'一局或钟响即停',g:'激烈对抗+手眼协调释放（定局数/定时，严禁续局滑成漫刷；区别已有 Switch 条目，这是竞技/射击向）'}
  ]},
  {cat:'输入滋养',sub:'不费眼、补脑子',color:'#5b9bf3',items:[
    {n:'读几页喜欢的非虚构 / 杂志',s:'定页数',g:'轻松输入'},
@@ -1693,7 +2372,8 @@ var REST_LIST=[
    {n:'温水泡手 / 手浴 3 分钟',s:'定时 3 分钟',g:'手部放松+仪式感（区别于涂护手霜）'},
    {n:'涂润唇膏 + 轻柔唇部按摩 2 分钟（定时）',s:'定时 2 分钟',g:'细节护理+仪式感，干燥党即时舒适'},
    {n:'十指逐个拉伸+按摩 3 分钟（掰指节、转手腕，纯松解不涂霜）',s:'做完十指即停',g:'松解指关节+前臂，键盘手专项（区别于涂护手霜）'}
- ]},
+   ,{n:'睡前涂护足霜+按摩脚底 3 分钟（定时）',s:'定时 3 分钟',g:'足部护理+仪式感，久坐/久站党即时舒适（区别于护手霜/面膜）'}
+   ]},
  {cat:'纯放空',sub:'严格定时',color:'#64748b',items:[
    {n:'闭眼眯 10 分钟',s:'闹钟',g:'大脑待机'},
    {n:'发呆看窗外',s:'定时',g:'放空'},
@@ -1702,6 +2382,7 @@ var REST_LIST=[
    {n:'站着看窗外发呆 5 分钟（不拿手机）',s:'定时',g:'放空+打断刷机'},
    {n:'戴蒸汽眼罩闭眼瘫 10 分钟（只遮光、不睡、不拿手机）',s:'定时 10 分钟（眼罩凉透即停）',g:'彻底切断视觉输入、给大脑真正的待机窗口（区别于关灯听呼吸的听取向，也区别于热毛巾敷眼的护理取向）'},
    {n:'身体扫描放松：从脚趾到头顶逐部位「注意到-放松」（躺/坐皆可，不拿手机）',s:'定时 8 分钟即停',g:'纯觉察式放空、松掉全身紧绷（区别于感官沉浸的渐进式肌肉紧-松，这里是"只是留意"不发力）'}
+   ,{n:'裹毯子关灯静坐 5 分钟（只裹着、不拿手机、钟响即停）',s:'定时 5 分钟',g:'被包裹的安全感+大脑彻底待机（区别于关灯听呼吸的"听"，这里是纯包裹感放空）'}
  ]}
 ];
 var restFilter='all';
@@ -1856,9 +2537,9 @@ function switchTab(name){
   if(name==='eng')renderEng();
 }
 document.querySelectorAll('.sidebar button.nav').forEach(function(b){if(!b.dataset.tab)return;b.onclick=function(){switchTab(b.dataset.tab);};});
-function renderAll(){renderOverview();renderTasks();renderFit();renderFun();renderFin();renderRest();renderGoal();renderFakao();renderEng();renderFakaoCheckin();}
+function renderAll(){renderOverview();renderTasks();renderFit();renderFun();renderFin();renderRest();renderGoal();renderFakao();renderEng();renderFakaoCheckin();renderCalendar();renderWxDate();}
 /* 版本号：每次发布改动后在此 +0.1，便于核对 Chrome 是否为最新版 */
-var APP_VER='1.66';
+var APP_VER='1.70';
 var _av=document.getElementById('appVer');if(_av)_av.textContent='v'+APP_VER;
 /* 清理已弃用的习惯打卡旧数据（v1.28 起不再使用，仅清孤立 key，不影响任何功能） */
 try{localStorage.removeItem('wb_hab_habits');localStorage.removeItem('wb_hab_seeded');}catch(e){}
