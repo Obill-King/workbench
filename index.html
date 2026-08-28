@@ -70,10 +70,13 @@ section.panel.active{display:block;animation:fade .2s ease;}
 .cal-cell.hol .cd{color:#ef4444;}
 .cal-cell.we{background:#f6f8fc;}
 .cal-cell.we .cd{color:#475569;}
-.cal-cell.today{background:var(--primary-soft);border-color:var(--primary);border-width:2px;min-height:66px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;padding:3px 1px;}
+/* 当天格子：只改配色与边框，尺寸/对齐与普通格子完全一致（内容顶部对齐，不居中、不撑高），
+   竖排阴历用绝对定位贴右侧，不占高度也不挤动日数字 → 与周围格子严丝合缝对齐 */
+.cal-cell.today{background:var(--primary-soft);border-color:var(--primary);border-width:2px;}
 .cal-cell.today .cd{color:var(--primary);font-size:13px;font-weight:700;line-height:1.1;}
-.cal-cell.today .today-lun{writing-mode:vertical-rl;letter-spacing:1px;font-size:10px;line-height:1.1;color:var(--primary);font-weight:600;}
+.cal-cell.today .today-lun{position:absolute;top:50%;right:1px;transform:translateY(-50%);writing-mode:vertical-rl;letter-spacing:0;font-size:9px;line-height:1;color:var(--primary);font-weight:600;max-height:34px;overflow:hidden;}
 .fc-temp{font-size:13px;margin-top:5px;font-weight:600;color:var(--text);}
+#wxBadge svg{width:34px;height:34px;display:block;}
 @media (max-width:768px){
   .ov-top-row{flex-direction:column;}
   .ov-top-row>.card{margin-bottom:24px;}
@@ -418,12 +421,15 @@ svg.chart{width:100%;height:auto;display:block;}
   .row.rw-form{flex-direction:row;align-items:flex-end;}
   html{overflow-x:hidden;}
   /* H5：天气头部同排（实时温度+日期+城市框+刷新按钮） */
-  #weatherCard>div:first-child{flex-direction:row!important;flex-wrap:nowrap;align-items:center;gap:8px;}
-  #weatherCard>div:first-child>div:first-child{min-width:0;flex:0 0 auto;}
-  #weatherCard>div:first-child>div:last-child{flex:1 1 auto;min-width:0;display:flex;align-items:center;gap:6px;justify-content:flex-end;}
-  #wxBadge{width:50px;height:50px;min-width:50px;font-size:13px!important;}
-  #wxTemp{font-size:20px!important;}
-  #wxCity{width:auto;flex:1 1 auto;min-width:60px;padding:6px 8px;font-size:13px;}
+  /* 注意：这些元素带 HTML 内联 style，内联优先级高于样式表，必须 !important 才能覆盖 */
+  #weatherCard>div:first-child{flex-direction:row!important;flex-wrap:nowrap!important;align-items:center;gap:8px!important;}
+  #weatherCard>div:first-child>div:first-child{min-width:0!important;flex:1 1 auto!important;display:flex!important;align-items:center;justify-content:space-between;gap:6px;}
+  #weatherCard>div:first-child>div:last-child{flex:0 0 auto!important;min-width:0;display:flex!important;align-items:center;gap:6px;}
+  #wxBadge{width:46px!important;height:46px!important;min-width:46px!important;padding:0!important;font-size:12px!important;}
+  #wxBadge svg{width:26px;height:26px;}
+  #wxTemp{font-size:20px!important;white-space:nowrap;}
+  #wxDesc{font-size:11px!important;}
+  #wxCity{width:76px!important;flex:0 0 auto;padding:6px 8px!important;font-size:13px;}
   #wxRefresh{flex:0 0 auto;padding:6px 10px;font-size:13px;}
   #weatherCard .wx-date{margin-left:0;padding-left:10px;}
   #weatherCard .wx-date-d{font-size:12px;}
@@ -1729,6 +1735,26 @@ function renderWxDate(){
 
 /* ---------- 天气（Open-Meteo 免 key / CORS 友好） ---------- */
 var WX_DESC={0:'晴',1:'多云',2:'多云',3:'阴',45:'雾',48:'雾凇',51:'毛毛雨',53:'小雨',55:'中雨',56:'冻雨',57:'冻雨',61:'小雨',63:'中雨',65:'大雨',66:'冻雨',67:'冻雨',71:'小雪',73:'中雪',75:'大雪',77:'雪粒',80:'阵雨',81:'阵雨',82:'强阵雨',85:'阵雪',86:'强阵雪',95:'雷阵雨',96:'雷阵雨',99:'雷阵雨'};
+/* 天气图标：内联 SVG（描边风格，随 currentColor 变色，无外部依赖） */
+var WX_ICON={
+0:'<circle cx="12" cy="12" r="4.2"/><path d="M12 2v2.2M12 19.8V22M4.2 4.2l1.6 1.6M18.2 18.2l1.6 1.6M2 12h2.2M19.8 12H22M4.2 19.8l1.6-1.6M18.2 5.8l1.6-1.6"/>',
+1:'<circle cx="8" cy="8" r="3.2"/><path d="M8 2v1.6M8 12.4V14M2.8 8h1.6M11.6 8h1.6M4.3 4.3l1.1 1.1M10.6 10.6l1.1 1.1M11.7 4.3l-1.1 1.1M5.4 10.6l-1.1 1.1"/><path d="M7 19.5h10a3.2 3.2 0 0 0 .2-6.4 5 5 0 0 0-9.6-1.4A3.5 3.5 0 0 0 7 19.5z"/>',
+2:'<circle cx="8" cy="8" r="3.2"/><path d="M8 2v1.6M8 12.4V14M2.8 8h1.6M11.6 8h1.6M4.3 4.3l1.1 1.1M10.6 10.6l1.1 1.1M11.7 4.3l-1.1 1.1M5.4 10.6l-1.1 1.1"/><path d="M7 19.5h10a3.2 3.2 0 0 0 .2-6.4 5 5 0 0 0-9.6-1.4A3.5 3.5 0 0 0 7 19.5z"/>',
+3:'<path d="M7 18.5h10.5a3.3 3.3 0 0 0 .2-6.6 5.4 5.4 0 0 0-10.4-1.5A3.6 3.6 0 0 0 7 18.5z"/>',
+45:'<path d="M6.5 15h11a3.3 3.3 0 0 0 .2-6.6 5.4 5.4 0 0 0-10.4-1.5A3.6 3.6 0 0 0 6.5 15z"/><path d="M4 18.5h16M6.5 21.5h11"/>',
+48:'<path d="M6.5 15h11a3.3 3.3 0 0 0 .2-6.6 5.4 5.4 0 0 0-10.4-1.5A3.6 3.6 0 0 0 6.5 15z"/><path d="M4 18.5h16M6.5 21.5h11"/>',
+rain:'<path d="M7 16h10.5a3.3 3.3 0 0 0 .2-6.6 5.4 5.4 0 0 0-10.4-1.5A3.6 3.6 0 0 0 7 16z"/><path d="M8.5 18.8v2.2M12 18.8v2.6M15.5 18.8v2.2"/>',
+snow:'<path d="M7 16h10.5a3.3 3.3 0 0 0 .2-6.6 5.4 5.4 0 0 0-10.4-1.5A3.6 3.6 0 0 0 7 16z"/><path d="M9 19.2h.01M12 19.2h.01M15 19.2h.01M10.5 21.6h.01M13.5 21.6h.01"/>',
+thunder:'<path d="M7 16h10.5a3.3 3.3 0 0 0 .2-6.6 5.4 5.4 0 0 0-10.4-1.5A3.6 3.6 0 0 0 7 16z"/><path d="M13.2 17.6l-2.4 3.2h2.6l-2 3.4"/>'
+};
+var WX_ICON_MAP={0:0,1:1,2:2,3:3,45:45,48:48};
+[51,53,55,56,57,61,63,65,66,67,80,81,82].forEach(function(c){WX_ICON_MAP[c]='rain';});
+[71,73,75,77,85,86].forEach(function(c){WX_ICON_MAP[c]='snow';});
+[95,96,99].forEach(function(c){WX_ICON_MAP[c]='thunder';});
+function wxIconSvg(code){
+  var k=WX_ICON_MAP[code]; if(k===undefined)k=3;
+  return '<svg viewBox="0 0 24 24" width="100%" height="100%" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">'+(WX_ICON[k]||WX_ICON[3])+'</svg>';
+}
 var WX_HS=[];
 function wxTipShow(e,i){
   var o=WX_HS[i]; if(!o)return;
@@ -1751,7 +1777,7 @@ function renderWeather(){
   if(temp)temp.textContent=(w.temp==null?'--':Math.round(w.temp))+'°C';
   var d=(w.temp==null?'点击刷新获取天气':(WX_DESC[w.code]||''));
   if(desc)desc.textContent=d;
-  if(badge)badge.textContent=w.temp==null?'--':(WX_DESC[w.code]||'').slice(0,2);
+  if(badge)badge.innerHTML=w.temp==null?'--':wxIconSvg(w.code);
   // 当日逐小时（24h 折线图）
   var hb=document.getElementById('wxHourly');
   if(hb){
@@ -2562,7 +2588,7 @@ function switchTab(name){
 document.querySelectorAll('.sidebar button.nav').forEach(function(b){if(!b.dataset.tab)return;b.onclick=function(){switchTab(b.dataset.tab);};});
 function renderAll(){renderOverview();renderTasks();renderFit();renderFun();renderFin();renderRest();renderGoal();renderFakao();renderEng();renderFakaoCheckin();renderCalendar();renderWxDate();}
 /* 版本号：每次发布改动后在此 +0.1，便于核对 Chrome 是否为最新版 */
-var APP_VER='1.72';
+var APP_VER='1.73';
 var _av=document.getElementById('appVer');if(_av)_av.textContent='v'+APP_VER;
 /* 清理已弃用的习惯打卡旧数据（v1.28 起不再使用，仅清孤立 key，不影响任何功能） */
 try{localStorage.removeItem('wb_hab_habits');localStorage.removeItem('wb_hab_seeded');}catch(e){}
