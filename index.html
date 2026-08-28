@@ -61,8 +61,9 @@ section.panel.active{display:block;animation:fade .2s ease;}
 .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;}
 .cal-dow{font-size:11px;color:var(--muted);text-align:center;padding:2px 0;}
 /* overflow:hidden + nowrap：格子窄时文字绝不换行（换行会让当天格子变高、把整行拉长） */
-/* 固定高度 + flex 顶部对齐：彻底杜绝行高被撑开、数字下沉 */
-.cal-cell{position:relative;border:1px solid var(--line);border-radius:8px;padding:4px 1px;height:42px;text-align:center;background:#fff;overflow:hidden;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;}
+/* 固定高度(height 而非 min-height)：格子绝不会被内容撑高、行高不会被拉伸。
+   保持普通块流布局（不用 flex），日数字在上、阴历在下，text-align 居中。 */
+.cal-cell{position:relative;border:1px solid var(--line);border-radius:8px;padding:4px 1px;height:42px;text-align:center;background:#fff;overflow:hidden;}
 .cal-cell .cd{font-size:13px;font-weight:600;line-height:1.1;color:var(--text);white-space:nowrap;}
 .cal-cell .cl{font-size:9px;line-height:1.2;margin-top:2px;color:var(--muted);white-space:nowrap;overflow:hidden;}
 .cal-cell.out{background:transparent;border-color:transparent;color:var(--muted);}
@@ -2585,7 +2586,7 @@ function switchTab(name){
 document.querySelectorAll('.sidebar button.nav').forEach(function(b){if(!b.dataset.tab)return;b.onclick=function(){switchTab(b.dataset.tab);};});
 function renderAll(){renderOverview();renderTasks();renderFit();renderFun();renderFin();renderRest();renderGoal();renderFakao();renderEng();renderFakaoCheckin();renderCalendar();renderWxDate();}
 /* 版本号：每次发布改动后在此 +0.1，便于核对 Chrome 是否为最新版 */
-var APP_VER='1.77';
+var APP_VER='1.78';
 var _av=document.getElementById('appVer');if(_av)_av.textContent='v'+APP_VER;
 /* 清理已弃用的习惯打卡旧数据（v1.28 起不再使用，仅清孤立 key，不影响任何功能） */
 try{localStorage.removeItem('wb_hab_habits');localStorage.removeItem('wb_hab_seeded');}catch(e){}
