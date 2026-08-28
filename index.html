@@ -60,7 +60,7 @@ section.panel.active{display:block;animation:fade .2s ease;}
 .cal-nav button:hover{border-color:var(--primary);color:var(--primary);}
 .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;}
 .cal-dow{font-size:11px;color:var(--muted);text-align:center;padding:2px 0;}
-.cal-cell{position:relative;border:1px solid var(--line);border-radius:8px;padding:4px 2px;min-height:58px;text-align:center;background:#fff;}
+.cal-cell{position:relative;border:1px solid var(--line);border-radius:8px;padding:4px 2px;min-height:42px;text-align:center;background:#fff;}
 .cal-cell .cd{font-size:13px;font-weight:600;line-height:1.1;color:var(--text);}
 .cal-cell .cl{font-size:10px;line-height:1.2;margin-top:2px;color:var(--muted);}
 .cal-cell.out{background:transparent;border-color:transparent;color:var(--muted);}
@@ -70,11 +70,9 @@ section.panel.active{display:block;animation:fade .2s ease;}
 .cal-cell.hol .cd{color:#ef4444;}
 .cal-cell.we{background:#f6f8fc;}
 .cal-cell.we .cd{color:#475569;}
-/* 当天格子：日数字在上方（与普通格子顶部对齐），阴历竖排在日数字下方居中。
-   为避免当天格单独撑高导致错位，统一把所有格子拉高到 58px（各行一起变高，保持 uniform）。 */
-.cal-cell.today{background:var(--primary-soft);border-color:var(--primary);border-width:2px;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;padding:4px 2px;}
+/* 当天格子：跟普通格子完全一致（日数字 + 下方横排阴历/节气/节日），只高亮配色和边框 */
+.cal-cell.today{background:var(--primary-soft);border-color:var(--primary);border-width:2px;}
 .cal-cell.today .cd{color:var(--primary);font-size:13px;font-weight:700;line-height:1.1;}
-.cal-cell.today .today-lun{writing-mode:vertical-rl;letter-spacing:0;font-size:9px;line-height:0.95;color:var(--primary);font-weight:600;max-height:36px;overflow:hidden;margin-top:1px;}
 .fc-temp{font-size:13px;margin-top:5px;font-weight:600;color:var(--text);}
 #wxBadge svg{width:34px;height:34px;display:block;}
 @media (max-width:768px){
@@ -1711,11 +1709,7 @@ function renderCalendar(){
       var isToday=(key===t);
       if(isToday)cls+=' today';
       var sub = L.term || L.festival || L.holiday || L.dayCn;
-      if(isToday){
-        html+='<div class="'+cls+'"><div class="cd">'+c.d+'</div><div class="today-lun">'+sub+'</div></div>';
-      }else{
-        html+='<div class="'+cls+'"><div class="cd">'+c.d+'</div><div class="cl">'+sub+'</div></div>';
-      }
+      html+='<div class="'+cls+'"><div class="cd">'+c.d+'</div><div class="cl">'+sub+'</div></div>';
     }
   });
   grid.innerHTML=html;
@@ -2588,7 +2582,7 @@ function switchTab(name){
 document.querySelectorAll('.sidebar button.nav').forEach(function(b){if(!b.dataset.tab)return;b.onclick=function(){switchTab(b.dataset.tab);};});
 function renderAll(){renderOverview();renderTasks();renderFit();renderFun();renderFin();renderRest();renderGoal();renderFakao();renderEng();renderFakaoCheckin();renderCalendar();renderWxDate();}
 /* 版本号：每次发布改动后在此 +0.1，便于核对 Chrome 是否为最新版 */
-var APP_VER='1.74';
+var APP_VER='1.75';
 var _av=document.getElementById('appVer');if(_av)_av.textContent='v'+APP_VER;
 /* 清理已弃用的习惯打卡旧数据（v1.28 起不再使用，仅清孤立 key，不影响任何功能） */
 try{localStorage.removeItem('wb_hab_habits');localStorage.removeItem('wb_hab_seeded');}catch(e){}
