@@ -68,11 +68,12 @@ section.panel.active{display:block;animation:fade .2s ease;}
 .cal-cell.fest .cl{color:#d97706;font-weight:600;}
 .cal-cell.term .cl{color:#ef4444;font-weight:600;}
 .cal-cell.hol .cd{color:#ef4444;}
-.cal-cell.today{background:var(--primary-soft);border-color:var(--primary);}
-.cal-cell.today .cd{color:var(--primary);}
-.cal-legend{font-size:11px;color:var(--muted);margin-top:8px;display:flex;gap:12px;flex-wrap:wrap;}
-.lg-hol,.lg-fest,.lg-term{display:inline-block;width:9px;height:9px;border-radius:3px;margin-right:4px;vertical-align:middle;}
-.lg-hol{background:#ef4444;} .lg-fest{background:#d97706;} .lg-term{background:#5b9bf3;}
+.cal-cell.we{background:#f6f8fc;}
+.cal-cell.we .cd{color:#475569;}
+.cal-cell.today{min-height:58px;display:flex;align-items:center;justify-content:center;gap:5px;background:var(--primary-soft);border-color:var(--primary);}
+.cal-cell.today .cd{color:var(--primary);font-size:14px;font-weight:700;}
+.cal-cell.today .today-lun{writing-mode:vertical-rl;letter-spacing:1px;font-size:11px;color:var(--primary);font-weight:600;}
+.fc-temp{font-size:13px;margin-top:5px;font-weight:600;color:var(--text);}
 @media (max-width:768px){
   .ov-top-row{flex-direction:column;}
   .ov-top-row>.card{margin-bottom:24px;}
@@ -117,7 +118,7 @@ input[type=date],input[type=datetime-local]{-webkit-appearance:none;appearance:n
 .fit-grid .warm-field{align-self:stretch;display:flex;flex-direction:column;align-items:center;justify-content:center;margin-bottom:0;}
 .fit-grid .warm-field>label:not(.switch){margin-bottom:6px;}
 /* 分栏总览 */
-.ov-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:14px;margin-bottom:24px;}
+.ov-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:24px;}
 .ov-card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;box-shadow:var(--shadow);cursor:pointer;transition:.15s;}
 .ov-card:hover{border-color:var(--primary);transform:translateY(-2px);}
 .ov-card .t{font-size:13px;color:var(--muted);display:flex;align-items:center;gap:6px;}
@@ -416,6 +417,21 @@ svg.chart{width:100%;height:auto;display:block;}
   .field input,.field select,.field textarea{width:100%;box-sizing:border-box;}
   .row.rw-form{flex-direction:row;align-items:flex-end;}
   html{overflow-x:hidden;}
+  /* H5：天气头部同排（实时温度+日期+城市框+刷新按钮） */
+  #weatherCard>div:first-child{flex-direction:row!important;flex-wrap:wrap;align-items:center;gap:10px;}
+  #weatherCard>div:first-child>div:first-child{min-width:0;flex:0 0 auto;}
+  #wxBadge{width:50px;height:50px;min-width:50px;font-size:13px!important;}
+  #wxTemp{font-size:22px!important;}
+  #wxCity{width:84px;padding:6px 8px;font-size:13px;}
+  #wxRefresh{padding:6px 10px;font-size:13px;}
+  #weatherCard .wx-date{margin-left:0;padding-left:10px;}
+  #weatherCard .wx-date-d{font-size:12px;}
+  #weatherCard .wx-date-l{font-size:13px;}
+  /* H5：隐藏天气下方日历 */
+  #calendarCard{display:none;}
+  /* H5：未来三天预报温度不被遮挡 */
+  #wxForecast>div{flex:1 1 0;min-width:0;}
+  .fc-temp{font-size:12px;white-space:normal;}
 }
 </style>
 </head>
@@ -448,6 +464,15 @@ svg.chart{width:100%;height:auto;display:block;}
     <!-- 总览 -->
     <section class="panel active" id="panel-overview">
       <div class="ov-top-row">
+        <div class="card" id="calendarCard">
+          <div class="cal">
+            <div class="cal-head">
+              <div class="cal-title" id="calTitle">日历</div>
+              <div class="cal-nav"><button id="calPrev" aria-label="上个月">‹</button><button id="calNext" aria-label="下个月">›</button></div>
+            </div>
+            <div class="cal-grid" id="calGrid"></div>
+          </div>
+        </div>
         <div class="card" id="weatherCard">
           <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap;">
             <div style="flex: 1;min-width:200px;display:flex;align-items:center;gap:14px;">
@@ -470,16 +495,6 @@ svg.chart{width:100%;height:auto;display:block;}
             <div id="wxHourly" style="position:relative;"></div>
           </div>
           <div id="wxForecast" style="display:flex;gap:10px;margin-top:14px;flex-wrap:wrap;"></div>
-        </div>
-        <div class="card" id="calendarCard">
-          <div class="cal">
-            <div class="cal-head">
-              <div class="cal-title" id="calTitle">日历</div>
-              <div class="cal-nav"><button id="calPrev" aria-label="上个月">‹</button><button id="calNext" aria-label="下个月">›</button></div>
-            </div>
-            <div class="cal-grid" id="calGrid"></div>
-            <div class="cal-legend"><span><i class="lg-hol"></i>法定假日</span><span><i class="lg-fest"></i>传统节日</span><span><i class="lg-term"></i>节气</span></div>
-          </div>
         </div>
       </div>
       <div class="ov-grid" id="ovGrid"></div>
@@ -1680,13 +1695,20 @@ function renderCalendar(){
     }else{
       var L=getDayLabels(calY,calM,c.d);
       var cls='cal-cell';
+      var dow=new Date(calY,calM-1,c.d).getDay(); // 0=周日 6=周六
+      if(dow===0||dow===6)cls+=' we';
       if(L.holiday)cls+=' hol';
       if(L.festival)cls+=' fest';
       if(L.term)cls+=' term';
       var key=calY+'-'+String(calM).padStart(2,'0')+'-'+String(c.d).padStart(2,'0');
-      if(key===t)cls+=' today';
+      var isToday=(key===t);
+      if(isToday)cls+=' today';
       var sub = L.term || L.festival || L.holiday || L.dayCn;
-      html+='<div class="'+cls+'"><div class="cd">'+c.d+'</div><div class="cl">'+sub+'</div></div>';
+      if(isToday){
+        html+='<div class="'+cls+'"><div class="cd">'+c.d+'</div><div class="today-lun">'+sub+'</div></div>';
+      }else{
+        html+='<div class="'+cls+'"><div class="cd">'+c.d+'</div><div class="cl">'+sub+'</div></div>';
+      }
     }
   });
   grid.innerHTML=html;
@@ -1773,7 +1795,7 @@ function renderWeather(){
         return '<div style="flex:1 1 0;min-width:78px;background:#f6f8fc;border:1px solid var(--line);border-radius:12px;padding:10px 6px;text-align:center;">'+
           '<div style="font-size:12px;color:var(--muted);">'+md+'</div>'+
           '<div style="font-size:18px;margin:4px 0;line-height:1;">'+desc.slice(0,2)+'</div>'+
-          '<div style="font-size:13px;margin-top:5px;font-weight:600;color:var(--text);">'+Math.round(f.tmax)+'° / '+Math.round(f.tmin)+'°</div>'+
+          '<div class="fc-temp">'+Math.round(f.tmax)+'° / '+Math.round(f.tmin)+'°</div>'+
         '</div>';
       }).join('');
     }
@@ -2539,7 +2561,7 @@ function switchTab(name){
 document.querySelectorAll('.sidebar button.nav').forEach(function(b){if(!b.dataset.tab)return;b.onclick=function(){switchTab(b.dataset.tab);};});
 function renderAll(){renderOverview();renderTasks();renderFit();renderFun();renderFin();renderRest();renderGoal();renderFakao();renderEng();renderFakaoCheckin();renderCalendar();renderWxDate();}
 /* 版本号：每次发布改动后在此 +0.1，便于核对 Chrome 是否为最新版 */
-var APP_VER='1.70';
+var APP_VER='1.71';
 var _av=document.getElementById('appVer');if(_av)_av.textContent='v'+APP_VER;
 /* 清理已弃用的习惯打卡旧数据（v1.28 起不再使用，仅清孤立 key，不影响任何功能） */
 try{localStorage.removeItem('wb_hab_habits');localStorage.removeItem('wb_hab_seeded');}catch(e){}
