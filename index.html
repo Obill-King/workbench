@@ -70,9 +70,9 @@ section.panel.active{display:block;animation:fade .2s ease;}
 .cal-cell.hol .cd{color:#ef4444;}
 .cal-cell.we{background:#f6f8fc;}
 .cal-cell.we .cd{color:#475569;}
-.cal-cell.today{min-height:58px;display:flex;align-items:center;justify-content:center;gap:5px;background:var(--primary-soft);border-color:var(--primary);}
-.cal-cell.today .cd{color:var(--primary);font-size:14px;font-weight:700;}
-.cal-cell.today .today-lun{writing-mode:vertical-rl;letter-spacing:1px;font-size:11px;color:var(--primary);font-weight:600;}
+.cal-cell.today{background:var(--primary-soft);border-color:var(--primary);border-width:2px;min-height:66px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;padding:3px 1px;}
+.cal-cell.today .cd{color:var(--primary);font-size:13px;font-weight:700;line-height:1.1;}
+.cal-cell.today .today-lun{writing-mode:vertical-rl;letter-spacing:1px;font-size:10px;line-height:1.1;color:var(--primary);font-weight:600;}
 .fc-temp{font-size:13px;margin-top:5px;font-weight:600;color:var(--text);}
 @media (max-width:768px){
   .ov-top-row{flex-direction:column;}
@@ -418,12 +418,13 @@ svg.chart{width:100%;height:auto;display:block;}
   .row.rw-form{flex-direction:row;align-items:flex-end;}
   html{overflow-x:hidden;}
   /* H5：天气头部同排（实时温度+日期+城市框+刷新按钮） */
-  #weatherCard>div:first-child{flex-direction:row!important;flex-wrap:wrap;align-items:center;gap:10px;}
+  #weatherCard>div:first-child{flex-direction:row!important;flex-wrap:nowrap;align-items:center;gap:8px;}
   #weatherCard>div:first-child>div:first-child{min-width:0;flex:0 0 auto;}
+  #weatherCard>div:first-child>div:last-child{flex:1 1 auto;min-width:0;display:flex;align-items:center;gap:6px;justify-content:flex-end;}
   #wxBadge{width:50px;height:50px;min-width:50px;font-size:13px!important;}
-  #wxTemp{font-size:22px!important;}
-  #wxCity{width:84px;padding:6px 8px;font-size:13px;}
-  #wxRefresh{padding:6px 10px;font-size:13px;}
+  #wxTemp{font-size:20px!important;}
+  #wxCity{width:auto;flex:1 1 auto;min-width:60px;padding:6px 8px;font-size:13px;}
+  #wxRefresh{flex:0 0 auto;padding:6px 10px;font-size:13px;}
   #weatherCard .wx-date{margin-left:0;padding-left:10px;}
   #weatherCard .wx-date-d{font-size:12px;}
   #weatherCard .wx-date-l{font-size:13px;}
@@ -1736,12 +1737,12 @@ function wxTipShow(e,i){
   var wd=WX_DESC[o.c]||'';
   tip.innerHTML='<b>'+hh+'点</b> '+wd+' '+Math.round(o.v)+'°';
   tip.style.display='block';
-  var host=document.getElementById('wxHourly'); if(!host)return;
-  var r=host.getBoundingClientRect();
-  var x=e.clientX-r.left, y=e.clientY-r.top;
-  var tw=tip.offsetWidth||90;
-  tip.style.left=Math.max(0,Math.min(x+12,r.width-tw-4))+'px';
-  tip.style.top=(y-36)+'px';
+  var tw=tip.offsetWidth||120, th=tip.offsetHeight||28;
+  var left=e.clientX+14, top=e.clientY+14;
+  if(left+tw>window.innerWidth-8) left=e.clientX-tw-14;
+  if(top+th>window.innerHeight-8) top=e.clientY-th-14;
+  if(left<8)left=8; if(top<8)top=8;
+  tip.style.left=left+'px'; tip.style.top=top+'px';
 }
 function wxTipHide(){var t=document.getElementById('wxTip');if(t)t.style.display='none';}
 function renderWeather(){
@@ -1774,7 +1775,7 @@ function renderWeather(){
         '<polyline fill="none" stroke="#5b9bf3" stroke-width="2" vector-effect="non-scaling-stroke" points="'+pts+'"></polyline>'+
         hot+
       '</svg>';
-      hb.innerHTML='<div id="wxTip" style="position:absolute;display:none;background:#1f2937;color:#fff;font-size:11px;padding:4px 8px;border-radius:6px;pointer-events:none;white-space:nowrap;z-index:5;"></div>'+
+      hb.innerHTML='<div id="wxTip" style="position:fixed;display:none;background:#1f2937;color:#fff;font-size:11px;padding:4px 8px;border-radius:6px;pointer-events:none;white-space:nowrap;z-index:9999;"></div>'+
         '<div style="font-size:11px;color:var(--muted);margin-bottom:2px;">今日逐小时 '+Math.round(mn)+'° ~ '+Math.round(mx)+'°</div>'+
         '<div style="width:100%;">'+svg+
         '<div style="display:flex;justify-content:space-between;font-size:11px;color:var(--muted);margin-top:2px;"><span>0点</span><span>6点</span><span>12点</span><span>18点</span><span>23点</span></div>'+
@@ -2561,7 +2562,7 @@ function switchTab(name){
 document.querySelectorAll('.sidebar button.nav').forEach(function(b){if(!b.dataset.tab)return;b.onclick=function(){switchTab(b.dataset.tab);};});
 function renderAll(){renderOverview();renderTasks();renderFit();renderFun();renderFin();renderRest();renderGoal();renderFakao();renderEng();renderFakaoCheckin();renderCalendar();renderWxDate();}
 /* 版本号：每次发布改动后在此 +0.1，便于核对 Chrome 是否为最新版 */
-var APP_VER='1.71';
+var APP_VER='1.72';
 var _av=document.getElementById('appVer');if(_av)_av.textContent='v'+APP_VER;
 /* 清理已弃用的习惯打卡旧数据（v1.28 起不再使用，仅清孤立 key，不影响任何功能） */
 try{localStorage.removeItem('wb_hab_habits');localStorage.removeItem('wb_hab_seeded');}catch(e){}
