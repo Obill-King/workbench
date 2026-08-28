@@ -65,7 +65,7 @@ section.panel.active{display:block;animation:fade .2s ease;}
    当天边框粗细也保持 1px 与普通格子相同 → 内部可用宽度完全一致，不可能换行或错位。 */
 .cal-cell{position:relative;border:1px solid var(--line);border-radius:8px;padding:4px 2px;min-height:42px;text-align:center;background:#fff;}
 .cal-cell .cd{font-size:13px;font-weight:600;line-height:1.1;color:var(--text);}
-.cal-cell .cl{font-size:10px;line-height:1.2;margin-top:2px;color:var(--muted);}
+.cal-cell .cl{font-size:10px;line-height:1.2;margin-top:2px;color:var(--muted);white-space:nowrap;}
 .cal-cell.out{background:transparent;border-color:transparent;color:var(--muted);}
 .cal-cell.out .cd{color:var(--muted);}
 .cal-cell.fest .cl{color:#d97706;font-weight:600;}
@@ -2586,7 +2586,7 @@ function switchTab(name){
 document.querySelectorAll('.sidebar button.nav').forEach(function(b){if(!b.dataset.tab)return;b.onclick=function(){switchTab(b.dataset.tab);};});
 function renderAll(){renderOverview();renderTasks();renderFit();renderFun();renderFin();renderRest();renderGoal();renderFakao();renderEng();renderFakaoCheckin();renderCalendar();renderWxDate();}
 /* 版本号：每次发布改动后在此 +0.1，便于核对 Chrome 是否为最新版 */
-var APP_VER='1.79';
+var APP_VER='1.80';
 var _av=document.getElementById('appVer');if(_av)_av.textContent='v'+APP_VER;
 /* 清理已弃用的习惯打卡旧数据（v1.28 起不再使用，仅清孤立 key，不影响任何功能） */
 try{localStorage.removeItem('wb_hab_habits');localStorage.removeItem('wb_hab_seeded');}catch(e){}
