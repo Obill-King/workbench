@@ -979,28 +979,52 @@ function syncApply(o){
   persist();renderAll();return true;
 }
 function syncSetStatus(m,err){var el=document.getElementById('syncStatus');if(el){el.textContent=m;el.style.color=err?'var(--danger)':'var(--muted)';}}
+/* 云同步错误：把笼统的报错翻成能照着做的排查建议 */
+function syncErrMsg(e,act){
+  var m=(e&&e.message)||String(e||'');
+  if(/network request failed|failed to fetch|load failed|networkerror|超时|timeout/i.test(m))
+    return act+'失败：连不上 GitHub（网络不通，不是 Token 问题）。试试：① 换 WiFi／关掉移动数据再试 ② 关掉代理或 VPN ③ GitHub API 在国内时好时坏，过会儿再来';
+  if(/^HTTP 401/.test(m))return act+'失败：Token 无效或已过期，重新生成一个（需勾 gist 权限）';
+  if(/^HTTP 403/.test(m))return act+'失败：Token 没勾 gist 权限，或触发了限流';
+  if(/^HTTP 404/.test(m))return act+'失败：Gist 不存在，检查 Gist ID 有没有填错';
+  return act+'失败：'+m;
+}
+/* 云同步请求：网络失败自动重试 2 次（GitHub API 在国内/手机网络常抖） */
+function syncRequest(url,opts,act,onOk,retry){
+  retry=(retry===undefined)?2:retry;
+  fetch(url,opts).then(function(r){
+    if(!r.ok)throw new Error('HTTP '+r.status);
+    return r.json();
+  }).then(function(d){
+    onOk(d);_syncBusy=false;
+  }).catch(function(e){
+    var m=(e&&e.message)||String(e||'');
+    var isNet=/network request failed|failed to fetch|load failed|networkerror|超时|timeout/i.test(m);
+    if(isNet&&retry>0){
+      syncSetStatus(act+'连不上 GitHub，1.5 秒后重试（还剩 '+retry+' 次）…',true);
+      setTimeout(function(){syncRequest(url,opts,act,onOk,retry-1);},1500);
+      return;
+    }
+    syncSetStatus(syncErrMsg(e,act),true);
+    _syncBusy=false;_syncReady=true;
+  });
+}
 function syncPush(){
   if(_syncBusy)return;
   if(!SYNC.token||!SYNC.gist){syncSetStatus('请先填 Token 并点「连接 / 创建」',true);return;}
   var payload=JSON.stringify(syncSnapshot());
   _syncBusy=true;syncSetStatus('上传中…');
-  fetch('https://api.github.com/gists/'+SYNC.gist,{method:'PATCH',
+  syncRequest('https://api.github.com/gists/'+SYNC.gist,{method:'PATCH',
     headers:{'Authorization':'Bearer '+SYNC.token,'Accept':'application/vnd.github+json','Content-Type':'application/json'},
-    body:JSON.stringify({description:'全能生活台云同步',public:false,files:{[GIST_FILE]:{content:payload}}})})
-    .then(function(r){if(!r.ok)throw new Error('HTTP '+r.status);return r.json();})
-    .then(function(){syncSetStatus('已上传到云端 · '+new Date().toLocaleTimeString());})
-    .catch(function(e){syncSetStatus('上传失败：'+(e&&e.message||e),true);})
-    .finally(function(){_syncBusy=false;});
+    body:JSON.stringify({description:'全能生活台云同步',public:false,files:{[GIST_FILE]:{content:payload}}})},
+    '上传',function(){syncSetStatus('已上传到云端 · '+new Date().toLocaleTimeString());});
 }
 function syncPull(){
   if(_syncBusy)return;
   if(!SYNC.token||!SYNC.gist){_syncReady=true;return;}
   _syncBusy=true;syncSetStatus('下载中…');
-  fetch('https://api.github.com/gists/'+SYNC.gist,{headers:{'Authorization':'Bearer '+SYNC.token,'Accept':'application/vnd.github+json'}})
-    .then(function(r){if(!r.ok)throw new Error('HTTP '+r.status);return r.json();})
-    .then(function(d){var f=d&&d.files&&d.files[GIST_FILE];var c=f&&f.content;if(!c)throw new Error('云端暂无数据');if(syncApply(JSON.parse(c)))syncSetStatus('已从云端同步到本机 · '+new Date().toLocaleTimeString());})
-    .catch(function(e){syncSetStatus('下载失败：'+(e&&e.message||e),true);})
-    .finally(function(){_syncBusy=false;_syncReady=true;});
+  syncRequest('https://api.github.com/gists/'+SYNC.gist,{headers:{'Authorization':'Bearer '+SYNC.token,'Accept':'application/vnd.github+json'}},
+    '下载',function(d){var f=d&&d.files&&d.files[GIST_FILE];var c=f&&f.content;if(!c){syncSetStatus('云端暂无数据',true);return;}if(syncApply(JSON.parse(c)))syncSetStatus('已从云端同步到本机 · '+new Date().toLocaleTimeString());});
 }
 function syncShowCode(){
   if(!SYNC.gist)return;
@@ -1023,7 +1047,7 @@ function syncCreate(){
       body:JSON.stringify({description:'全能生活台云同步',public:false,files:{[GIST_FILE]:{content:JSON.stringify(syncSnapshot())}}})})
       .then(function(r){if(!r.ok)throw new Error('HTTP '+r.status);return r.json();})
       .then(function(d){SYNC.token=token;SYNC.gist=d.id;sv('wb_sync',SYNC);syncSetStatus('已创建并连接 · Gist '+SYNC.gist);syncRefreshUI();syncShowCode();})
-      .catch(function(e){syncSetStatus('创建失败：'+(e&&e.message||e),true);});
+      .catch(function(e){syncSetStatus(syncErrMsg(e,'创建'),true);});
   }else{
     SYNC.token=token;sv('wb_sync',SYNC);syncSetStatus('已更新 Token · Gist '+SYNC.gist);syncRefreshUI();syncShowCode();
   }
@@ -2617,7 +2641,7 @@ function switchTab(name){
 document.querySelectorAll('.sidebar button.nav').forEach(function(b){if(!b.dataset.tab)return;b.onclick=function(){switchTab(b.dataset.tab);};});
 function renderAll(){renderOverview();renderTasks();renderFit();renderFun();renderFin();renderRest();renderGoal();renderFakao();renderEng();renderFakaoCheckin();renderCalendar();renderWxDate();}
 /* 版本号：每次发布改动后在此 +0.1，便于核对 Chrome 是否为最新版 */
-var APP_VER='1.84';
+var APP_VER='1.85';
 var _av=document.getElementById('appVer');if(_av)_av.textContent='v'+APP_VER;
 /* 清理已弃用的习惯打卡旧数据（v1.28 起不再使用，仅清孤立 key，不影响任何功能） */
 try{localStorage.removeItem('wb_hab_habits');localStorage.removeItem('wb_hab_seeded');}catch(e){}
