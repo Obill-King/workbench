@@ -124,13 +124,19 @@ input[type=date],input[type=datetime-local]{-webkit-appearance:none;appearance:n
 .fit-grid .warm-field>label:not(.switch){margin-bottom:6px;}
 /* 分栏总览 */
 .ov-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:24px;}
-.ov-card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;box-shadow:var(--shadow);cursor:pointer;transition:.15s;}
-.ov-card:hover{border-color:var(--primary);transform:translateY(-2px);}
-.ov-card .t{font-size:13px;color:var(--muted);display:flex;align-items:center;gap:6px;}
-.ov-card .t svg{width:16px;height:16px;color:var(--primary);}
-.ov-card .v{font-size:26px;font-weight:800;margin-top:6px;}
-.ov-card .s{font-size:12px;color:var(--muted);margin-top:2px;}
+.ov-card{position:relative;overflow:hidden;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px 16px 15px;box-shadow:var(--shadow);cursor:pointer;transition:transform .18s,border-color .18s,box-shadow .18s;}
+.ov-card::before{content:'';position:absolute;left:0;top:0;right:0;height:3px;background:var(--accent,var(--primary));opacity:0;transition:opacity .18s;z-index:2;}
+.ov-card::after{content:'';position:absolute;right:-26px;top:-26px;width:92px;height:92px;border-radius:50%;background:var(--accent,var(--primary));opacity:.07;pointer-events:none;}
+.ov-card:hover{transform:translateY(-3px);border-color:var(--accent,var(--primary));box-shadow:0 10px 22px rgba(31,41,55,.10);}
+.ov-card:hover::before{opacity:1;}
+.ov-card .hd{position:relative;z-index:1;display:flex;align-items:center;justify-content:space-between;gap:10px;}
+.ov-card .ico{width:34px;height:34px;border-radius:10px;flex:0 0 auto;display:flex;align-items:center;justify-content:center;background:var(--accent-soft,var(--primary-soft));color:var(--accent,var(--primary));transition:transform .18s;}
+.ov-card:hover .ico{transform:scale(1.07);}
+.ov-card .ico svg{width:18px;height:18px;}
+.ov-card .v{position:relative;z-index:1;font-size:25px;font-weight:800;line-height:1.15;letter-spacing:-.5px;color:var(--accent,var(--primary));font-variant-numeric:tabular-nums;}
 .ov-card .v.ok{color:var(--ok);} .ov-card .v.danger{color:var(--danger);}
+.ov-card .nm{position:relative;z-index:1;font-size:13px;font-weight:600;color:var(--text);margin-top:11px;}
+.ov-card .s{position:relative;z-index:1;font-size:12px;color:var(--muted);margin-top:3px;}
 .today-panel{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px;box-shadow:var(--shadow);margin-bottom:24px;}
 .today-panel h2{font-size:15px;display:flex;align-items:center;gap:8px;margin:0 0 12px;}
 .today-panel h2 svg{width:18px;height:18px;color:var(--primary);margin-right:6px;}
@@ -1062,6 +1068,17 @@ function duesToday(){
   r.sort(function(a,b){return (a.due<b.due?-1:1);});
   return r;
 }
+/* 总览 8 卡片：主题色 + 内联 SVG 图标（零外链，不用 emoji） */
+var OV_META={
+  tasks:{accent:'#3b82f6',soft:'#e0edff',icon:'<rect x="3" y="4.5" width="18" height="17" rx="2.5"/><path d="M16 2.5v4M8 2.5v4M3 10h18"/><path d="M9 15.5l2 2 4-4"/>'},
+  fit:{accent:'#10b981',soft:'#d7f5e8',icon:'<path d="M22 12h-4l-3 8L9 4l-3 8H2"/>'},
+  fun:{accent:'#f59e0b',soft:'#fdf0d8',icon:'<path d="M12 2.5l2.3 7.1h7.4l-6 4.3 2.3 7.1-6-4.4-6 4.4 2.3-7.1-6-4.3h7.4z"/>'},
+  fin:{accent:'#ef4444',soft:'#fee2e2',icon:'<path d="M20 12V8H6a2 2 0 0 1 0-4h12v4"/><path d="M4 6v12a2 2 0 0 0 2 2h14v-4"/><path d="M18 12a2 2 0 0 0 0 4h4v-4z"/>'},
+  rest:{accent:'#06b6d4',soft:'#d3f4fa',icon:'<path d="M18 8.5h1a3.5 3.5 0 0 1 0 7h-1"/><path d="M2.5 8.5h15.5v8a4 4 0 0 1-4 4H6.5a4 4 0 0 1-4-4z"/><path d="M6 2v2.5M10 2v2.5M14 2v2.5"/>'},
+  goal:{accent:'#8b5cf6',soft:'#ece3fd',icon:'<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.6"/>'},
+  bar:{accent:'#6366f1',soft:'#e2e5fd',icon:'<path d="M12 3v18"/><path d="M8 21h8"/><path d="M3.5 7h17"/><path d="M6.5 7L4 12h5z"/><path d="M17.5 7L15 12h5z"/>'},
+  eng:{accent:'#ec4899',soft:'#fde3ef',icon:'<path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2.5H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2.5z"/>'}
+};
 function renderOverview(){
   var t=todayStr();
   var remaining=S.tasks.filter(function(x){return !x.done;}).length;
@@ -1082,7 +1099,11 @@ function renderOverview(){
     {tab:'eng',name:'英语学习',v:'English',s:'今日专注 '+engFocus+'/30 分',cls:''}
   ];
   document.getElementById('ovGrid').innerHTML=cards.map(function(c){
-    return '<div class="ov-card" data-go="'+c.tab+'"><div class="t">'+c.name+'</div><div class="v '+(c.cls||'')+'">'+c.v+'</div><div class="s">'+c.s+'</div></div>';
+    var m=OV_META[c.tab]||{accent:'#5b9bf3',soft:'#eef5ff',icon:'<circle cx="12" cy="12" r="9"/>'};
+    return '<div class="ov-card" data-go="'+c.tab+'" style="--accent:'+m.accent+';--accent-soft:'+m.soft+'">'
+      +'<div class="hd"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">'+m.icon+'</svg></span>'
+      +'<span class="v '+(c.cls||'')+'">'+c.v+'</span></div>'
+      +'<div class="nm">'+c.name+'</div><div class="s">'+c.s+'</div></div>';
   }).join('');
   var ds=duesToday();
   if(!ds.length){document.getElementById('ovTodo').innerHTML='<div class="empty">今天没有待办，也没有逾期，去享受生活吧</div>';}
@@ -2591,7 +2612,7 @@ function switchTab(name){
 document.querySelectorAll('.sidebar button.nav').forEach(function(b){if(!b.dataset.tab)return;b.onclick=function(){switchTab(b.dataset.tab);};});
 function renderAll(){renderOverview();renderTasks();renderFit();renderFun();renderFin();renderRest();renderGoal();renderFakao();renderEng();renderFakaoCheckin();renderCalendar();renderWxDate();}
 /* 版本号：每次发布改动后在此 +0.1，便于核对 Chrome 是否为最新版 */
-var APP_VER='1.82';
+var APP_VER='1.83';
 var _av=document.getElementById('appVer');if(_av)_av.textContent='v'+APP_VER;
 /* 清理已弃用的习惯打卡旧数据（v1.28 起不再使用，仅清孤立 key，不影响任何功能） */
 try{localStorage.removeItem('wb_hab_habits');localStorage.removeItem('wb_hab_seeded');}catch(e){}
