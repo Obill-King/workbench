@@ -124,19 +124,19 @@ input[type=date],input[type=datetime-local]{-webkit-appearance:none;appearance:n
 .fit-grid .warm-field>label:not(.switch){margin-bottom:6px;}
 /* 分栏总览 */
 .ov-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:24px;}
-.ov-card{position:relative;overflow:hidden;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px 16px 15px;box-shadow:var(--shadow);cursor:pointer;transition:transform .18s,border-color .18s,box-shadow .18s;}
+.ov-card{position:relative;overflow:hidden;display:flex;align-items:center;gap:14px;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px 18px;box-shadow:var(--shadow);cursor:pointer;transition:transform .18s,border-color .18s,box-shadow .18s;}
 .ov-card::before{content:'';position:absolute;left:0;top:0;right:0;height:3px;background:var(--accent,var(--primary));opacity:0;transition:opacity .18s;z-index:2;}
 .ov-card::after{content:'';position:absolute;right:-26px;top:-26px;width:92px;height:92px;border-radius:50%;background:var(--accent,var(--primary));opacity:.07;pointer-events:none;}
 .ov-card:hover{transform:translateY(-3px);border-color:var(--accent,var(--primary));box-shadow:0 10px 22px rgba(31,41,55,.10);}
 .ov-card:hover::before{opacity:1;}
-.ov-card .hd{position:relative;z-index:1;display:flex;align-items:center;justify-content:space-between;gap:10px;}
-.ov-card .ico{width:34px;height:34px;border-radius:10px;flex:0 0 auto;display:flex;align-items:center;justify-content:center;background:var(--accent-soft,var(--primary-soft));color:var(--accent,var(--primary));transition:transform .18s;}
+.ov-card .ico{width:48px;height:48px;border-radius:13px;flex:0 0 auto;display:flex;align-items:center;justify-content:center;background:var(--accent-soft,var(--primary-soft));color:var(--accent,var(--primary));transition:transform .18s;}
 .ov-card:hover .ico{transform:scale(1.07);}
-.ov-card .ico svg{width:18px;height:18px;}
-.ov-card .v{position:relative;z-index:1;font-size:25px;font-weight:800;line-height:1.15;letter-spacing:-.5px;color:var(--accent,var(--primary));font-variant-numeric:tabular-nums;}
+.ov-card .ico svg{width:26px;height:26px;}
+.ov-card .v{position:absolute;top:11px;right:15px;z-index:3;font-size:21px;font-weight:800;line-height:1.1;letter-spacing:-.5px;color:var(--accent,var(--primary));font-variant-numeric:tabular-nums;}
 .ov-card .v.ok{color:var(--ok);} .ov-card .v.danger{color:var(--danger);}
-.ov-card .nm{position:relative;z-index:1;font-size:13px;font-weight:600;color:var(--text);margin-top:11px;}
-.ov-card .s{position:relative;z-index:1;font-size:12px;color:var(--muted);margin-top:3px;}
+.ov-card .body{flex:1 1 auto;min-width:0;text-align:center;padding-right:62px;}
+.ov-card .nm{font-size:13.5px;font-weight:600;color:var(--text);line-height:1.25;}
+.ov-card .s{font-size:12px;color:var(--muted);margin-top:3px;line-height:1.25;}
 .today-panel{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px;box-shadow:var(--shadow);margin-bottom:24px;}
 .today-panel h2{font-size:15px;display:flex;align-items:center;gap:8px;margin:0 0 12px;}
 .today-panel h2 svg{width:18px;height:18px;color:var(--primary);margin-right:6px;}
@@ -1154,9 +1154,9 @@ function renderOverview(){
   document.getElementById('ovGrid').innerHTML=cards.map(function(c){
     var m=OV_META[c.tab]||{accent:'#5b9bf3',soft:'#eef5ff',icon:'<circle cx="12" cy="12" r="9"/>'};
     return '<div class="ov-card" data-go="'+c.tab+'" style="--accent:'+m.accent+';--accent-soft:'+m.soft+'">'
-      +'<div class="hd"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">'+m.icon+'</svg></span>'
-      +'<span class="v '+(c.cls||'')+'">'+c.v+'</span></div>'
-      +'<div class="nm">'+c.name+'</div><div class="s">'+c.s+'</div></div>';
+      +'<span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">'+m.icon+'</svg></span>'
+      +'<span class="v '+(c.cls||'')+'">'+c.v+'</span>'
+      +'<div class="body"><div class="nm">'+c.name+'</div><div class="s">'+c.s+'</div></div></div>';
   }).join('');
   var ds=duesToday();
   if(!ds.length){document.getElementById('ovTodo').innerHTML='<div class="empty">今天没有待办，也没有逾期，去享受生活吧</div>';}
@@ -2665,7 +2665,7 @@ function switchTab(name){
 document.querySelectorAll('.sidebar button.nav').forEach(function(b){if(!b.dataset.tab)return;b.onclick=function(){switchTab(b.dataset.tab);};});
 function renderAll(){renderOverview();renderTasks();renderFit();renderFun();renderFin();renderRest();renderGoal();renderFakao();renderEng();renderFakaoCheckin();renderCalendar();renderWxDate();}
 /* 版本号：每次发布改动后在此 +0.1，便于核对 Chrome 是否为最新版 */
-var APP_VER='1.87';
+var APP_VER='1.88';
 var _av=document.getElementById('appVer');if(_av)_av.textContent='v'+APP_VER;
 /* 清理已弃用的习惯打卡旧数据（v1.28 起不再使用，仅清孤立 key，不影响任何功能） */
 try{localStorage.removeItem('wb_hab_habits');localStorage.removeItem('wb_hab_seeded');}catch(e){}
