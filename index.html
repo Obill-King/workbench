@@ -162,9 +162,14 @@ input[type=date],input[type=datetime-local]{-webkit-appearance:none;appearance:n
 .empty{color:var(--muted);font-size:13px;padding:14px 0;text-align:center;}
 .rec-item{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--line);}
 .rec-item:last-child{border-bottom:none;}
-.rec-item .rtag{font-size:11px;padding:2px 8px;border-radius:99px;flex:0 0 auto;margin-top:1px;font-weight:600;}
+.rec-item .rtag{font-size:11px;padding:2px 8px;border-radius:99px;flex:0 0 auto;margin-top:1px;font-weight:600;min-width:46px;display:inline-flex;align-items:center;justify-content:center;background:var(--bg);color:var(--muted);}
 .rec-item .rtag.book{background:#eaf2ff;color:#2f6fed;}
+.rec-item .rtag.novel{background:#f1e9ff;color:#7048e8;}
 .rec-item .rtag.movie{background:#fdeef3;color:#d6336c;}
+.rec-item .rtag.drama{background:#fff0e6;color:#e8590c;}
+.rec-item .rtag.anime{background:#e3f7fb;color:#0c8599;}
+.rec-item .rtag.game{background:#eceaff;color:#5f3dc4;}
+.rec-item .rtag.eng{background:#e6fcf5;color:#0ca678;}
 .rec-item .rtag.tip{background:#e9f8ef;color:#1f9d57;}
 .rec-item .rbody{flex:1;min-width:0;}
 .rec-item .rtitle{font-size:14px;font-weight:600;}
@@ -2612,7 +2617,7 @@ function switchTab(name){
 document.querySelectorAll('.sidebar button.nav').forEach(function(b){if(!b.dataset.tab)return;b.onclick=function(){switchTab(b.dataset.tab);};});
 function renderAll(){renderOverview();renderTasks();renderFit();renderFun();renderFin();renderRest();renderGoal();renderFakao();renderEng();renderFakaoCheckin();renderCalendar();renderWxDate();}
 /* 版本号：每次发布改动后在此 +0.1，便于核对 Chrome 是否为最新版 */
-var APP_VER='1.83';
+var APP_VER='1.84';
 var _av=document.getElementById('appVer');if(_av)_av.textContent='v'+APP_VER;
 /* 清理已弃用的习惯打卡旧数据（v1.28 起不再使用，仅清孤立 key，不影响任何功能） */
 try{localStorage.removeItem('wb_hab_habits');localStorage.removeItem('wb_hab_seeded');}catch(e){}
