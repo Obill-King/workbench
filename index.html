@@ -958,6 +958,7 @@ function persist(){
   sv('wb_fin_spend',S.spend);sv('wb_fin_income',S.income);sv('wb_fin_meta',S.fmeta);sv('wb_fin_seeded',S.seededF);sv('wb_fin_txns',S.txns);
   sv('wb_goal_goals',S.goals);sv('wb_goal_reviews',S.reviews);sv('wb_goal_seeded',S.seededG);
   sv('wb_bg',S.bg);sv('wb_fakao_link',S.fakaoLink);sv('wb_fakao_checked',S.fakaoChecked);sv('wb_eng_data',S.eng);sv('wb_weather',S.weather);sv('wb_recs',S.recs);sv('wb_rec_seen',S.recSeen);sv('wb_rec_avoid',S.recAvoid);
+  syncTouch();
   syncPersistHook();
 }
 
@@ -965,12 +966,17 @@ function persist(){
 var SYNC=ls('wb_sync',{token:'',gist:'',auto:false});
 var _syncReady=false,_syncBusy=false,_syncTimer=null;
 var GIST_FILE='allday-sync.json';
+/* 同步时间戳：本地数据最后修改时间。用于阻止"云端旧数据覆盖本地新数据" */
+function syncLocalTs(){return +(ls('wb_sync_ts',0));}
+function syncTouch(t){sv('wb_sync_ts',t||Date.now());}
 function syncSnapshot(){
-  return {tasks:S.tasks,fit:S.fit,bar:S.bar,meta:S.meta,fun:S.fun,seededA:S.seededA,
+  var o={tasks:S.tasks,fit:S.fit,bar:S.bar,meta:S.meta,fun:S.fun,seededA:S.seededA,
     spend:S.spend,income:S.income,fmeta:S.fmeta,seededF:S.seededF,txns:S.txns,
     goals:S.goals,reviews:S.reviews,seededG:S.seededG,
     fakaoLink:S.fakaoLink,fakaoChecked:S.fakaoChecked,eng:S.eng,weather:S.weather,
     recs:S.recs,recSeen:S.recSeen,recAvoid:S.recAvoid};
+  o.__ts=syncLocalTs()||Date.now();
+  return o;
 }
 var SYNC_KEYS=['tasks','fit','bar','meta','fun','seededA','spend','income','fmeta','seededF','txns','goals','reviews','seededG','fakaoLink','fakaoChecked','eng','weather','recs','recSeen','recAvoid'];
 function syncApply(o){
@@ -996,7 +1002,7 @@ function syncRequest(url,opts,act,onOk,retry){
     if(!r.ok)throw new Error('HTTP '+r.status);
     return r.json();
   }).then(function(d){
-    onOk(d);_syncBusy=false;
+    onOk(d);_syncBusy=false;_syncReady=true;
   }).catch(function(e){
     var m=(e&&e.message)||String(e||'');
     var isNet=/network request failed|failed to fetch|load failed|networkerror|超时|timeout/i.test(m);
@@ -1024,7 +1030,20 @@ function syncPull(){
   if(!SYNC.token||!SYNC.gist){_syncReady=true;return;}
   _syncBusy=true;syncSetStatus('下载中…');
   syncRequest('https://api.github.com/gists/'+SYNC.gist,{headers:{'Authorization':'Bearer '+SYNC.token,'Accept':'application/vnd.github+json'}},
-    '下载',function(d){var f=d&&d.files&&d.files[GIST_FILE];var c=f&&f.content;if(!c){syncSetStatus('云端暂无数据',true);return;}if(syncApply(JSON.parse(c)))syncSetStatus('已从云端同步到本机 · '+new Date().toLocaleTimeString());});
+    '下载',function(d){
+      var f=d&&d.files&&d.files[GIST_FILE];var c=f&&f.content;
+      if(!c){syncSetStatus('云端暂无数据',true);return;}
+      var cloud=JSON.parse(c);
+      var cloudTs=+(cloud&&cloud.__ts)||0, localTs=syncLocalTs();
+      /* 云端不比本地新 → 绝不用云端覆盖本地（这正是"完成的待办被回滚"的成因） */
+      if(cloudTs&&cloudTs<=localTs){
+        syncSetStatus('本机数据较新（'+(new Date(localTs)).toLocaleString()+'），已保留本机内容未覆盖');
+        if(cloudTs<localTs)syncPush();
+        return;
+      }
+      if(!cloudTs&&localTs){syncSetStatus('云端数据无时间戳，已保留本机内容并上传');syncPush();return;}
+      if(syncApply(cloud)){syncTouch(cloudTs||Date.now());syncSetStatus('已从云端同步到本机 · '+new Date().toLocaleTimeString());}
+    });
 }
 function syncShowCode(){
   if(!SYNC.gist)return;
@@ -2641,7 +2660,7 @@ function switchTab(name){
 document.querySelectorAll('.sidebar button.nav').forEach(function(b){if(!b.dataset.tab)return;b.onclick=function(){switchTab(b.dataset.tab);};});
 function renderAll(){renderOverview();renderTasks();renderFit();renderFun();renderFin();renderRest();renderGoal();renderFakao();renderEng();renderFakaoCheckin();renderCalendar();renderWxDate();}
 /* 版本号：每次发布改动后在此 +0.1，便于核对 Chrome 是否为最新版 */
-var APP_VER='1.85';
+var APP_VER='1.86';
 var _av=document.getElementById('appVer');if(_av)_av.textContent='v'+APP_VER;
 /* 清理已弃用的习惯打卡旧数据（v1.28 起不再使用，仅清孤立 key，不影响任何功能） */
 try{localStorage.removeItem('wb_hab_habits');localStorage.removeItem('wb_hab_seeded');}catch(e){}
