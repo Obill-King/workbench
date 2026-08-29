@@ -131,9 +131,9 @@ input[type=date],input[type=datetime-local]{-webkit-appearance:none;appearance:n
 .ov-card .v{font-size:26px;font-weight:800;margin-top:6px;}
 .ov-card .s{font-size:12px;color:var(--muted);margin-top:2px;}
 .ov-card .v.ok{color:var(--ok);} .ov-card .v.danger{color:var(--danger);}
-.today{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px;box-shadow:var(--shadow);margin-bottom:24px;}
-.today h2{font-size:15px;display:flex;align-items:center;gap:8px;margin:0 0 12px;}
-.today h2 svg{width:18px;height:18px;color:var(--primary);margin-right:6px;}
+.today-panel{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px;box-shadow:var(--shadow);margin-bottom:24px;}
+.today-panel h2{font-size:15px;display:flex;align-items:center;gap:8px;margin:0 0 12px;}
+.today-panel h2 svg{width:18px;height:18px;color:var(--primary);margin-right:6px;}
 .todo{display:grid;grid-template-columns:20px minmax(0,1fr) 56px 104px 64px 56px 30px;align-items:center;gap:12px;padding:8px 14px;border-bottom:1px solid var(--line);}
 .todo:last-child{border-bottom:none;}
 .todo .ck{width:20px;height:20px;border-radius:6px;border:2px solid var(--line);cursor:pointer;display:flex;align-items:center;justify-content:center;}
@@ -507,11 +507,11 @@ svg.chart{width:100%;height:auto;display:block;}
         </div>
       </div>
       <div class="ov-grid" id="ovGrid"></div>
-      <div class="today">
+      <div class="today-panel">
         <h2><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>今日待办 / 逾期</h2>
         <div id="ovTodo"></div>
       </div>
-      <div class="today">
+      <div class="today-panel">
         <h2 style="display:flex;align-items:center;justify-content:space-between;"><span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l2.4 7.4H22l-6 4.4 2.3 7.2L12 16.8 5.7 21l2.3-7.2-6-4.4h7.6z"/></svg>每周推荐 <span id="recWeek" style="font-size:12px;color:var(--muted);font-weight:400;"></span></span><button class="btn" id="recManage" style="font-size:12px;padding:5px 10px;">管理</button></h2>
         <div id="recList"></div>
       </div>
@@ -2586,7 +2586,7 @@ function switchTab(name){
 document.querySelectorAll('.sidebar button.nav').forEach(function(b){if(!b.dataset.tab)return;b.onclick=function(){switchTab(b.dataset.tab);};});
 function renderAll(){renderOverview();renderTasks();renderFit();renderFun();renderFin();renderRest();renderGoal();renderFakao();renderEng();renderFakaoCheckin();renderCalendar();renderWxDate();}
 /* 版本号：每次发布改动后在此 +0.1，便于核对 Chrome 是否为最新版 */
-var APP_VER='1.80';
+var APP_VER='1.81';
 var _av=document.getElementById('appVer');if(_av)_av.textContent='v'+APP_VER;
 /* 清理已弃用的习惯打卡旧数据（v1.28 起不再使用，仅清孤立 key，不影响任何功能） */
 try{localStorage.removeItem('wb_hab_habits');localStorage.removeItem('wb_hab_seeded');}catch(e){}
