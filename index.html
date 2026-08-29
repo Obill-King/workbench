@@ -969,6 +969,10 @@ var GIST_FILE='allday-sync.json';
 /* 同步时间戳：本地数据最后修改时间。用于阻止"云端旧数据覆盖本地新数据" */
 function syncLocalTs(){return +(ls('wb_sync_ts',0));}
 function syncTouch(t){sv('wb_sync_ts',t||Date.now());}
+/* 是否曾经成功同步过：首次连接时不比较时间戳，无条件采用云端
+   （否则本机 seed/初始化会把本地时间戳顶到"现在"，导致永远拒绝拉取） */
+function syncEver(){return !!ls('wb_sync_ever',false);}
+function syncMarkEver(){sv('wb_sync_ever',1);}
 function syncSnapshot(){
   var o={tasks:S.tasks,fit:S.fit,bar:S.bar,meta:S.meta,fun:S.fun,seededA:S.seededA,
     spend:S.spend,income:S.income,fmeta:S.fmeta,seededF:S.seededF,txns:S.txns,
@@ -1023,26 +1027,27 @@ function syncPush(){
   syncRequest('https://api.github.com/gists/'+SYNC.gist,{method:'PATCH',
     headers:{'Authorization':'Bearer '+SYNC.token,'Accept':'application/vnd.github+json','Content-Type':'application/json'},
     body:JSON.stringify({description:'全能生活台云同步',public:false,files:{[GIST_FILE]:{content:payload}}})},
-    '上传',function(){syncSetStatus('已上传到云端 · '+new Date().toLocaleTimeString());});
+    '上传',function(){syncMarkEver();syncSetStatus('已上传到云端 · '+new Date().toLocaleTimeString());});
 }
-function syncPull(){
+function syncPull(force){
   if(_syncBusy)return;
   if(!SYNC.token||!SYNC.gist){_syncReady=true;return;}
-  _syncBusy=true;syncSetStatus('下载中…');
+  _syncBusy=true;syncSetStatus(force?'强制下载中…':'下载中…');
   syncRequest('https://api.github.com/gists/'+SYNC.gist,{headers:{'Authorization':'Bearer '+SYNC.token,'Accept':'application/vnd.github+json'}},
     '下载',function(d){
       var f=d&&d.files&&d.files[GIST_FILE];var c=f&&f.content;
       if(!c){syncSetStatus('云端暂无数据',true);return;}
       var cloud=JSON.parse(c);
-      var cloudTs=+(cloud&&cloud.__ts)||0, localTs=syncLocalTs();
-      /* 云端不比本地新 → 绝不用云端覆盖本地（这正是"完成的待办被回滚"的成因） */
-      if(cloudTs&&cloudTs<=localTs){
-        syncSetStatus('本机数据较新（'+(new Date(localTs)).toLocaleString()+'），已保留本机内容未覆盖');
+      var cloudTs=+(cloud&&cloud.__ts)||0, localTs=syncLocalTs(), ever=syncEver();
+      /* 云端不比本地新 → 绝不用云端覆盖本地（这正是"完成的待办被回滚"的成因）。
+         首次连接（ever=false）不做此保护，无条件采用云端 */
+      if(!force&&ever&&cloudTs&&cloudTs<=localTs){
+        syncSetStatus('本机数据较新（'+(new Date(localTs)).toLocaleString()+'），已保留本机内容未覆盖。要采用云端请点「云 → 本机」');
         if(cloudTs<localTs)syncPush();
         return;
       }
-      if(!cloudTs&&localTs){syncSetStatus('云端数据无时间戳，已保留本机内容并上传');syncPush();return;}
-      if(syncApply(cloud)){syncTouch(cloudTs||Date.now());syncSetStatus('已从云端同步到本机 · '+new Date().toLocaleTimeString());}
+      if(!force&&ever&&!cloudTs&&localTs){syncSetStatus('云端数据无时间戳，已保留本机内容并上传');syncPush();return;}
+      if(syncApply(cloud)){syncTouch(cloudTs||Date.now());syncMarkEver();syncSetStatus('已从云端同步到本机 · '+new Date().toLocaleTimeString());}
     });
 }
 function syncShowCode(){
@@ -1089,7 +1094,7 @@ if(document.getElementById('syncKey')){
   if(_head)_head.onclick=function(){var b=document.getElementById('syncBody');if(!b)return;if(b.style.display==='none')syncExpand();else syncCollapse();};
   document.getElementById('syncConnect').onclick=function(){syncExpand();syncCreate();};
   document.getElementById('syncPush').onclick=function(){syncExpand();syncPush();};
-  document.getElementById('syncPull').onclick=function(){syncExpand();syncPull();};
+  document.getElementById('syncPull').onclick=function(){syncExpand();syncPull(true);};
   document.getElementById('syncCopy').onclick=function(){var t=document.getElementById('syncCodeText');if(t&&navigator.clipboard){navigator.clipboard.writeText(t.textContent).then(function(){syncSetStatus('Gist ID 已复制，去另一台设备粘到「Gist ID」框即可');});}};
   document.getElementById('syncAuto').onchange=function(){syncExpand();SYNC.auto=this.checked;sv('wb_sync',SYNC);if(SYNC.auto){syncPull();window._syncIv=setInterval(syncPull,300000);syncSetStatus('自动同步已开启（每5分钟+切回前台时拉取）');}else{clearInterval(window._syncIv);syncSetStatus('自动同步已关闭');}};
   syncRefreshUI();if(SYNC.gist)syncShowCode();
@@ -1142,9 +1147,9 @@ function renderOverview(){
     {tab:'fun',name:'娱乐激励',v:points,s:'可用积分',cls:''},
     {tab:'fin',name:'记账理财',v:'<span class="out">-¥'+finSpend.toFixed(0)+'</span>',s:'预算 ¥'+(+S.fmeta.budget||0).toFixed(0),cls:''},
     {tab:'rest',name:'休息放松',v:REST_LIST.length+' 类',s:'随时来翻',cls:''},
-    {tab:'goal',name:'目标复盘',v:goalsActive,s:'English目标',cls:''},
-    {tab:'bar',name:'法考学习',v:'Lawyer',s:'点击打开学习表',cls:''},
-    {tab:'eng',name:'英语学习',v:'English',s:'今日专注 '+engFocus+'/30 分',cls:''}
+    {tab:'goal',name:'目标复盘',v:goalsActive,s:'进行中目标',cls:''},
+    {tab:'bar',name:'法考学习',v:'法律',s:'点击打开学习表',cls:''},
+    {tab:'eng',name:'英语学习',v:'英语',s:'今日专注 '+engFocus+'/30 分',cls:''}
   ];
   document.getElementById('ovGrid').innerHTML=cards.map(function(c){
     var m=OV_META[c.tab]||{accent:'#5b9bf3',soft:'#eef5ff',icon:'<circle cx="12" cy="12" r="9"/>'};
@@ -2660,7 +2665,7 @@ function switchTab(name){
 document.querySelectorAll('.sidebar button.nav').forEach(function(b){if(!b.dataset.tab)return;b.onclick=function(){switchTab(b.dataset.tab);};});
 function renderAll(){renderOverview();renderTasks();renderFit();renderFun();renderFin();renderRest();renderGoal();renderFakao();renderEng();renderFakaoCheckin();renderCalendar();renderWxDate();}
 /* 版本号：每次发布改动后在此 +0.1，便于核对 Chrome 是否为最新版 */
-var APP_VER='1.86';
+var APP_VER='1.87';
 var _av=document.getElementById('appVer');if(_av)_av.textContent='v'+APP_VER;
 /* 清理已弃用的习惯打卡旧数据（v1.28 起不再使用，仅清孤立 key，不影响任何功能） */
 try{localStorage.removeItem('wb_hab_habits');localStorage.removeItem('wb_hab_seeded');}catch(e){}
