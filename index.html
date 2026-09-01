@@ -105,9 +105,18 @@ input[type=date],input[type=datetime-local]{-webkit-appearance:none;appearance:n
 .todo-actions .btn{flex:0 0 auto;height:42px;padding:8px 24px;font-size:14px;}
 /* 记每日花销：金额、备注、添加记录按钮同一行；金额短，备注填充中间 */
 .fin-actions{align-items:flex-end;}
+.fin-actions .field{margin-bottom:0;}
 .fin-actions .fin-amt{flex:0 0 auto;width:140px;}
 .fin-actions .fin-note{flex:1 1 auto;min-width:0;}
 .fin-actions .btn{flex:0 0 auto;height:42px;}
+/* 分类模糊搜索 */
+.catsearch{position:relative;width:100%;}
+.catsearch-pop{position:absolute;left:0;right:0;top:100%;z-index:30;background:var(--card);border:1px solid var(--line);border-radius:10px;box-shadow:var(--shadow);max-height:230px;overflow:auto;margin-top:4px;display:none;}
+.catsearch-pop.show{display:block;}
+.catsearch-pop .opt{display:flex;align-items:center;gap:8px;padding:9px 12px;font-size:14px;cursor:pointer;}
+.catsearch-pop .opt:hover,.catsearch-pop .opt.active{background:var(--primary-soft);}
+.catsearch-pop .opt .dot{width:10px;height:10px;border-radius:50%;flex:0 0 auto;}
+.catsearch-pop .empty{padding:9px 12px;font-size:13px;color:var(--muted);}
 .switch{position:relative;display:inline-block;width:46px;height:26px;flex:0 0 auto;}
 .switch input{opacity:0;width:0;height:0;}
 .switch .slider{position:absolute;inset:0;background:#cbd5e1;border-radius:999px;transition:.2s;cursor:pointer;}
@@ -894,36 +903,53 @@ function catHue(c){var h=0;for(var i=0;i<c.length;i++){h=(h*131+c.charCodeAt(i))
 function catColor(c){if(CAT_COLOR[c])return CAT_COLOR[c];return 'hsl('+catHue(c)+',62%,50%)';}
 function catTint(c){if(CAT_COLOR[c])return CAT_COLOR[c]+'22';return 'hsla('+catHue(c)+',62%,50%,0.16)';}
 var REP_LABEL={daily:'每天',weekly:'每周',monthly:'每月',yearly:'每年'};
-/* 分类字段：支出=可输入新分类的下拉框(input+datalist)，收入=自由文本框；共用 id #dailyCat，addDaily 读取逻辑无需改 */
-function refreshCatOptions(){
-  var sel=document.getElementById('dailyCat');if(!sel||sel.tagName!=='SELECT')return;
-  var cur=sel.value,set={};
-  CATS.forEach(function(c){set[c]=1;});
+/* 分类字段：支出=可模糊搜索的下拉（input+浮层筛选，支持子串匹配/回车选首项/自由新增），收入=自由文本框；共用 id #dailyCat，addDaily 读取逻辑无需改 */
+function allCats(){
+  var set={};CATS.forEach(function(c){set[c]=1;});
   if(S.txns)S.txns.forEach(function(t){if(t.cat)set[t.cat]=1;});
-  var opts=Object.keys(set);
-  var html=opts.map(function(c){return '<option value="'+esc(c)+'">'+esc(c)+'</option>';}).join('');
-  html+='<option value="__new__">＋ 自定义分类…</option>';
-  sel.innerHTML=html;
-  if(cur&&((opts.indexOf(cur)>=0)||cur==='__new__'))sel.value=cur;
+  return Object.keys(set);
+}
+function filterCats(q){
+  q=(q||'').trim().toLowerCase();
+  var all=allCats();
+  if(!q)return all;
+  return all.filter(function(c){return c.toLowerCase().indexOf(q)>=0;});
+}
+function renderCatSearch(){
+  var inp=document.getElementById('dailyCat');var pop=document.getElementById('catPop');
+  if(!inp||!pop)return;
+  var list=filterCats(inp.value);
+  if(!list.length){
+    var v=(inp.value||'').trim();
+    pop.innerHTML='<div class="empty">无匹配，回车即新增「'+(v||'')+'」</div>';
+    return;
+  }
+  pop.innerHTML=list.map(function(c){
+    return '<div class="opt" data-cat="'+esc(c)+'"><span class="dot" style="background:'+catColor(c)+'"></span><span>'+esc(c)+'</span></div>';
+  }).join('');
+}
+function bindCatSearch(){
+  var inp=document.getElementById('dailyCat');var pop=document.getElementById('catPop');
+  if(!inp||!pop||inp._csBound)return;inp._csBound=true;
+  inp.addEventListener('focus',function(){renderCatSearch();pop.classList.add('show');});
+  inp.addEventListener('input',function(){renderCatSearch();pop.classList.add('show');});
+  inp.addEventListener('blur',function(){setTimeout(function(){pop.classList.remove('show');},150);});
+  inp.addEventListener('keydown',function(e){
+    if(e.key==='Enter'){var first=pop.querySelector('.opt');if(first){inp.value=first.getAttribute('data-cat');pop.classList.remove('show');}e.preventDefault();}
+    else if(e.key==='Escape'){pop.classList.remove('show');}
+  });
+  pop.addEventListener('mousedown',function(e){var o=e.target.closest('.opt');if(!o)return;inp.value=o.getAttribute('data-cat');pop.classList.remove('show');inp.focus();});
 }
 function renderCatField(){
   var wrap=document.getElementById('catWrap');if(!wrap)return;
   if(document.getElementById('dailyType').value==='inc'){
     wrap.innerHTML='<input type="text" id="dailyCat" placeholder="如：工资 / 奖金 / 理财收益" style="width:100%;">';
   }else{
-    wrap.innerHTML='<select id="dailyCat" style="width:100%;"></select>';
-    refreshCatOptions();
+    wrap.innerHTML='<div class="catsearch"><input type="text" id="dailyCat" autocomplete="off" placeholder="搜索或选择分类…"><div class="catsearch-pop" id="catPop"></div></div>';
+    bindCatSearch();renderCatSearch();
   }
 }
 renderCatField();
-document.getElementById('catWrap').addEventListener('change',function(e){
-  var sel=e.target;
-  if(sel&&sel.id==='dailyCat'&&sel.value==='__new__'){
-    var wrap=document.getElementById('catWrap');
-    wrap.innerHTML='<input type="text" id="dailyCat" placeholder="输入新分类名" style="width:100%;">';
-    wrap.querySelector('input').focus();
-  }
-});
 function seedAllday(){
   var y=new Date(Date.now()-86400000*2).toISOString().slice(0,10),to=todayStr();
   S.tasks=[{id:uid(),title:'完成民法精讲复盘',prio:'p1',due:to,done:false,note:''},{id:uid(),title:'提交报销单',prio:'p0',due:y,done:false,note:'记得附发票'},{id:uid(),title:'买菜',prio:'p2',due:to,done:true,note:''}];
@@ -2209,7 +2235,6 @@ function renderFin(){
   document.getElementById('spendViewMonth').innerHTML=months.map(function(m){return '<option value="'+m+'"'+(m===cm?' selected':'')+'>'+m+'</option>';}).join('');
   document.getElementById('txnMonth').innerHTML=months.map(function(m){return '<option value="'+m+'"'+(m===cm?' selected':'')+'>'+m+'</option>';}).join('');
   if(!document.getElementById('dailyDate').value)document.getElementById('dailyDate').value=todayStr();
-  refreshCatOptions();
   renderFinCat(cm);
   renderTxns();
   syncByCatControls();
@@ -2311,7 +2336,7 @@ document.getElementById('yearSel').addEventListener('change',function(){renderYe
 function addDaily(){
   var date=document.getElementById('dailyDate').value||todayStr();
   var cat=document.getElementById('dailyCat').value.trim();
-  if(!cat||cat==='__new__')cat='其他';
+  if(!cat)cat='其他';
   var type=document.getElementById('dailyType').value;
   var amt=parseFloat(document.getElementById('dailyAmt').value);
   if(isNaN(amt)||amt<0){toast('请输入有效金额');return;}
@@ -2669,7 +2694,7 @@ function switchTab(name){
 document.querySelectorAll('.sidebar button.nav').forEach(function(b){if(!b.dataset.tab)return;b.onclick=function(){switchTab(b.dataset.tab);};});
 function renderAll(){renderOverview();renderTasks();renderFit();renderFun();renderFin();renderRest();renderGoal();renderFakao();renderEng();renderFakaoCheckin();renderCalendar();renderWxDate();}
 /* 版本号：每次发布改动后在此 +0.1，便于核对 Chrome 是否为最新版 */
-var APP_VER='1.90';
+var APP_VER='1.91';
 var _av=document.getElementById('appVer');if(_av)_av.textContent='v'+APP_VER;
 /* 清理已弃用的习惯打卡旧数据（v1.28 起不再使用，仅清孤立 key，不影响任何功能） */
 try{localStorage.removeItem('wb_hab_habits');localStorage.removeItem('wb_hab_seeded');}catch(e){}
