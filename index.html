@@ -668,8 +668,8 @@ svg.chart{width:100%;height:auto;display:block;}
             <div class="field"><label>分类</label><span id="catWrap"></span></div>
           </div>
           <div class="row fin-actions">
-            <div class="field fin-amt"><label>金额 ¥</label><input type="number" id="dailyAmt" min="0" step="0.01" placeholder="0.00"></div>
-            <div class="field fin-note"><label>备注</label><input type="text" id="dailyNote" placeholder="如：午饭 / 地铁"></div>
+            <div class="field fin-amt"><label>金额 ¥</label><input type="text" id="dailyAmt" inputmode="decimal" autocomplete="off" placeholder="0.00"></div>
+            <div class="field fin-note"><label>备注</label><input type="text" id="dailyNote" autocomplete="off" placeholder="如：午饭 / 地铁"></div>
             <button class="btn primary" type="submit">添加记录</button>
           </div>
         </form>
@@ -903,6 +903,10 @@ function catHue(c){var h=0;for(var i=0;i<c.length;i++){h=(h*131+c.charCodeAt(i))
 function catColor(c){if(CAT_COLOR[c])return CAT_COLOR[c];return 'hsl('+catHue(c)+',62%,50%)';}
 function catTint(c){if(CAT_COLOR[c])return CAT_COLOR[c]+'22';return 'hsla('+catHue(c)+',62%,50%,0.16)';}
 var REP_LABEL={daily:'每天',weekly:'每周',monthly:'每月',yearly:'每年'};
+/* 离线拼音表：仅覆盖常用生活/记账类汉字；未收录的字回退为中文子串匹配，不影响搜索 */
+var PINYIN={'餐':'can','饮':'yin','交':'jiao','通':'tong','购':'gou','物':'wu','居':'ju','住':'zhu','娱':'yu','乐':'le','学':'xue','习':'xi','医':'yi','疗':'liao','其':'qi','他':'ta','午':'wu','饭':'fan','地':'di','铁':'tie','日':'ri','用':'yong','品':'pin','衣':'yi','服':'fu','鼠':'shu','标':'biao','电':'dian','影':'ying','聚':'ju','房':'fang','租':'zu','车':'che','水':'shui','果':'guo','菜':'cai','肉':'rou','蛋':'dan','奶':'nai','面':'mian','包':'bao','话':'hua','费':'fei','网':'wang','咖':'ka','啡':'fei','茶':'cha','酒':'jiu','烟':'yan','书':'shu','笔':'bi','药':'yao','保':'bao','险':'xian','旅':'lv','游':'you','票':'piao','礼':'li','玩':'wan','充':'chong','值':'zhi','卡':'ka','油':'you','停':'ting','洗':'xi','美':'mei','发':'fa','超':'chao','市':'shi','便':'bian','利':'li','店':'dian','快':'kuai','递':'di','邮':'you','政':'zheng','童':'tong','装':'zhuang','鞋':'xie','数':'shu','码':'ma','机':'ji','脑':'nao','手':'shou','平':'ping','板':'ban','耳':'er','健':'jian','身':'shen','跑':'pao','步':'bu','运':'yun','动':'dong','工':'gong','资':'zi','奖':'jiang','金':'jin','理':'li','财':'cai','收':'shou','益':'yi','转':'zhuan','账':'zhang','红':'hong','包':'bao','借':'jie','贷':'dai','储':'chu','蓄':'xu','基':'ji','股':'gu','债':'zhai','券':'quan','薪':'xin','教':'jiao','育':'yu','培':'pei','训':'xun','讯':'xun','燃':'ran','气':'qi','业':'ye','维':'wei','修':'xiu','宠':'chong','人':'ren','情':'qing','随':'sui','份':'fen','子':'zi','婚':'hun','庆':'qing','丧':'sang','葬':'zang','家':'jia','饰':'shi','妆':'zhuang','母':'mu','婴':'ying','食':'shi','料':'liao','蔬':'shu','禽':'qin','海':'hai','鲜':'xian','零':'ling','早':'zao','晚':'wan','夜':'ye','宵':'xiao','外':'wai','卖':'mai','堂':'tang','宴':'yan','请':'qing','打':'da','公':'gong','加':'jia','高':'gao','速':'su','火':'huo','宿':'su','景':'jing','门':'men','京':'jing','东':'dong','淘':'tao','宝':'bao','拼':'pin','多':'duo','闲':'xian','鱼':'yu','搬':'ban','容':'rong','体':'ti','检':'jian','诊':'zhen','院':'yuan','文':'wen','具':'ju','相':'xiang','会':'hui','员':'yuan','订':'ding','阅':'yue'};
+/* 取汉字串的全拼与首字母（未收录字忽略，不影响中文子串匹配） */
+function pyOf(s){var full='',init='';for(var i=0;i<s.length;i++){var p=PINYIN[s.charAt(i)];if(p){full+=p;init+=p.charAt(0);}}return {full:full,init:init};}
 /* 分类字段：支出=可模糊搜索的下拉（input+浮层筛选，支持子串匹配/回车选首项/自由新增），收入=自由文本框；共用 id #dailyCat，addDaily 读取逻辑无需改 */
 function allCats(){
   var set={};CATS.forEach(function(c){set[c]=1;});
@@ -913,7 +917,11 @@ function filterCats(q){
   q=(q||'').trim().toLowerCase();
   var all=allCats();
   if(!q)return all;
-  return all.filter(function(c){return c.toLowerCase().indexOf(q)>=0;});
+  return all.filter(function(c){
+    if(c.toLowerCase().indexOf(q)>=0)return true;            // 中文子串
+    var p=pyOf(c);
+    return p.full.indexOf(q)>=0 || p.init.indexOf(q)>=0;     // 全拼 / 首字母
+  });
 }
 function renderCatSearch(){
   var inp=document.getElementById('dailyCat');var pop=document.getElementById('catPop');
@@ -2338,8 +2346,9 @@ function addDaily(){
   var cat=document.getElementById('dailyCat').value.trim();
   if(!cat)cat='其他';
   var type=document.getElementById('dailyType').value;
-  var amt=parseFloat(document.getElementById('dailyAmt').value);
-  if(isNaN(amt)||amt<0){toast('请输入有效金额');return;}
+  var amtStr=document.getElementById('dailyAmt').value.trim();
+  if(!/^\d+(\.\d+)?$/.test(amtStr)){toast('请输入有效金额');return;}
+  var amt=parseFloat(amtStr);
   var note=document.getElementById('dailyNote').value.trim();
   S.txns.push({id:uid(),date:date,cat:cat,amount:amt,note:note,type:type});
   var m=date.slice(0,7);var store=type==='inc'?S.income:S.spend;store[m]=store[m]||{};store[m][cat]=(store[m][cat]||0)+amt;
@@ -2694,7 +2703,7 @@ function switchTab(name){
 document.querySelectorAll('.sidebar button.nav').forEach(function(b){if(!b.dataset.tab)return;b.onclick=function(){switchTab(b.dataset.tab);};});
 function renderAll(){renderOverview();renderTasks();renderFit();renderFun();renderFin();renderRest();renderGoal();renderFakao();renderEng();renderFakaoCheckin();renderCalendar();renderWxDate();}
 /* 版本号：每次发布改动后在此 +0.1，便于核对 Chrome 是否为最新版 */
-var APP_VER='1.91';
+var APP_VER='1.92';
 var _av=document.getElementById('appVer');if(_av)_av.textContent='v'+APP_VER;
 /* 清理已弃用的习惯打卡旧数据（v1.28 起不再使用，仅清孤立 key，不影响任何功能） */
 try{localStorage.removeItem('wb_hab_habits');localStorage.removeItem('wb_hab_seeded');}catch(e){}
