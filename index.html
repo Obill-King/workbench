@@ -115,7 +115,7 @@ select option{background:#fff;color:var(--text);}
 .fin-actions .field{margin-bottom:0;}
 .fin-actions .fin-date{flex:0 0 150px;min-width:0;}
 .fin-actions .fin-type{flex:0 0 90px;min-width:0;}
-.fin-actions .fin-cat{flex:1 1 170px;min-width:120px;}
+.fin-actions .fin-cat{flex:0 1 120px;min-width:90px;}
 .fin-actions .fin-amt{flex:0 0 auto;width:140px;}
 .fin-actions .fin-note{flex:1 1 auto;min-width:0;}
 .fin-actions .btn{flex:0 0 auto;height:42px;}
@@ -1946,14 +1946,32 @@ function renderWeather(){
     }
   }
 }
+function geoCity(city){
+  function url(n){return 'https://geocoding-api.open-meteo.com/v1/search?name='+encodeURIComponent(n)+'&count=8&language=zh&format=json';}
+  function pick(g){
+    if(!g||!g.results||!g.results.length)return null;
+    return g.results.slice().sort(function(a,b){
+      var ca=a.country_code==='CN'?1:0, cb=b.country_code==='CN'?1:0;
+      if(ca!==cb)return cb-ca;
+      return (b.population||0)-(a.population||0);
+    })[0];
+  }
+  return fetch(url(city)).then(function(r){if(!r.ok)throw new Error('geo');return r.json();}).then(function(g){
+    var p=pick(g);
+    if(p&&(p.population||0)>0)return p;            // 已命中大城市，直接用
+    // 同名小村镇歧义（如“大连”→福建龙岩村、“青岛”→辽宁村），改用“城市名+市”再查一次
+    return fetch(url(city+'市')).then(function(r){if(!r.ok)throw new Error('geo');return r.json();}).then(function(g2){
+      var p2=pick(g2);return p2||p;
+    });
+  });
+}
 function fetchWeather(force){
   var w=S.weather,cityEl=document.getElementById('wxCity');
   var city=(cityEl&&cityEl.value?cityEl.value:(w.city||'北京')).trim();
   if(!force&&w.updated&&Date.now()-w.updated<30*60*1000&&w.temp!=null&&w.hourly){renderWeather();return;}
-  var geo='https://geocoding-api.open-meteo.com/v1/search?name='+encodeURIComponent(city)+'&count=1&language=zh&format=json';
-  fetch(geo).then(function(r){if(!r.ok)throw new Error('geo');return r.json();}).then(function(g){
-    if(!g.results||!g.results.length)throw new Error('nocity');
-    var p=g.results[0],la=p.latitude,lo=p.longitude,cn=p.name;
+  geoCity(city).then(function(p){
+    if(!p)throw new Error('nocity');
+    var la=p.latitude,lo=p.longitude,cn=p.name;
     var f='https://api.open-meteo.com/v1/forecast?latitude='+la+'&longitude='+lo+'&current=temperature_2m,relative_humidity_2m,weather_code,wind_speed_10m&hourly=temperature_2m,weather_code&daily=weather_code,temperature_2m_max,temperature_2m_min&forecast_days=4&timezone=auto';
     return fetch(f).then(function(r){if(!r.ok)throw new Error('fc');return r.json();}).then(function(d){
       var c=d.current,fc=[];
@@ -2235,6 +2253,9 @@ function monthTotal(m){var o=S.spend[m];if(!o)return 0;return Object.keys(o).red
 function monthIncome(m){var o=S.income[m];if(!o)return 0;return Object.keys(o).reduce(function(s,k){return s+(+o[k]||0);},0);}
 /* 年份/月份下拉：拆分年与月，避免月份列表过长 */
 function finYears(){var ys={};Object.keys(S.spend).forEach(function(m){ys[m.slice(0,4)]=1;});Object.keys(S.income).forEach(function(m){ys[m.slice(0,4)]=1;});if(!Object.keys(ys).length)ys[new Date().getFullYear()+'']=1;return Object.keys(ys).sort().reverse();}
+/* 清理空月份键：删除交易后 S.spend/S.income 可能残留空对象 {} 或零值分类，导致年份下拉显示无数据的年份（如误填的 0021）。
+   在每次渲染前清理，既修复历史脏数据也防止复发。 */
+function cleanEmptyMonths(){var changed=false;['spend','income'].forEach(function(k){var obj=S[k];if(!obj)return;Object.keys(obj).forEach(function(m){var o=obj[m];if(o&&typeof o==='object'){Object.keys(o).forEach(function(c){if(!(+o[c]>0)){delete o[c];changed=true;}});if(!Object.keys(o).length){delete obj[m];changed=true;}}else if(!o||+o===0){delete obj[m];changed=true;}});});if(changed)persist();return changed;}
 function monthOpts(sel,withAll){var a=[];if(withAll)a.push('<option value="all">全年</option>');for(var i=1;i<=12;i++){var v=('0'+i).slice(-2);a.push('<option value="'+v+'"'+(v===sel?' selected':'')+'>'+v+'月</option>');}return a.join('');}
 function spendVal(){return document.getElementById('spendYear').value+'-'+document.getElementById('spendMonth').value;}
 function txnVal(){return document.getElementById('txnYear').value+'-'+document.getElementById('txnMonth').value;}
@@ -2242,6 +2263,7 @@ var spendState={y:null,m:null},txnState={y:null,m:null};
 var bcState={y:'all',m:'all'};
 function bcMonthVal(){var y=bcState.y,m=bcState.m;if(y==='all')return 'all';if(m==='all')return 'Y'+y;return y+'-'+m;}
 function renderFin(){
+  cleanEmptyMonths();
   var cm=curMonth();
   var spent=monthTotal(cm),inc=monthIncome(cm);
   document.getElementById('finStats').innerHTML=
@@ -2716,7 +2738,7 @@ function switchTab(name){
 document.querySelectorAll('.sidebar button.nav').forEach(function(b){if(!b.dataset.tab)return;b.onclick=function(){switchTab(b.dataset.tab);};});
 function renderAll(){renderOverview();renderTasks();renderFit();renderFun();renderFin();renderRest();renderGoal();renderFakao();renderEng();renderFakaoCheckin();renderCalendar();renderWxDate();}
 /* 版本号：每次发布改动后在此 +0.1，便于核对 Chrome 是否为最新版 */
-var APP_VER='1.95';
+var APP_VER='1.97';
 var _av=document.getElementById('appVer');if(_av)_av.textContent='v'+APP_VER;
 /* 清理已弃用的习惯打卡旧数据（v1.28 起不再使用，仅清孤立 key，不影响任何功能） */
 try{localStorage.removeItem('wb_hab_habits');localStorage.removeItem('wb_hab_seeded');}catch(e){}
