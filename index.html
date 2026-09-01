@@ -89,14 +89,20 @@ section.panel.active{display:block;animation:fade .2s ease;}
 input,select,textarea{width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:9px;font-size:15px;font-family:inherit;background:#fff;color:var(--text);}
 textarea{min-height:80px;resize:vertical;}
 input[type=date],input[type=datetime-local]{-webkit-appearance:none;appearance:none;min-width:0;width:100%;box-sizing:border-box;background:#fff;border:1px solid var(--line);border-radius:9px;}
-.field select{-webkit-appearance:none;appearance:none;background:#fff url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'><path d='M1 1l4 4 4-4' fill='none' stroke='%23999' stroke-width='1.6' stroke-linecap='round'/></svg>") no-repeat right 10px center;background-size:10px 6px;padding-right:28px;}
+/* 统一所有下拉框样式（含弹窗内不在 .field 的 select，如 .rec-add） */
+select{-webkit-appearance:none;-moz-appearance:none;appearance:none;cursor:pointer;
+  background:#fff url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'><path d='M6 9l6 6 6-6'/></svg>") no-repeat right 12px center;
+  background-size:12px 12px;padding:9px 34px 9px 12px;transition:border-color .15s,box-shadow .15s;}
+select:hover{border-color:#cbd5e1;}
+select:focus{border-color:var(--primary);box-shadow:0 0 0 3px var(--primary-soft);outline:none;}
+select option{background:#fff;color:var(--text);}
 .row{display:flex;gap:10px;flex-wrap:wrap;}
 .row>.field{min-width:0;}
 .row>*{flex:1;}
 /* 新增待办：可选字段字号正常，仅 PC 端长度收窄 */
 .field.optional label{font-size:12px;}
 .field.optional input{padding:8px 10px;}
-.field.optional select{padding:8px 28px 8px 10px;}
+.field.optional select{padding:8px 32px 8px 10px;}
 /* PC 端：新增待办的四个短字段并排铺满整行；截止日期略宽 */
 .field.short{flex:1 1 0;min-width:0;width:auto;}
 .field.short#tDue{flex:1.35 1 0;}
@@ -2708,7 +2714,7 @@ function switchTab(name){
 document.querySelectorAll('.sidebar button.nav').forEach(function(b){if(!b.dataset.tab)return;b.onclick=function(){switchTab(b.dataset.tab);};});
 function renderAll(){renderOverview();renderTasks();renderFit();renderFun();renderFin();renderRest();renderGoal();renderFakao();renderEng();renderFakaoCheckin();renderCalendar();renderWxDate();}
 /* 版本号：每次发布改动后在此 +0.1，便于核对 Chrome 是否为最新版 */
-var APP_VER='1.93';
+var APP_VER='1.94';
 var _av=document.getElementById('appVer');if(_av)_av.textContent='v'+APP_VER;
 /* 清理已弃用的习惯打卡旧数据（v1.28 起不再使用，仅清孤立 key，不影响任何功能） */
 try{localStorage.removeItem('wb_hab_habits');localStorage.removeItem('wb_hab_seeded');}catch(e){}
