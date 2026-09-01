@@ -682,18 +682,18 @@ svg.chart{width:100%;height:auto;display:block;}
       </div>
       <div class="card full">
         <h3><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.21 15.89A10 10 0 1 1 8 2.83M22 12A10 10 0 0 0 12 2v10z"/></svg>月度分类（<span id="catMonthLabel"></span>）</h3>
-        <div class="row" style="margin-bottom:12px;"><div class="field"><label>查看月份</label><select id="spendViewMonth"></select></div></div>
+        <div class="row" style="margin-bottom:12px;"><div class="field" style="flex:0 0 110px;"><label>年份</label><select id="spendYear"></select></div><div class="field" style="flex:0 0 100px;"><label>月份</label><select id="spendMonth"></select></div></div>
         <div id="catBox"></div>
       </div>
       <div class="card full">
         <h3><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M4 12h16M4 18h10"/></svg>记录明细（<span id="txnMonthLabel"></span>）</h3>
-        <div class="row" style="margin-bottom:12px;"><div class="field" style="flex:0 0 160px;"><label>查看月份</label><select id="txnMonth"></select></div><span id="txnSum" style="margin-left:auto;align-self:center;font-size:13px;color:var(--muted);flex:0 0 auto;"></span></div>
+        <div class="row" style="margin-bottom:12px;"><div class="field" style="flex:0 0 90px;"><label>年份</label><select id="txnYear"></select></div><div class="field" style="flex:0 0 90px;"><label>月份</label><select id="txnMonth"></select></div><span id="txnSum" style="margin-left:auto;align-self:center;font-size:13px;color:var(--muted);flex:0 0 auto;"></span></div>
         <div id="txnBox"></div>
       </div>
       <div class="card full">
         <h3><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3h18v18H3zM3 9h18M9 21V9"/></svg>按分类查看</h3>
         <div class="row" style="margin-bottom:12px;">
-          <div class="field"><label>时间</label><select id="bcMonth"></select></div>
+          <div class="field" style="flex:0 0 110px;"><label>年份</label><select id="bcYear"></select></div><div class="field" style="flex:0 0 100px;"><label>月份</label><select id="bcMonth"></select></div>
           <div class="field"><label>分类</label><select id="bcCat"></select></div>
           <span id="bcSum" style="margin-left:auto;align-self:center;font-size:13px;color:var(--muted);"></span>
         </div>
@@ -2225,6 +2225,14 @@ document.getElementById('rwAdd').onclick=function(){var n=document.getElementByI
 /* ---------- 记账理财 ---------- */
 function monthTotal(m){var o=S.spend[m];if(!o)return 0;return Object.keys(o).reduce(function(s,k){return s+(+o[k]||0);},0);}
 function monthIncome(m){var o=S.income[m];if(!o)return 0;return Object.keys(o).reduce(function(s,k){return s+(+o[k]||0);},0);}
+/* 年份/月份下拉：拆分年与月，避免月份列表过长 */
+function finYears(){var ys={};Object.keys(S.spend).forEach(function(m){ys[m.slice(0,4)]=1;});Object.keys(S.income).forEach(function(m){ys[m.slice(0,4)]=1;});if(!Object.keys(ys).length)ys[new Date().getFullYear()+'']=1;return Object.keys(ys).sort().reverse();}
+function monthOpts(sel,withAll){var a=[];if(withAll)a.push('<option value="all">全年</option>');for(var i=1;i<=12;i++){var v=('0'+i).slice(-2);a.push('<option value="'+v+'"'+(v===sel?' selected':'')+'>'+v+'月</option>');}return a.join('');}
+function spendVal(){return document.getElementById('spendYear').value+'-'+document.getElementById('spendMonth').value;}
+function txnVal(){return document.getElementById('txnYear').value+'-'+document.getElementById('txnMonth').value;}
+var spendState={y:null,m:null},txnState={y:null,m:null};
+var bcState={y:'all',m:'all'};
+function bcMonthVal(){var y=bcState.y,m=bcState.m;if(y==='all')return 'all';if(m==='all')return 'Y'+y;return y+'-'+m;}
 function renderFin(){
   var cm=curMonth();
   var spent=monthTotal(cm),inc=monthIncome(cm);
@@ -2238,12 +2246,15 @@ function renderFin(){
   document.getElementById('ringBox').innerHTML='<svg width="84" height="84" viewBox="0 0 84 84"><circle cx="42" cy="42" r="'+R+'" fill="none" stroke="var(--line)" stroke-width="9"/><circle cx="42" cy="42" r="'+R+'" fill="none" stroke="'+col+'" stroke-width="9" stroke-linecap="round" stroke-dasharray="'+C+'" stroke-dashoffset="'+(C*(1-pct/100))+'" transform="rotate(-90 42 42)"/><text x="42" y="46" text-anchor="middle" font-size="15" font-weight="700" fill="var(--text)">'+Math.round(pct)+'%</text></svg>';
   document.getElementById('budgetTxt').textContent='¥'+spent.toFixed(0)+' / ¥'+b;
   document.getElementById('budgetInput').value=b||'';
-  var months=Object.keys(S.spend).sort().reverse();
-  if(months.indexOf(cm)<0)months.unshift(cm);
-  document.getElementById('spendViewMonth').innerHTML=months.map(function(m){return '<option value="'+m+'"'+(m===cm?' selected':'')+'>'+m+'</option>';}).join('');
-  document.getElementById('txnMonth').innerHTML=months.map(function(m){return '<option value="'+m+'"'+(m===cm?' selected':'')+'>'+m+'</option>';}).join('');
+  var yrs=finYears();var cy=cm.slice(0,4),cmM=cm.slice(5);
+  if(spendState.y===null){spendState.y=cy;spendState.m=cmM;}
+  if(txnState.y===null){txnState.y=cy;txnState.m=cmM;}
+  var sy=document.getElementById('spendYear');sy.innerHTML=yrs.map(function(y){return '<option value="'+y+'"'+(y===spendState.y?' selected':'')+'>'+y+'</option>';}).join('');sy.value=spendState.y;
+  document.getElementById('spendMonth').innerHTML=monthOpts(spendState.m,false);
+  var ty=document.getElementById('txnYear');ty.innerHTML=yrs.map(function(y){return '<option value="'+y+'"'+(y===txnState.y?' selected':'')+'>'+y+'</option>';}).join('');ty.value=txnState.y;
+  document.getElementById('txnMonth').innerHTML=monthOpts(txnState.m,false);
   if(!document.getElementById('dailyDate').value)document.getElementById('dailyDate').value=todayStr();
-  renderFinCat(cm);
+  renderFinCat(spendVal());
   renderTxns();
   syncByCatControls();
   renderByCat();
@@ -2251,19 +2262,12 @@ function renderFin(){
 }
 function esc(s){return (s||'').replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
 function syncByCatControls(){
-  var bm=document.getElementById('bcMonth'),bc=document.getElementById('bcCat');
-  var months=Object.keys(S.spend).sort().reverse();
-  var years={};
-  months.forEach(function(m){var y=m.slice(0,4);(years[y]=years[y]||[]).push(m);});
-  var yr=Object.keys(years).sort().reverse();
-  var curM=bm.value||'all';
-  var html='<option value="all">全部时间</option>';
-  yr.forEach(function(y){
-    html+='<option value="Y'+y+'">'+y+' 全年</option>';
-    html+='<optgroup label="'+y+'">'+years[y].map(function(m){return '<option value="'+m+'">'+m+'</option>';}).join('')+'</optgroup>';
-  });
-  bm.innerHTML=html;
-  var opt=bm.querySelector('option[value="'+curM+'"]');bm.value=opt?curM:'all';
+  var by=document.getElementById('bcYear'),bm=document.getElementById('bcMonth'),bc=document.getElementById('bcCat');
+  var yrs=finYears();
+  if(yrs.indexOf(bcState.y)<0)bcState.y='all';
+  by.innerHTML='<option value="all">全部时间</option>'+yrs.map(function(y){return '<option value="'+y+'"'+(y===bcState.y?' selected':'')+'>'+y+'</option>';}).join('');
+  bm.innerHTML=monthOpts(bcState.m,true);
+  if(!by._bnd){by.addEventListener('change',function(){bcState.y=this.value;renderByCat();});bm.addEventListener('change',function(){bcState.m=this.value;renderByCat();});by._bnd=true;}
   var curC=bc.value;
   var cats={};S.txns.forEach(function(t){cats[t.cat]=1;});
   var catList=Object.keys(cats).sort();
@@ -2272,7 +2276,7 @@ function syncByCatControls(){
   if(catList.indexOf(curC)>=0)bc.value=curC;
 }
 function renderByCat(){
-  var month=document.getElementById('bcMonth').value,cat=document.getElementById('bcCat').value;
+  var month=bcMonthVal(),cat=document.getElementById('bcCat').value;
   var list=S.txns.filter(function(t){
     if(t.cat!==cat)return false;
     if(month==='all')return true;
@@ -2294,7 +2298,6 @@ function renderByCat(){
     return '<div class="bc-group"><div class="bc-group-top"><span class="bc-note">'+esc(n)+'</span><span class="bc-sub"><b>¥'+sub.toFixed(2)+'</b> · '+items.length+'笔 · '+pct.toFixed(0)+'%</span></div><div class="catbar" style="margin:0 12px 8px;"><i style="width:'+pct.toFixed(1)+'%;background:'+catColor(cat)+'"></i></div><div class="bc-items">'+rows+'</div></div>';
   }).join('');
 }
-document.getElementById('bcMonth').addEventListener('change',renderByCat);
 document.getElementById('bcCat').addEventListener('change',renderByCat);
 var yearOpen=false;
 document.getElementById('yearHead').addEventListener('click',function(){
@@ -2362,7 +2365,7 @@ function deleteTxn(id){
   S.txns.splice(i,1);persist();renderFin();
 }
 function renderTxns(){
-  var month=document.getElementById('txnMonth').value;if(!month)return;
+  var month=txnVal();if(!month)return;
   document.getElementById('txnMonthLabel').textContent=month;
   var list=S.txns.filter(function(t){return t.date.slice(0,7)===month;}).sort(function(a,b){return a.date<b.date?1:-1;});
   var expSum=0,incSum=0;list.forEach(function(t){if(t.type==='inc')incSum+=+t.amount;else expSum+=+t.amount;});
@@ -2374,8 +2377,10 @@ function renderTxns(){
     return '<div class="txn"><div class="txn-main"><span class="txn-date">'+t.date.slice(5)+'</span><span class="txn-cat" style="color:'+catColor(t.cat)+';background:'+catTint(t.cat)+';">'+t.cat+'</span>'+(isInc?'<span class="txn-type inc">收入</span>':'<span class="txn-type exp">支出</span>')+'<span class="txn-note">'+(t.note||'')+'</span></div><div class="txn-right"><span class="'+(isInc?'in':'out')+'">¥'+(+t.amount).toFixed(2)+'</span><button class="del" data-deltxn="'+t.id+'"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18M6 6l12 12"/></svg></button></div></div>';
   }).join('')+'</div>';
 }
-document.getElementById('spendViewMonth').addEventListener('change',function(){renderFinCat(this.value);});
-document.getElementById('txnMonth').addEventListener('change',renderTxns);
+document.getElementById('spendYear').addEventListener('change',function(){spendState.y=this.value;renderFinCat(spendVal());});
+document.getElementById('spendMonth').addEventListener('change',function(){spendState.m=this.value;renderFinCat(spendVal());});
+document.getElementById('txnYear').addEventListener('change',function(){txnState.y=this.value;renderTxns();});
+document.getElementById('txnMonth').addEventListener('change',function(){txnState.m=this.value;renderTxns();});
 document.getElementById('txnBox').addEventListener('click',function(e){var b=e.target.closest('[data-deltxn]');if(b)deleteTxn(b.dataset.deltxn);});
 document.getElementById('dailyType').addEventListener('change',renderCatField);
 document.getElementById('dailyForm').addEventListener('submit',function(e){e.preventDefault();addDaily();});
@@ -2703,7 +2708,7 @@ function switchTab(name){
 document.querySelectorAll('.sidebar button.nav').forEach(function(b){if(!b.dataset.tab)return;b.onclick=function(){switchTab(b.dataset.tab);};});
 function renderAll(){renderOverview();renderTasks();renderFit();renderFun();renderFin();renderRest();renderGoal();renderFakao();renderEng();renderFakaoCheckin();renderCalendar();renderWxDate();}
 /* 版本号：每次发布改动后在此 +0.1，便于核对 Chrome 是否为最新版 */
-var APP_VER='1.92';
+var APP_VER='1.93';
 var _av=document.getElementById('appVer');if(_av)_av.textContent='v'+APP_VER;
 /* 清理已弃用的习惯打卡旧数据（v1.28 起不再使用，仅清孤立 key，不影响任何功能） */
 try{localStorage.removeItem('wb_hab_habits');localStorage.removeItem('wb_hab_seeded');}catch(e){}
