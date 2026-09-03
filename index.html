@@ -483,6 +483,11 @@ svg.chart{width:100%;height:auto;display:block;}
   /* H5：未来三天预报温度不被遮挡 */
   #wxForecast>div{flex:1 1 0;min-width:0;}
   .fc-temp{font-size:12px;white-space:normal;}
+  /* H5：记事本操作按钮改为底部单行、紧凑小按钮，不再两个 42px 大按钮竖排占两行 */
+  .note-item{flex-wrap:wrap;}
+  .note-item .note-body{flex:1 1 100%;}
+  .note-item .note-btns{flex:1 1 100%;flex-direction:row;justify-content:flex-end;gap:8px;}
+  .note-item .note-btns .btn{min-height:0;padding:5px 12px;font-size:12px;}
 }
 @media (max-width:480px){
   .ov-grid{grid-template-columns:1fr;}
@@ -2820,7 +2825,7 @@ function switchTab(name){
 document.querySelectorAll('.sidebar button.nav').forEach(function(b){if(!b.dataset.tab)return;b.onclick=function(){switchTab(b.dataset.tab);};});
 function renderAll(){renderOverview();renderTasks();renderFit();renderFun();renderFin();renderRest();renderGoal();renderFakao();renderEng();renderFakaoCheckin();renderCalendar();renderWxDate();renderNotes();}
 /* 版本号：每次发布改动后在此 +0.1，便于核对 Chrome 是否为最新版 */
-var APP_VER='2.00';
+var APP_VER='2.01';
 var _av=document.getElementById('appVer');if(_av)_av.textContent='v'+APP_VER;
 /* 清理已弃用的习惯打卡旧数据（v1.28 起不再使用，仅清孤立 key，不影响任何功能） */
 try{localStorage.removeItem('wb_hab_habits');localStorage.removeItem('wb_hab_seeded');}catch(e){}
