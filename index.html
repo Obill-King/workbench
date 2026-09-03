@@ -1042,7 +1042,7 @@ function persist(){
 
 /* ---------- 云同步（GitHub Gist，纯前端免后端） ---------- */
 var SYNC=ls('wb_sync',{token:'',gist:'',auto:false});
-var _syncReady=false,_syncBusy=false,_syncTimer=null;
+var _syncReady=false,_syncBusy=false,_syncTimer=null,_syncFromCloud=false;
 var GIST_FILE='allday-sync.json';
 /* 同步时间戳：本地数据最后修改时间。用于阻止"云端旧数据覆盖本地新数据" */
 function syncLocalTs(){return +(ls('wb_sync_ts',0));}
@@ -1060,11 +1060,13 @@ function syncSnapshot(){
   o.__ts=syncLocalTs()||Date.now();
   return o;
 }
-var SYNC_KEYS=['tasks','fit','bar','meta','fun','seededA','spend','income','fmeta','seededF','txns','goals','reviews','seededG','fakaoLink','fakaoChecked','eng','weather','recs','recSeen','recAvoid'];
+var SYNC_KEYS=['tasks','fit','bar','meta','fun','seededA','spend','income','fmeta','seededF','txns','goals','reviews','seededG','fakaoLink','fakaoChecked','eng','weather','recs','recSeen','recAvoid','notes'];
 function syncApply(o){
   if(!o||typeof o!=='object')return false;
+  _syncFromCloud=true;                                   /* 刚从云端拉取，抑制随后的自动上传回写，避免状态被覆盖成“已上传” */
   SYNC_KEYS.forEach(function(k){if(k in o)S[k]=o[k];});
-  persist();renderAll();return true;
+  persist();_syncFromCloud=false;
+  renderAll();return true;
 }
 function syncSetStatus(m,err){var el=document.getElementById('syncStatus');if(el){el.textContent=m;el.style.color=err?'var(--danger)':'var(--muted)';}}
 /* 云同步错误：把笼统的报错翻成能照着做的排查建议 */
@@ -1161,6 +1163,7 @@ function syncRefreshUI(){
   if(SYNC.gist)syncSetStatus('已连接 · Gist '+SYNC.gist+(SYNC.auto?' · 自动同步已开':''));
 }
 function syncPersistHook(){
+  if(_syncFromCloud)return;   /* 刚从云端拉取，本机数据即云端数据，无需再立即回传上传 */
   if(!SYNC.auto||!SYNC.token||!SYNC.gist||!_syncReady)return;
   clearTimeout(_syncTimer);_syncTimer=setTimeout(syncPush,2000);
 }
@@ -2817,7 +2820,7 @@ function switchTab(name){
 document.querySelectorAll('.sidebar button.nav').forEach(function(b){if(!b.dataset.tab)return;b.onclick=function(){switchTab(b.dataset.tab);};});
 function renderAll(){renderOverview();renderTasks();renderFit();renderFun();renderFin();renderRest();renderGoal();renderFakao();renderEng();renderFakaoCheckin();renderCalendar();renderWxDate();renderNotes();}
 /* 版本号：每次发布改动后在此 +0.1，便于核对 Chrome 是否为最新版 */
-var APP_VER='1.99';
+var APP_VER='2.00';
 var _av=document.getElementById('appVer');if(_av)_av.textContent='v'+APP_VER;
 /* 清理已弃用的习惯打卡旧数据（v1.28 起不再使用，仅清孤立 key，不影响任何功能） */
 try{localStorage.removeItem('wb_hab_habits');localStorage.removeItem('wb_hab_seeded');}catch(e){}
