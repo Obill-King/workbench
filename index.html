@@ -41,6 +41,18 @@ section.panel.active{display:block;animation:fade .2s ease;}
 .card h3{font-size:15px;display:flex;align-items:center;gap:8px;margin:0 0 14px;}
 .card h3 svg{width:17px;height:17px;flex:0 0 auto;color:var(--primary);}
 .card.full{margin-bottom:24px;}
+/* 记事本 */
+.notes-add{display:flex;flex-direction:column;gap:10px;margin-bottom:18px;}
+.notes-add textarea{min-height:72px;resize:vertical;line-height:1.55;font-size:14px;}
+.notes-add .acts{display:flex;gap:10px;align-items:center;}
+.notes-add .cnt{margin-left:auto;font-size:12px;color:var(--muted);}
+.note-item{display:flex;gap:12px;align-items:flex-start;padding:12px 14px;border:1px solid var(--line);border-radius:11px;margin-bottom:10px;background:#fff;}
+.note-item .note-body{flex:1 1 auto;min-width:0;}
+.note-item .note-text{white-space:pre-wrap;word-break:break-word;font-size:14px;line-height:1.55;color:var(--text);}
+.note-item .note-text[contenteditable="true"]{outline:none;border:1px dashed var(--primary);border-radius:8px;padding:6px 8px;background:var(--bg);}
+.note-item .note-time{font-size:11px;color:var(--muted);margin-top:6px;}
+.note-item .note-btns{display:flex;flex-direction:column;gap:6px;flex:0 0 auto;}
+.note-empty{color:var(--muted);font-size:13px;text-align:center;padding:26px 0;}
 /* 总览：天气(2/3) + 日历(1/3) 双栏 */
 .ov-top-row{display:flex;gap:16px;align-items:stretch;margin-bottom:24px;}
 .ov-top-row>.card{margin-bottom:0;}
@@ -490,6 +502,7 @@ svg.chart{width:100%;height:auto;display:block;}
     <button class="nav" data-tab="rest"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8h1a4 4 0 0 1 0 8h-1M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/><line x1="6" y1="2" x2="6" y2="5"/><line x1="10" y1="2" x2="10" y2="5"/><line x1="14" y1="2" x2="14" y2="5"/></svg>休息放松</button>
     <button class="nav" data-tab="fun"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l2.4 7.4H22l-6 4.4 2.3 7.2L12 16.8 5.7 21l2.3-7.2-6-4.4h7.6z"/></svg>娱乐激励</button>
     <button class="nav" data-tab="goal"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3h18v18H3zM3 9h18M3 15h18M9 3v18M15 3v18"/></svg>目标复盘</button>
+    <button class="nav" data-tab="notes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16v16H4z"/><path d="M8 9h8M8 13h8M8 17h5"/></svg>记事本</button>
     <div class="sp"></div>
     <button class="nav" id="btnSettings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>设置</button>
     <div class="mini">数据存本地浏览器<br>可开「云同步」多设备互通<br><span id="appVer" style="display:inline-block;margin-top:6px;padding:2px 9px;border:1px solid var(--line);border-radius:20px;font-size:11px;opacity:.85">v1.0</span></div>
@@ -791,6 +804,23 @@ svg.chart{width:100%;height:auto;display:block;}
         <div id="engMore" class="chk"></div>
       </div>
     </section>
+
+    <!-- 记事本 -->
+    <section class="panel" id="panel-notes">
+      <div class="card full">
+        <h3><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16v16H4z"/><path d="M8 9h8M8 13h8M8 17h5"/></svg>记事本</h3>
+        <p style="font-size:13px;color:var(--muted);margin:0 0 14px;">随时记下突然想到的点子、待办、灵感 —— 自动存本地浏览器，刷新不丢。</p>
+        <div class="notes-add">
+          <textarea id="noteInput" placeholder="突然想到的…（Ctrl+Enter 快速记录）"></textarea>
+          <div class="acts">
+            <button class="btn primary" id="noteAdd">记一笔</button>
+            <span class="cnt" id="noteCnt"></span>
+          </div>
+        </div>
+        <div id="noteList"></div>
+      </div>
+    </section>
+
   </div>
 </div>
 <div class="toast" id="toast"></div>
@@ -844,12 +874,14 @@ var S={
   weather:ls('wb_weather',{city:'大连',temp:null,code:null,hum:null,wind:null,updated:0}),
   recs:ls('wb_recs',null),
   recSeen:ls('wb_rec_seen',ls('wb_rec_hide',[])),   /* 看过了的条目：仅屏蔽这条具体的，同类照常推（旧 wb_rec_hide 迁移而来） */
-  recAvoid:ls('wb_rec_avoid',[])                     /* 不喜欢的类型：屏蔽该类型，同类不再推（记住偏好） */
+  recAvoid:ls('wb_rec_avoid',[]),                    /* 不喜欢的类型：屏蔽该类型，同类不再推（记住偏好） */
+  notes:ls('wb_notes',null)                          /* 记事本：随手记的突发想法 */
 };
 // 明细记录（逐笔每日花销/收入）为输入源，月度 spend/income 由明细汇总而来
 if(!Array.isArray(S.txns))S.txns=[];
 if(!S.spend)S.spend={};
 if(!S.income)S.income={};
+if(!Array.isArray(S.notes))S.notes=[];
 // 防御：localStorage 可能存下 "null"（JSON.parse 返回 null），后续渲染会抛错
 if(!Array.isArray(S.tasks))S.tasks=[];
 if(!Array.isArray(S.fit))S.fit=[];
@@ -1003,7 +1035,7 @@ function persist(){
   sv('wb_allday_tasks',S.tasks);sv('wb_allday_fit',S.fit);sv('wb_allday_bar',S.bar);sv('wb_allday_meta',S.meta);sv('wb_allday_fun',S.fun);sv('wb_allday_seeded',S.seededA);
   sv('wb_fin_spend',S.spend);sv('wb_fin_income',S.income);sv('wb_fin_meta',S.fmeta);sv('wb_fin_seeded',S.seededF);sv('wb_fin_txns',S.txns);
   sv('wb_goal_goals',S.goals);sv('wb_goal_reviews',S.reviews);sv('wb_goal_seeded',S.seededG);
-  sv('wb_bg',S.bg);sv('wb_fakao_link',S.fakaoLink);sv('wb_fakao_checked',S.fakaoChecked);sv('wb_eng_data',S.eng);sv('wb_weather',S.weather);sv('wb_recs',S.recs);sv('wb_rec_seen',S.recSeen);sv('wb_rec_avoid',S.recAvoid);
+  sv('wb_bg',S.bg);sv('wb_fakao_link',S.fakaoLink);sv('wb_fakao_checked',S.fakaoChecked);sv('wb_eng_data',S.eng);sv('wb_weather',S.weather);sv('wb_recs',S.recs);sv('wb_rec_seen',S.recSeen);sv('wb_rec_avoid',S.recAvoid);sv('wb_notes',S.notes);
   syncTouch();
   syncPersistHook();
 }
@@ -1024,7 +1056,7 @@ function syncSnapshot(){
     spend:S.spend,income:S.income,fmeta:S.fmeta,seededF:S.seededF,txns:S.txns,
     goals:S.goals,reviews:S.reviews,seededG:S.seededG,
     fakaoLink:S.fakaoLink,fakaoChecked:S.fakaoChecked,eng:S.eng,weather:S.weather,
-    recs:S.recs,recSeen:S.recSeen,recAvoid:S.recAvoid};
+    recs:S.recs,recSeen:S.recSeen,recAvoid:S.recAvoid,notes:S.notes};
   o.__ts=syncLocalTs()||Date.now();
   return o;
 }
@@ -2721,6 +2753,52 @@ document.getElementById('settingsClose').onclick=function(){document.getElementB
 document.getElementById('settingsBg').onclick=function(e){if(e.target===this)this.classList.remove('show');};
 
 /* ---------- 切换 ---------- */
+/* ---------- 记事本 ---------- */
+function renderNotes(){
+  var box=document.getElementById('noteList');if(!box)return;
+  var list=(S.notes||[]).slice().sort(function(a,b){return b.ts-a.ts;});
+  var c=document.getElementById('noteCnt');
+  if(!list.length){box.innerHTML='<div class="note-empty">还没有记录，上面写一句吧 ✍️</div>';if(c)c.textContent='';return;}
+  box.innerHTML=list.map(function(n){
+    var d=new Date(n.ts);var p=function(x){return String(x).padStart(2,'0');};
+    var t=d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate())+' '+p(d.getHours())+':'+p(d.getMinutes());
+    return '<div class="note-item" data-id="'+n.id+'">'
+      +'<div class="note-body"><div class="note-text" data-id="'+n.id+'">'+esc(n.text)+'</div>'
+      +'<div class="note-time">'+t+'</div></div>'
+      +'<div class="note-btns"><button class="btn small" data-edit="'+n.id+'">编辑</button><button class="btn small danger" data-del="'+n.id+'">删除</button></div>'
+      +'</div>';
+  }).join('');
+  if(c)c.textContent=S.notes.length+' 条';
+}
+function addNote(){
+  var ta=document.getElementById('noteInput');if(!ta)return;
+  var v=ta.value.trim();
+  if(!v){toast('写点什么再记吧');return;}
+  S.notes=S.notes||[];
+  S.notes.push({id:uid(),text:v,ts:Date.now()});
+  ta.value='';persist();renderNotes();ta.focus();
+}
+function saveNote(id,text){
+  var n=S.notes.find(function(x){return x.id===id;});
+  if(n){n.text=(text||'').trim();persist();}
+  renderNotes();
+}
+function editNote(id){
+  var el=document.querySelector('.note-text[data-id="'+id+'"]');if(!el)return;
+  if(el.getAttribute('contenteditable')==='true'){
+    el.setAttribute('contenteditable','false');el.onblur=null;saveNote(id,el.textContent);
+  }else{
+    el.setAttribute('contenteditable','true');el.focus();
+    var r=document.createRange();r.selectNodeContents(el);var s=getSelection();s.removeAllRanges();s.addRange(r);
+    el.onblur=function(){el.setAttribute('contenteditable','false');el.onblur=null;saveNote(id,el.textContent);};
+  }
+}
+document.getElementById('noteAdd').addEventListener('click',addNote);
+document.getElementById('noteInput').addEventListener('keydown',function(e){if((e.ctrlKey||e.metaKey)&&e.key==='Enter'){e.preventDefault();addNote();}});
+document.getElementById('noteList').addEventListener('click',function(e){
+  var del=e.target.closest('[data-del]');if(del){S.notes=S.notes.filter(function(x){return x.id!==del.dataset.del;});persist();renderNotes();return;}
+  var ed=e.target.closest('[data-edit]');if(ed){editNote(ed.dataset.edit);}
+});
 function switchTab(name){
   if(!name){name='overview';}
   document.querySelectorAll('.sidebar button.nav').forEach(function(b){b.classList.toggle('active',b.dataset.tab===name);});
@@ -2734,11 +2812,12 @@ function switchTab(name){
   if(name==='rest')renderRest();
   if(name==='goal')renderGoal();
   if(name==='eng')renderEng();
+  if(name==='notes')renderNotes();
 }
 document.querySelectorAll('.sidebar button.nav').forEach(function(b){if(!b.dataset.tab)return;b.onclick=function(){switchTab(b.dataset.tab);};});
-function renderAll(){renderOverview();renderTasks();renderFit();renderFun();renderFin();renderRest();renderGoal();renderFakao();renderEng();renderFakaoCheckin();renderCalendar();renderWxDate();}
+function renderAll(){renderOverview();renderTasks();renderFit();renderFun();renderFin();renderRest();renderGoal();renderFakao();renderEng();renderFakaoCheckin();renderCalendar();renderWxDate();renderNotes();}
 /* 版本号：每次发布改动后在此 +0.1，便于核对 Chrome 是否为最新版 */
-var APP_VER='1.98';
+var APP_VER='1.99';
 var _av=document.getElementById('appVer');if(_av)_av.textContent='v'+APP_VER;
 /* 清理已弃用的习惯打卡旧数据（v1.28 起不再使用，仅清孤立 key，不影响任何功能） */
 try{localStorage.removeItem('wb_hab_habits');localStorage.removeItem('wb_hab_seeded');}catch(e){}
