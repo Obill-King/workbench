@@ -1260,7 +1260,7 @@ function renderOverview(){
   var engLogT=S.eng.logs[todayStr()];var engFocus=engLogT?engLogT.focus:0;
   var cards=[
     {tab:'tasks',name:'日程待办',v:remaining,s:(overdue?('逾期 '+overdue+' 条'):'无逾期'),cls:overdue?'danger':''},
-    {tab:'fit',name:'健康身体',v:hasFit?'已热身':'未热身',s:'体重趋势 · 以热身为打卡标准',cls:hasFit?'ok':''},
+    {tab:'fit',name:'健康身体',v:hasFit?'已打卡':'未打卡',s:'体重趋势 · 热身打卡',cls:hasFit?'ok':''},
     {tab:'fun',name:'娱乐激励',v:points,s:'可用积分',cls:''},
     {tab:'fin',name:'记账理财',v:'<span class="out">-¥'+finSpend.toFixed(0)+'</span>',s:'预算 ¥'+(+S.fmeta.budget||0).toFixed(0),cls:''},
     {tab:'rest',name:'休息放松',v:REST_LIST.length+' 类',s:'随时来翻',cls:''},
@@ -2910,7 +2910,7 @@ function switchTab(name){
 document.querySelectorAll('.sidebar button.nav').forEach(function(b){if(!b.dataset.tab)return;b.onclick=function(){switchTab(b.dataset.tab);};});
 function renderAll(){renderOverview();renderTasks();renderFit();renderFun();renderFin();renderRest();renderGoal();renderFakao();renderEng();renderFakaoCheckin();renderCalendar();renderWxDate();renderNotes();}
 /* 版本号：每次发布改动后在此 +0.1，便于核对 Chrome 是否为最新版 */
-var APP_VER='2.02';
+var APP_VER='2.03';
 var _av=document.getElementById('appVer');if(_av)_av.textContent='v'+APP_VER;
 /* 清理已弃用的习惯打卡旧数据（v1.28 起不再使用，仅清孤立 key，不影响任何功能） */
 try{localStorage.removeItem('wb_hab_habits');localStorage.removeItem('wb_hab_seeded');}catch(e){}
