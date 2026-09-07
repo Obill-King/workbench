@@ -890,6 +890,23 @@ if(!Array.isArray(S.notes))S.notes=[];
 // 防御：localStorage 可能存下 "null"（JSON.parse 返回 null），后续渲染会抛错
 if(!Array.isArray(S.tasks))S.tasks=[];
 if(!Array.isArray(S.fit))S.fit=[];
+// 健身记录按日期去重：同一天多条合并为一条，避免同日显示多条
+// 合并规则：体重取首个非空 / 热身取任意「已做」/ 运动取首条非空
+(function(){
+  if(!S.fit||!S.fit.length)return;
+  var byDate={},order=[];
+  S.fit.forEach(function(r){
+    var d=r.date;
+    if(byDate[d]){
+      var e=byDate[d];
+      if(!e.weight&&r.weight)e.weight=r.weight;
+      if(!e.warmup&&r.warmup)e.warmup=true;
+      if(!e.note&&r.note)e.note=r.note;
+    }else{byDate[d]=r;order.push(d);}
+  });
+  S.fit=order.map(function(d){return byDate[d];});
+  sv('wb_allday_fit',S.fit);
+})();
 if(!Array.isArray(S.bar))S.bar=[];
 if(!Array.isArray(S.goals))S.goals=[];
 if(!Array.isArray(S.reviews))S.reviews=[];
@@ -2112,14 +2129,30 @@ function renderFit(){
 }
 document.getElementById('fDate').value=todayStr();
 document.getElementById('fitForm').addEventListener('submit',function(e){
-  e.preventDefault();var w=parseFloat(document.getElementById('fWeight').value),note=document.getElementById('fNote').value.trim();
+  e.preventDefault();
+  var date=document.getElementById('fDate').value||todayStr();
+  var w=parseFloat(document.getElementById('fWeight').value),note=document.getElementById('fNote').value.trim();
   var warmOn=document.getElementById('fWarm').checked;
   if(!(w>0)&&!warmOn&&!note){toast('请至少记录一项（体重/热身/运动）');return;}
-  S.fit.push({id:uid(),date:document.getElementById('fDate').value||todayStr(),weight:w||'',warmup:warmOn,note:note});
-  if(warmOn)earn('健身热身',10);
-  if(note)earn('健身内容·'+note,10);
+  // 同一天：合并到已有记录而非新增；空白字段不覆盖，其余作为编辑
+  var existing=null;
+  for(var i=0;i<S.fit.length;i++){if(S.fit[i].date===date){existing=S.fit[i];break;}}
+  if(existing){
+    var hadWarm=!!existing.warmup, hadNote=!!(existing.note&&existing.note.trim());
+    if(w>0)existing.weight=w;        // 体重：填了才更新
+    if(note)existing.note=note;      // 运动：填了才更新
+    if(warmOn)existing.warmup=true;  // 热身：勾选才置「已做」，未勾选保留原值
+    if(warmOn&&!hadWarm)earn('健身热身',10);
+    if(note&&!hadNote)earn('健身内容·'+note,10);
+    toast('已更新当天打卡');
+  }else{
+    S.fit.push({id:uid(),date:date,weight:w||'',warmup:warmOn,note:note});
+    if(warmOn)earn('健身热身',10);
+    if(note)earn('健身内容·'+note,10);
+    toast('已打卡');
+  }
   persist();renderFit();this.reset();document.getElementById('fDate').value=todayStr();
-  document.getElementById('fWarm').checked=false;toast('已打卡');
+  document.getElementById('fWarm').checked=false;
 });
 document.getElementById('fitList').addEventListener('click',function(e){var b=e.target.closest('.del');if(!b)return;var id=b.dataset.delf;S.fit=S.fit.filter(function(x){return x.id!==id;});persist();renderFit();});
 
