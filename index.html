@@ -1,11 +1,11 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-<meta http-equiv="Pragma" content="no-cache">
-<meta http-equiv="Expires" content="0">
+<html lang="zh-CN" data-page-node-id="OAL4zpCwymteCWLjANOvrF">
+<head data-page-node-id="1KRDYpV2H0t5O54MICWNCh">
+<meta charset="UTF-8" data-page-node-id="CA4jMwEVuofP0OAGTS5e3j">
+<meta name="viewport" content="width=device-width,initial-scale=1" data-page-node-id="FHJaxGJCbGaKTJK1U8wM94">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" data-page-node-id="RUGFxxBD19aMZxhoqD4sc0">
+<meta http-equiv="Pragma" content="no-cache" data-page-node-id="39cAzGOTAFak1Cle5K8m0G">
+<meta http-equiv="Expires" content="0" data-page-node-id="n1uvfREqK9SFchEo28Hfyb">
 <title>全能生活台</title>
 <style>
 :root{
@@ -146,13 +146,21 @@ select option{background:#fff;color:var(--text);}
 .switch input:checked+.slider{background:var(--primary);}
 .switch input:checked+.slider:before{transform:translateX(20px);}
 /* 健身打卡表单 */
-.fit-grid{display:grid;grid-template-columns:1.1fr 1.1fr 2.4fr 1fr auto;gap:14px;align-items:center;width:100%;}
+.fit-grid{display:grid;grid-template-columns:1fr 1fr 1fr 2.2fr 1fr auto;gap:14px;align-items:center;width:100%;}
 .fit-grid>.field{min-width:0;}
 .fit-grid .field.w-wide{}
 .fit-grid>.field.fit-btn{flex:0 0 auto;}
 .fit-grid>.field.fit-btn .btn{width:120px;justify-content:center;}
 .fit-grid .warm-field{align-self:stretch;display:flex;flex-direction:column;align-items:center;justify-content:center;margin-bottom:0;}
 .fit-grid .warm-field>label:not(.switch){margin-bottom:6px;}
+/* 身体参数 & 基础代谢 */
+.body-box{margin-top:14px;padding-top:14px;border-top:1px dashed var(--line);}
+.body-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;}
+.body-row .field{margin-bottom:0;}
+.bmr-out{margin-top:12px;font-size:13px;color:var(--muted);line-height:1.6;background:var(--bg);border-radius:9px;padding:10px 12px;}
+.bmr-out.has{color:var(--text);}
+.bmr-out b{color:var(--primary);font-size:15px;font-variant-numeric:tabular-nums;}
+@media (max-width:1024px){.body-row{grid-template-columns:1fr 1fr 1fr;}}
 /* 分栏总览 */
 .ov-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:24px;}
 .ov-card{position:relative;overflow:hidden;display:flex;align-items:center;gap:14px;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px 18px;box-shadow:var(--shadow);cursor:pointer;transition:transform .18s,border-color .18s,box-shadow .18s;}
@@ -452,7 +460,7 @@ svg.chart{width:100%;height:auto;display:block;}
   /* 健身打卡：手机端日期/体重/运动各占一行，热身与记录按钮同排并对齐 */
   .fit-grid{grid-template-columns:1fr 1fr;column-gap:20px;row-gap:12px;align-items:center;}
   .fit-grid>.field{min-width:0;margin-bottom:0;}
-  .fit-grid>.field:nth-child(-n+2){grid-column:1/-1;}
+  .fit-grid>.field:nth-child(1){grid-column:1/-1;}
   .fit-grid .field.w-wide{grid-column:1 / -1;}
   .fit-grid .warm-field{grid-column:1;flex-direction:row;align-items:center;justify-content:flex-start;gap:10px;align-self:center;}
   .fit-grid .warm-field>label:not(.switch){margin-bottom:0;}
@@ -494,358 +502,367 @@ svg.chart{width:100%;height:auto;display:block;}
 }
 </style>
 </head>
-<body>
-<div class="layout">
-  <nav class="sidebar">
-    <div class="brand"><div class="logo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3h7v7H3zM14 3h7v4h-7zM14 11h7v10h-7zM3 14h7v7H3z"/></svg></div><b>全能生活台</b></div>
-    <button class="nav active" data-tab="overview"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3h7v7H3zM14 3h7v4h-7zM14 11h7v10h-7zM3 14h7v7H3z"/></svg>总览</button>
-    <button class="nav" data-tab="fit"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6.5 6.5 17.5 17.5M4 9l-1 1 3 3 1-1M20 15l1-1-3-3-1 1M9 4l1 1-3 3-1-1M15 20l-1-1 3-3 1 1"/></svg>健康身体</button>
-    <button class="nav" data-tab="fin"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1v22M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>记账理财</button>
-    <button class="nav" data-tab="tasks"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3 8-8M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>日程待办</button>
-    <button class="nav" data-tab="bar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>法考学习</button>
-    <button class="nav" data-tab="eng"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/><path d="M9 9h6M9 13h6M9 17h3"/></svg>英语学习</button>
-    <button class="nav" data-tab="rest"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8h1a4 4 0 0 1 0 8h-1M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/><line x1="6" y1="2" x2="6" y2="5"/><line x1="10" y1="2" x2="10" y2="5"/><line x1="14" y1="2" x2="14" y2="5"/></svg>休息放松</button>
-    <button class="nav" data-tab="fun"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l2.4 7.4H22l-6 4.4 2.3 7.2L12 16.8 5.7 21l2.3-7.2-6-4.4h7.6z"/></svg>娱乐激励</button>
-    <button class="nav" data-tab="goal"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3h18v18H3zM3 9h18M3 15h18M9 3v18M15 3v18"/></svg>目标复盘</button>
-    <button class="nav" data-tab="notes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16v16H4z"/><path d="M8 9h8M8 13h8M8 17h5"/></svg>记事本</button>
-    <div class="sp"></div>
-    <button class="nav" id="btnSettings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>设置</button>
-    <div class="mini">数据存本地浏览器<br>可开「云同步」多设备互通<br><span id="appVer" style="display:inline-block;margin-top:6px;padding:2px 9px;border:1px solid var(--line);border-radius:20px;font-size:11px;opacity:.85">v1.0</span></div>
+<body data-page-node-id="6PLVa0ErnFlWGBfGJ1kbF7">
+<div class="layout" data-page-node-id="rdAaZU37ktgFlCK18mlehe">
+  <nav class="sidebar" data-page-node-id="FV0sWr62DfCgQ0YmrBu2rP">
+    <div class="brand" data-page-node-id="M1mHXwNFWgnHRpMXW8JcRd"><div class="logo" data-page-node-id="GVLthneI9cSzglsD9WJcKM"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-page-node-id="IP8CgrNrmxgwNSLePx3KMb"><path d="M3 3h7v7H3zM14 3h7v4h-7zM14 11h7v10h-7zM3 14h7v7H3z" data-page-node-id="44j6WptCIWU9PoWI4XPL7t"/></svg></div><b data-page-node-id="DVYTrGfvEMmatgydEmTrZe">全能生活台</b></div>
+    <button class="nav active" data-tab="overview" data-page-node-id="NbhXxGtlg1CRRS0WdPCHZB"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-page-node-id="zPdDjGbL9Oj2XxoSIVEzzF"><path d="M3 3h7v7H3zM14 3h7v4h-7zM14 11h7v10h-7zM3 14h7v7H3z" data-page-node-id="ExtI0rEg3HFCVaCJyEzdSW"/></svg>总览</button>
+    <button class="nav" data-tab="fit" data-page-node-id="fx0ta9MccNOLFbJ1l4qftc"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-page-node-id="nMco9X8eM2dqygofVs1Ba0"><path d="M6.5 6.5 17.5 17.5M4 9l-1 1 3 3 1-1M20 15l1-1-3-3-1 1M9 4l1 1-3 3-1-1M15 20l-1-1 3-3 1 1" data-page-node-id="10AGB6sEaDEnGyGp8Tcezx"/></svg>健康身体</button>
+    <button class="nav" data-tab="fin" data-page-node-id="76rp4kPkzm5N1LKTuKIUNY"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-page-node-id="z8wRGL6DMHCncIjsccvKe3"><path d="M12 1v22M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" data-page-node-id="SgN0lWAmFca0flUYUbLPiA"/></svg>记账理财</button>
+    <button class="nav" data-tab="tasks" data-page-node-id="VECH4U7Ve7L5kMdWhcw6Vw"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-page-node-id="t49b17dcRFbSaFyjoTbSzJ"><path d="M9 11l3 3 8-8M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" data-page-node-id="HtmG7AOnCnalz86jF0NFKM"/></svg>日程待办</button>
+    <button class="nav" data-tab="bar" data-page-node-id="AEOfaNSFsdPtfcbxQVSUAg"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-page-node-id="z4XXdKfA26x3HnOEhkffqZ"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" data-page-node-id="xbDG2M4eb7BwkMGCZOwp9P"/></svg>法考学习</button>
+    <button class="nav" data-tab="eng" data-page-node-id="mygvbGWV5BhLbFIALtxsrc"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-page-node-id="FzpM38Bp6W2K2gn0PsuXJ7"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" data-page-node-id="nHliqJj2HFNeu9YCVMCFOx"/><path d="M9 9h6M9 13h6M9 17h3" data-page-node-id="2uAB6REbZlpt6AvF0Czzp3"/></svg>英语学习</button>
+    <button class="nav" data-tab="rest" data-page-node-id="iMgeFvquVC4gera5Sf2nza"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-page-node-id="RNGClLxreMuaBXuDFBGJL2"><path d="M18 8h1a4 4 0 0 1 0 8h-1M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z" data-page-node-id="ZTGHoocwGXzgOkF3MlDHje"/><line x1="6" y1="2" x2="6" y2="5" data-page-node-id="qIezbmI86ooAR6lGGVgA8L"/><line x1="10" y1="2" x2="10" y2="5" data-page-node-id="YCi6ebs0jWxOpiVdGMxCPa"/><line x1="14" y1="2" x2="14" y2="5" data-page-node-id="FPgI6jjGBMg5bptiK0CMuf"/></svg>休息放松</button>
+    <button class="nav" data-tab="fun" data-page-node-id="ADAyhhVBdobXZLG4dmobkv"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-page-node-id="9m7QWXYMEmHNs1TEDnCCSR"><path d="M12 2l2.4 7.4H22l-6 4.4 2.3 7.2L12 16.8 5.7 21l2.3-7.2-6-4.4h7.6z" data-page-node-id="C8fJBuyGrZgHYrfG9QPN2A"/></svg>娱乐激励</button>
+    <button class="nav" data-tab="goal" data-page-node-id="a2YNvBziX1skh6Z86nbgML"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-page-node-id="LxGX259lceSriEzwX2RL1A"><path d="M3 3h18v18H3zM3 9h18M3 15h18M9 3v18M15 3v18" data-page-node-id="95QLpx2MJwh2PrWus1g7Gf"/></svg>目标复盘</button>
+    <button class="nav" data-tab="notes" data-page-node-id="C1mn5d4C29Mdnnsd0RwVP6"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-page-node-id="PRSCK0FElOjKktWWwHo8qR"><path d="M4 4h16v16H4z" data-page-node-id="8ZmYVz4rWMWfUROREJXYbg"/><path d="M8 9h8M8 13h8M8 17h5" data-page-node-id="EzI9wev6HWvWBNpHhzxgEQ"/></svg>记事本</button>
+    <div class="sp" data-page-node-id="vzEqlhQFqBBGMxnRmGF25b"></div>
+    <button class="nav" id="btnSettings" data-page-node-id="AsNTjk17gsSwRtPqmMqlQg"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-page-node-id="uCE5iDVAAf68VQFbiw7HGb"><circle cx="12" cy="12" r="3" data-page-node-id="A1CBYF5HbCKx1PZFLbC5Pf"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" data-page-node-id="OfG9zyUCxMrXFF2PHfWjG5"/></svg>设置</button>
+    <div class="mini" data-page-node-id="C1ThN6MQSOol24YmwL0kH6">数据存本地浏览器<br data-page-node-id="5tKaBnAO31S2A8gfJQ9cU8">可开「云同步」多设备互通<br data-page-node-id="jFAf5GiLbvRQX3p8JSPTQn"><span id="appVer" style="display:inline-block;margin-top:6px;padding:2px 9px;border:1px solid var(--line);border-radius:20px;font-size:11px;opacity:.85" data-page-node-id="vWiTgd5FqMDygkt1EaCU3G">v1.0</span></div>
   </nav>
-  <div class="drawer-bg" id="drawerBg"></div>
+  <div class="drawer-bg" id="drawerBg" data-page-node-id="ZXCqW7XECFiDGGRYxTGcBc"></div>
 
-  <div class="wrap">
-    <div class="mbar">
-      <button class="ham" id="hamBtn" aria-label="菜单"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M3 12h18M3 18h18"/></svg></button>
-      <b>全能生活台</b>
+  <div class="wrap" data-page-node-id="7JR1TqaFayHVEDE9ZtsEpi">
+    <div class="mbar" data-page-node-id="a2frSU8UeAMcGa3v8D1sQZ">
+      <button class="ham" id="hamBtn" aria-label="菜单" data-page-node-id="RRijv7w1svTbFNlRSWcAbM"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-page-node-id="2wjKMDkRCblPryn5CdD3oX"><path d="M3 6h18M3 12h18M3 18h18" data-page-node-id="V2KRBwEO19N3KEVhCMTEjB"/></svg></button>
+      <b data-page-node-id="GPtc7kWF8BPf7diauvtMP3">全能生活台</b>
     </div>
-    <div id="initError" style="display:none;background:#fee2e2;border:1px solid #ef4444;color:#991b1b;border-radius:12px;padding:14px 16px;margin:14px 0;font-size:13px;white-space:pre-wrap;word-break:break-word;"></div>
+    <div id="initError" style="display:none;background:#fee2e2;border:1px solid #ef4444;color:#991b1b;border-radius:12px;padding:14px 16px;margin:14px 0;font-size:13px;white-space:pre-wrap;word-break:break-word;" data-page-node-id="lrQ18SSUxAs53YvsHE4UI6"></div>
 
     <!-- 总览 -->
-    <section class="panel active" id="panel-overview">
-      <div class="ov-top-row">
-        <div class="card" id="calendarCard">
-          <div class="cal">
-            <div class="cal-head">
-              <div class="cal-title" id="calTitle">日历</div>
-              <div class="cal-nav"><button id="calPrev" aria-label="上个月">‹</button><button id="calNext" aria-label="下个月">›</button></div>
+    <section class="panel active" id="panel-overview" data-page-node-id="noIUoaj1QheIvV9sGknVHY">
+      <div class="ov-top-row" data-page-node-id="sBrCJ1fxNYFfwH48tAqwDH">
+        <div class="card" id="calendarCard" data-page-node-id="yMfm1KKmVIKNoDtDEXGlzn">
+          <div class="cal" data-page-node-id="LyvCcSHlEubu6iMnl2TTQH">
+            <div class="cal-head" data-page-node-id="TEnGCni1svaiTAARNuox4g">
+              <div class="cal-title" id="calTitle" data-page-node-id="AEg5F9VGAjAbSO9xg8v0E2">日历</div>
+              <div class="cal-nav" data-page-node-id="nD6AJoEdkIscjhj9LZDexT"><button id="calPrev" aria-label="上个月" data-page-node-id="9baoBxUysRiO6WADnI7sF3">‹</button><button id="calNext" aria-label="下个月" data-page-node-id="2JXbXivPxjPHWaZk8j0HuP">›</button></div>
             </div>
-            <div class="cal-grid" id="calGrid"></div>
+            <div class="cal-grid" id="calGrid" data-page-node-id="xFq5oDKulZNZhqOumlNICV"></div>
           </div>
         </div>
-        <div class="card" id="weatherCard">
-          <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap;">
-            <div style="flex: 1;min-width:200px;display:flex;align-items:center;gap:14px;">
-              <div id="wxBadge" style="min-width:62px;height:62px;border-radius:14px;background:var(--primary-soft);color:var(--primary);display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:700;text-align:center;padding:6px;flex:0 0 auto;">--</div>
-              <div>
-                <div style="font-size:26px;font-weight:800;line-height:1.1;" id="wxTemp">--°C</div>
-                <div style="font-size:13px;color:var(--muted);" id="wxDesc">点击刷新获取天气</div>
+        <div class="card" id="weatherCard" data-page-node-id="PFEBYYwhqBpYMeRTRciSa6">
+          <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap;" data-page-node-id="AiZ7YiWb25gArDX1IPpTbV">
+            <div style="flex: 1;min-width:200px;display:flex;align-items:center;gap:14px;" data-page-node-id="AkgwsDNHH8REMSP7Z6MLLz">
+              <div id="wxBadge" style="min-width:62px;height:62px;border-radius:14px;background:var(--primary-soft);color:var(--primary);display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:700;text-align:center;padding:6px;flex:0 0 auto;" data-page-node-id="h5W1VDQ4l7Dr0aEuGtJzwJ">--</div>
+              <div data-page-node-id="EXySsj9YQ13Q7QwF49OGMz">
+                <div style="font-size:26px;font-weight:800;line-height:1.1;" id="wxTemp" data-page-node-id="FsVLVc97i3nOIaIaaXxdnj">--°C</div>
+                <div style="font-size:13px;color:var(--muted);" id="wxDesc" data-page-node-id="HlLvUNhza8Afgz7RZFRqAk">点击刷新获取天气</div>
               </div>
-              <div class="wx-date" id="wxDate">
-                <div class="wx-date-d" id="wxDateSun">--</div>
-                <div class="wx-date-l" id="wxDateLun">--</div>
+              <div class="wx-date" id="wxDate" data-page-node-id="bnQm9raArkjY7zRqK4KiMr">
+                <div class="wx-date-d" id="wxDateSun" data-page-node-id="cqwYCnkP6k0I5HzsHrAEfR">--</div>
+                <div class="wx-date-l" id="wxDateLun" data-page-node-id="ATrSQHUkT6sYs94aHncHXq">--</div>
               </div>
             </div>
-            <div style="display:flex;align-items:center;gap:8px;">
-              <input type="text" id="wxCity" placeholder="城市名" style="width:120px;font-size:13px;padding:8px 10px;">
-              <button class="btn" id="wxRefresh">刷新</button>
+            <div style="display:flex;align-items:center;gap:8px;" data-page-node-id="KU3BsGiRQvAijHFOUmXSMl">
+              <input type="text" id="wxCity" placeholder="城市名" style="width:120px;font-size:13px;padding:8px 10px;" data-page-node-id="qih8m3GSa8UFycFMHqsCsc">
+              <button class="btn" id="wxRefresh" data-page-node-id="wsDEoy4E9VUgc5bvrAmPK3">刷新</button>
             </div>
           </div>
-          <div class="wx-hscroll" style="margin-top:12px;">
-            <div id="wxHourly" style="position:relative;"></div>
+          <div class="wx-hscroll" style="margin-top:12px;" data-page-node-id="bDrm4wuL3o9VOZKIeDWDag">
+            <div id="wxHourly" style="position:relative;" data-page-node-id="zg5ckKuLymMuAkAsZHKB1d"></div>
           </div>
-          <div id="wxForecast" style="display:flex;gap:10px;margin-top:14px;flex-wrap:wrap;"></div>
+          <div id="wxForecast" style="display:flex;gap:10px;margin-top:14px;flex-wrap:wrap;" data-page-node-id="RI9OVTmrhV5FCOdjJ9zsDm"></div>
         </div>
       </div>
-      <div class="ov-grid" id="ovGrid"></div>
-      <div class="today-panel">
-        <h2><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>今日待办 / 逾期</h2>
-        <div id="ovTodo"></div>
+      <div class="ov-grid" id="ovGrid" data-page-node-id="N9k5BqwnmFkCVug0OkcFk9"></div>
+      <div class="today-panel" data-page-node-id="jo3OyCked10gVt08A3rAR0">
+        <h2 data-page-node-id="KzF0nkhu3pjmtPGgDJN2tp"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-page-node-id="8N9Fp33pP1h6rtJeWXjNFS"><circle cx="12" cy="12" r="9" data-page-node-id="fjo44uz4ODW3Ikv2W93l7V"/><path d="M12 7v5l3 2" data-page-node-id="AcvnN7Vceiw94PV9NsyhwD"/></svg>今日待办 / 逾期</h2>
+        <div id="ovTodo" data-page-node-id="ncJ54Aeskg4nWrA2K9cRBm"></div>
       </div>
-      <div class="today-panel">
-        <h2 style="display:flex;align-items:center;justify-content:space-between;"><span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l2.4 7.4H22l-6 4.4 2.3 7.2L12 16.8 5.7 21l2.3-7.2-6-4.4h7.6z"/></svg>每周推荐 <span id="recWeek" style="font-size:12px;color:var(--muted);font-weight:400;"></span></span><button class="btn" id="recManage" style="font-size:12px;padding:5px 10px;">管理</button></h2>
-        <div id="recList"></div>
+      <div class="today-panel" data-page-node-id="aFxDv93BNe6UC8dRH1bbZM">
+        <h2 style="display:flex;align-items:center;justify-content:space-between;" data-page-node-id="cK1AP5Y3kmUW6bYCm09JQd"><span data-page-node-id="w6WrCiRlOaQYCActT5C7Bc"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-page-node-id="w3dptHZSoQZiMNcbOaBHto"><path d="M12 2l2.4 7.4H22l-6 4.4 2.3 7.2L12 16.8 5.7 21l2.3-7.2-6-4.4h7.6z" data-page-node-id="NyQ5YYr7OIm0ZbIM2kqPfq"/></svg>每周推荐 <span id="recWeek" style="font-size:12px;color:var(--muted);font-weight:400;" data-page-node-id="Tqu5nidE1JS4TAXnoBXerx"></span></span><button class="btn" id="recManage" style="font-size:12px;padding:5px 10px;" data-page-node-id="HqIfsdrxHDGYjJl9f9g1wo">管理</button></h2>
+        <div id="recList" data-page-node-id="pSxcAeew0LRiAv26BOH2Gk"></div>
       </div>
 
       <!-- 云同步：默认收起，放在总览最下方 -->
-      <div class="card collapsible" id="syncCard">
-        <div class="coll-head" id="syncHead" style="display:flex;align-items:center;justify-content:space-between;cursor:pointer;">
-          <h3 style="margin:0;">☁️ 云同步（多设备互通 · GitHub）</h3>
-          <span id="syncToggleTxt" style="color:var(--muted);font-size:13px;">点击展开 ▾</span>
+      <div class="card collapsible" id="syncCard" data-page-node-id="RjADmqnHrIu38YaqA0vtvd">
+        <div class="coll-head" id="syncHead" style="display:flex;align-items:center;justify-content:space-between;cursor:pointer;" data-page-node-id="Klc9BLMzwN1e32HFGeHMHA">
+          <h3 style="margin:0;" data-page-node-id="5To6vodOZnHsgFaFnxqtey">☁️ 云同步（多设备互通 · GitHub）</h3>
+          <span id="syncToggleTxt" style="color:var(--muted);font-size:13px;" data-page-node-id="0m0srOALwfEwJ5cefzRid9">点击展开 ▾</span>
         </div>
-        <div class="coll-body" id="syncBody" style="display:none;">
-          <p class="sync-status" id="syncStatus">未连接。按下方清单拿到 GitHub Token（仅勾 gist 权限）后粘贴，点「连接 / 创建」即可在电脑与手机间自动互通。</p>
-          <div class="sync-row">
-            <input type="text" id="syncKey" placeholder="GitHub Token（ghp_… 或 github_pat_…）">
-            <button class="btn primary" id="syncConnect">连接 / 创建</button>
+        <div class="coll-body" id="syncBody" style="display:none;" data-page-node-id="E5aHaFf2PzpggL8n8wQMC9">
+          <p class="sync-status" id="syncStatus" data-page-node-id="BmyveaFxUVELE9QrdTBoNg">未连接。按下方清单拿到 GitHub Token（仅勾 gist 权限）后粘贴，点「连接 / 创建」即可在电脑与手机间自动互通。</p>
+          <div class="sync-row" data-page-node-id="KIqqaWmnji2GlUMReqzHjG">
+            <input type="text" id="syncKey" placeholder="GitHub Token（ghp_… 或 github_pat_…）" data-page-node-id="roqFbYnucXxE9flCaaFbDC">
+            <button class="btn primary" id="syncConnect" data-page-node-id="KFmVxjxOxfaruUTtUJLowl">连接 / 创建</button>
           </div>
-          <div class="sync-row">
-            <input type="text" id="syncGist" placeholder="Gist ID（第二台设备连接用，可留空）" style="flex:1;">
+          <div class="sync-row" data-page-node-id="kGLRYHlRNu9hWadhRyChxn">
+            <input type="text" id="syncGist" placeholder="Gist ID（第二台设备连接用，可留空）" style="flex:1;" data-page-node-id="EnTRnXtap0uKkVFIA11EyH">
           </div>
-          <div class="sync-row">
-            <button class="btn" id="syncPush">本机 → 云（上传）</button>
-            <button class="btn" id="syncPull">云 → 本机（下载）</button>
-            <label class="switch-line"><label class="switch"><input type="checkbox" id="syncAuto"><span class="slider"></span></label>自动同步</label>
+          <div class="sync-row" data-page-node-id="MrGPz76612ZINgysoZDLEZ">
+            <button class="btn" id="syncPush" data-page-node-id="KvMeiNyKkHBxefFNAhVxHr">本机 → 云（上传）</button>
+            <button class="btn" id="syncPull" data-page-node-id="2FE6hCH9pDtpiIe4951ykA">云 → 本机（下载）</button>
+            <label class="switch-line" data-page-node-id="2ya9Iy1788fzzCc3BfdE4q"><label class="switch" data-page-node-id="LLQgUTfhxWQKEzqlVutqcf"><input type="checkbox" id="syncAuto" data-page-node-id="n48GH7H9dCASYcQUF8QOfT"><span class="slider" data-page-node-id="eGqqkMwMNswGKJd8EjEN0F"></span></label>自动同步</label>
           </div>
-          <div class="sync-code" id="syncCodeBox" style="display:none;">
-            <span>Gist ID（复制到另一台设备，配同一 Token 即可连接）：</span>
-            <code id="syncCodeText"></code>
-            <button class="btn ghost" id="syncCopy" style="padding:2px 10px;font-size:12px;">复制</button>
+          <div class="sync-code" id="syncCodeBox" style="display:none;" data-page-node-id="D0zjKWa3eeOATkvnfK4hCE">
+            <span data-page-node-id="OLs334ZVLubIIW1FWECLNn">Gist ID（复制到另一台设备，配同一 Token 即可连接）：</span>
+            <code id="syncCodeText" data-page-node-id="O8Sc1wa0Kf1OitBDQbjG92"></code>
+            <button class="btn ghost" id="syncCopy" style="padding:2px 10px;font-size:12px;" data-page-node-id="GG02AkaueyM5A9uX9fHBFc">复制</button>
           </div>
-          <p class="sync-status">数据存于 GitHub Secret Gist（仅你有 Token 能读，不公开）。免费、无单文件大小上限，鲨鱼历史也能同步。Token 等同密码，勿外泄。</p>
+          <p class="sync-status" data-page-node-id="3KHSQoa9jgJ3pN1wZDCC8T">数据存于 GitHub Secret Gist（仅你有 Token 能读，不公开）。免费、无单文件大小上限，鲨鱼历史也能同步。Token 等同密码，勿外泄。</p>
         </div>
       </div>
     </section>
 
     <!-- 日程待办 -->
-    <section class="panel" id="panel-tasks">
-      <div class="card">
-        <h3><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 8v4l3 2"/><circle cx="12" cy="12" r="9"/></svg>新增待办</h3>
-        <form id="taskForm">
-          <div class="row">
-            <div class="field"><label>事项 *</label><input type="text" id="tTitle" placeholder="今天要做什么" required></div>
+    <section class="panel" id="panel-tasks" data-page-node-id="cCIH1Q3w1zmk4kVnkZ1CD4">
+      <div class="card" data-page-node-id="ehSKYBo35J1iyyKvBOWZxv">
+        <h3 data-page-node-id="F1aKAOUjDvgTk3bCpmpsVf"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-page-node-id="NIofnNODpubsGIrK7s3Yc7"><path d="M12 8v4l3 2" data-page-node-id="jA13HqfVvSmNtvsrPaez3A"/><circle cx="12" cy="12" r="9" data-page-node-id="C1tmipg7pjEWoo8tDvhAqc"/></svg>新增待办</h3>
+        <form id="taskForm" data-page-node-id="i3tGQ0nWFMYOVlzYPpeQFm">
+          <div class="row" data-page-node-id="S7zeDr40skIPlMjjpWnd0m">
+            <div class="field" data-page-node-id="Czq5quAZRYcEmYj1KGcWlu"><label data-page-node-id="NzxYbXrhRwLqzD21B2y4Mg">事项 *</label><input type="text" id="tTitle" placeholder="今天要做什么" required data-page-node-id="Sqp4mLL3hYJsBkQIyRYzRS"></div>
           </div>
-          <div class="row task-opts">
-            <div class="field optional short"><label>截止日期</label><input type="date" id="tDue"></div>
-            <div class="field optional short"><label>优先级</label><select id="tPrio"><option value="p0">P0 重要</option><option value="p1" selected>P1 一般</option><option value="p2">P2 次要</option></select></div>
-            <div class="field optional short"><label>积分</label><input type="text" id="tPts" inputmode="numeric" placeholder="完成后奖励" autocomplete="off" oninput="this.value=this.value.replace(/\D/g,'').replace(/^0+/,'')"></div>
-            <div class="field optional short"><label>重复</label><select id="tRepeat"><option value="none" selected>不重复</option><option value="daily">每天</option><option value="weekly">每周</option><option value="monthly">每月</option><option value="yearly">每年</option></select></div>
+          <div class="row task-opts" data-page-node-id="pCgItRG6PnEUFh9aBAWWMQ">
+            <div class="field optional short" data-page-node-id="RlkPzELZMmtzQn9Cj3q3DE"><label data-page-node-id="ryD6a4xmwKGCBsWrYBl20d">截止日期</label><input type="date" id="tDue" data-page-node-id="4NxRVkmdxzGAiFK8eQyQDp"></div>
+            <div class="field optional short" data-page-node-id="C2VEEcLxvVAM2ZfNnjsoeR"><label data-page-node-id="Aq7I5CyC7DTCwV2gfeW9FG">优先级</label><select id="tPrio" data-page-node-id="62sA26eqvwFxL1mB0BGYgZ"><option value="p0" data-page-node-id="EZb4VvGHcdLCKea1TXWZG8">P0 重要</option><option value="p1" selected data-page-node-id="jQFixjY6ef6GoyxOTzfGUR">P1 一般</option><option value="p2" data-page-node-id="7e8ZVKSvvPUQiyi23dEEG4">P2 次要</option></select></div>
+            <div class="field optional short" data-page-node-id="ZaBol2MvugHE6GA3QVIpom"><label data-page-node-id="Z3H7NzawV0r77cwks0SynJ">积分</label><input type="text" id="tPts" inputmode="numeric" placeholder="完成后奖励" autocomplete="off" oninput="this.value=this.value.replace(/\D/g,'').replace(/^0+/,'')" data-page-node-id="9v3NunY985JoS8MaVznvjW"></div>
+            <div class="field optional short" data-page-node-id="8GFriRyuYAU5ZpvP6l8RWz"><label data-page-node-id="mRkeFpCJL4MgBVN7tsanjL">重复</label><select id="tRepeat" data-page-node-id="ZtQHtw6ZGJVaJuftzEtoXp"><option value="none" selected data-page-node-id="Oc3nVtOSGCOpEfQYhYYAtu">不重复</option><option value="daily" data-page-node-id="JbyhmFDegLQZKX6zbMLtbW">每天</option><option value="weekly" data-page-node-id="csGSkeY2arfVFZpUZLDNZV">每周</option><option value="monthly" data-page-node-id="dULOZmGtNh4y1sRb96UVu0">每月</option><option value="yearly" data-page-node-id="T7YY31qt0bBTSwCTh6Lu8i">每年</option></select></div>
           </div>
-          <div class="row">
-            <div class="field optional"><label>备注</label><input type="text" id="tNote" placeholder="补充说明（可选）"></div>
+          <div class="row" data-page-node-id="DgiSRtiiMOwZ00n3BhdREA">
+            <div class="field optional" data-page-node-id="htfzGeJAHJhAomZNfAZQDq"><label data-page-node-id="JBNmaMAqYRnIEaNnW4eNCb">备注</label><input type="text" id="tNote" placeholder="补充说明（可选）" data-page-node-id="tOSYSsGx73Kx3IIdcFbZ8A"></div>
           </div>
-          <div class="row todo-actions">
-            <button class="btn primary" type="submit">添加</button>
+          <div class="row todo-actions" data-page-node-id="mA6sWgkiRWTSCgSPobc8BL">
+            <button class="btn primary" type="submit" data-page-node-id="tkwPjtq3XZlTdP1xPKyHEu">添加</button>
           </div>
         </form>
       </div>
-      <div class="card full">
-        <h3><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg>待办列表</h3>
-        <div id="taskList"></div>
+      <div class="card full" data-page-node-id="SeAep8rd7NymNKyxlyPd4F">
+        <h3 data-page-node-id="kjhcnBb2U64S1LIE7IZStD"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-page-node-id="SVRIajacmDuZGwB1T2jChc"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01" data-page-node-id="xaBFVGcJJShzDhgZZZQ0go"/></svg>待办列表</h3>
+        <div id="taskList" data-page-node-id="uh7pHqt2g4HurjPkyrY1Jj"></div>
       </div>
     </section>
 
     <!-- 健康身体 -->
-    <section class="panel" id="panel-fit">
-      <div class="card">
-        <h3><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6.5 6.5 17.5 17.5M4 9l-1 1 3 3 1-1M20 15l1-1-3-3-1 1M9 4l1 1-3 3-1-1M15 20l-1-1 3-3 1 1"/></svg>记录打卡</h3>
-        <form id="fitForm">
-          <div class="fit-grid">
-            <div class="field"><label>日期</label><input type="date" id="fDate"></div>
-            <div class="field"><label>体重(kg)</label><input type="number" id="fWeight" step="0.1" placeholder="可选"></div>
-            <div class="field w-wide"><label>运动内容</label><input type="text" id="fNote" placeholder="如：跑步5km"></div>
-            <div class="field warm-field"><label>热身</label><label class="switch"><input type="checkbox" id="fWarm"><span class="slider"></span></label></div>
-            <div class="field fit-btn"><label>&nbsp;</label><button class="btn primary" type="submit">记录打卡</button></div>
+    <section class="panel" id="panel-fit" data-page-node-id="q5wAGvyL7EApinZXrPDH5L">
+      <div class="card" data-page-node-id="3DRBsgIIxJNFkEACwpC04F">
+        <h3 data-page-node-id="mqHDwBufACcDo2y6Eih62D"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-page-node-id="VDSEELVkhBZA31XV6LKqLb"><path d="M6.5 6.5 17.5 17.5M4 9l-1 1 3 3 1-1M20 15l1-1-3-3-1 1M9 4l1 1-3 3-1-1M15 20l-1-1 3-3 1 1" data-page-node-id="P4ME9dFaj48c5b43B4InJd"/></svg>记录打卡</h3>
+        <form id="fitForm" data-page-node-id="Hq5F0NoW0ibiFymnv1hw8Y">
+          <div class="fit-grid" data-page-node-id="FSHQprQI8UsvYsAQk9ovg1">
+            <div class="field" data-page-node-id="qIfjnL5BcTWyvbDzVsVqjO"><label data-page-node-id="BRWHaNFBmPcTF3tHMZAfR1">日期</label><input type="date" id="fDate" data-page-node-id="qBWBbGG7uN4Sh2AIahGctF"></div>
+            <div class="field" data-page-node-id="1BBHhG0Xx6P94nVZxtGBFH"><label data-page-node-id="zYy9lBToYNxgif3Gh1n7Zt">早体重(kg)</label><input type="text" id="fWeightM" inputmode="decimal" placeholder="可选" data-page-node-id="V7JJs1hUwPPU2ArNv5XSQi"></div>
+            <div class="field" data-page-node-id="wbWE1"><label data-page-node-id="wbWE2">晚体重(kg)</label><input type="text" id="fWeightE" inputmode="decimal" placeholder="可选" data-page-node-id="wbWE3"></div>
+            <div class="field w-wide" data-page-node-id="ihnQGhyZkYq9AO6qLyn8lM"><label data-page-node-id="6M4yif2Ws4xpFInZIU04AE">运动内容</label><input type="text" id="fNote" placeholder="如：跑步5km" data-page-node-id="3dwulgz1j81kAVRDOWkr24"></div>
+            <div class="field warm-field" data-page-node-id="LF2GqGY5GSNKniUZ3BsJD2"><label data-page-node-id="G1mrPYFZZCwGgOIEJ8Vf9L">热身</label><label class="switch" data-page-node-id="bjwg1EdozkXCf5I4rZKhFM"><input type="checkbox" id="fWarm" data-page-node-id="SzreYnXxEvQmjvXqbQyF3c"><span class="slider" data-page-node-id="2LroYtFfcucQtjeEhjw7ta"></span></label></div>
+            <div class="field fit-btn" data-page-node-id="xK42jPpnBm08wf1984Ztdk"><label data-page-node-id="Q7BOcQEvAirhC3sqJ506ok">&nbsp;</label><button class="btn primary" type="submit" data-page-node-id="KOKg62AXUdVnWEtiplUJg1">记录打卡</button></div>
           </div>
         </form>
+        <div class="body-box" data-page-node-id="wbBB1">
+          <div class="body-row" data-page-node-id="wbBB2">
+            <div class="field" data-page-node-id="wbBB3"><label data-page-node-id="wbBB4">身高(cm)</label><input type="text" id="bHeight" inputmode="decimal" placeholder="如 175" data-page-node-id="wbBB5"></div>
+            <div class="field" data-page-node-id="wbBB6"><label data-page-node-id="wbBB7">年龄</label><input type="text" id="bAge" inputmode="numeric" placeholder="如 30" data-page-node-id="wbBB8"></div>
+            <div class="field" data-page-node-id="wbBB9"><label data-page-node-id="wbBB10">性别</label><select id="bSex" data-page-node-id="wbBB11"><option value="m">男</option><option value="f">女</option></select></div>
+          </div>
+          <div class="bmr-out" id="bmrOut" data-page-node-id="wbBB12">填写身高 / 年龄 / 性别与早体重后，自动估算基础代谢</div>
+        </div>
       </div>
-      <div class="card full">
-        <h3><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18M7 14l4-4 3 3 5-6"/></svg>体重趋势</h3>
-        <div class="chart-row"><div id="fitChart"></div><div id="fitList"></div></div>
+      <div class="card full" data-page-node-id="4JDGwqEoy8cVWT8ot2KuEu">
+        <h3 data-page-node-id="SGHGryAFFlQtICQ0ImFjcC"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-page-node-id="KZrQAvuhxcdB5YkFc1FSje"><path d="M3 3v18h18M7 14l4-4 3 3 5-6" data-page-node-id="G9Pt8UgBf4zlRsHJgj9L28"/></svg>体重趋势</h3>
+        <div class="chart-row" data-page-node-id="LIIyywtJtx5D8EEcAhFAoC"><div id="fitChart" data-page-node-id="wh7pioW78ClXWcS7UpgTLO"></div><div id="fitList" data-page-node-id="8ZTnBBGAYCM8t0MEKURXvK"></div></div>
       </div>
     </section>
 
     <!-- 法考学习（跳转腾讯文档在线表） -->
-    <section class="panel" id="panel-bar">
-      <div class="card full" style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:340px;">
-        <a id="fakaoOpen" href="https://docs.qq.com/sheet/DZkdpWmNpSHZJbVJr?tab=000001" target="_blank" rel="noopener" class="btn primary big-cta">进入学习 ↗</a>
-        <p class="cta-sub">法考每日跟踪表 · 腾讯文档在线表</p>
-        <button id="fakaoCheckin" class="btn" style="margin-top:18px;display:inline-flex;width:auto;align-items:center;gap:6px;">签到 +50 积分</button>
+    <section class="panel" id="panel-bar" data-page-node-id="iBcWgIOdnXITSEIHHqv3NG">
+      <div class="card full" style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:340px;" data-page-node-id="zJdTvCzdbbqUW67ww3mMzU">
+        <a id="fakaoOpen" href="https://docs.qq.com/sheet/DZkdpWmNpSHZJbVJr?tab=000001" target="_blank" rel="noopener" class="btn primary big-cta" data-page-node-id="S5WMorBWJXemhe1hO7BiJ1">进入学习 ↗</a>
+        <p class="cta-sub" data-page-node-id="E4Ftuc5NVz7TvEyrb505yC">法考每日跟踪表 · 腾讯文档在线表</p>
+        <button id="fakaoCheckin" class="btn" style="margin-top:18px;display:inline-flex;width:auto;align-items:center;gap:6px;" data-page-node-id="FDeH8X7WnPJXAuKGGf5hbE">签到 +50 积分</button>
       </div>
-      <div class="card full" style="display:flex;flex-direction:column;align-items:center;">
-        <h3 style="display:flex;align-items:center;gap:8px;margin:0 0 6px;">🍅 番茄钟 · 30 分钟专注</h3>
-        <div id="fkPomoTime" class="fk-pomo-time">30:00</div>
-        <div class="fk-pomo-ctrl">
-          <button id="fkPomoToggle" class="btn primary" style="min-width:96px;justify-content:center;">开始</button>
-          <button id="fkPomoReset" class="btn" style="min-width:96px;justify-content:center;">重置</button>
+      <div class="card full" style="display:flex;flex-direction:column;align-items:center;" data-page-node-id="0MQwqnaa6D7uTpNJVGky2C">
+        <h3 style="display:flex;align-items:center;gap:8px;margin:0 0 6px;" data-page-node-id="erY3PnKRTA09ffsHz8SyuE">🍅 番茄钟 · 30 分钟专注</h3>
+        <div id="fkPomoTime" class="fk-pomo-time" data-page-node-id="BJFDhIRULhmvhPu8ckqoYj">30:00</div>
+        <div class="fk-pomo-ctrl" data-page-node-id="iBIOEvCjQs3ijulGBX1mTe">
+          <button id="fkPomoToggle" class="btn primary" style="min-width:96px;justify-content:center;" data-page-node-id="kACoxnboZStrCnBNdyBsSW">开始</button>
+          <button id="fkPomoReset" class="btn" style="min-width:96px;justify-content:center;" data-page-node-id="fHd2XID6aiKC8iztvGWPRR">重置</button>
         </div>
-        <p class="fk-pomo-sub">今日已完成 <b id="fkPomoCount">0</b> 个番茄</p>
+        <p class="fk-pomo-sub" data-page-node-id="EPDHHX5g3GYjlVTk7cufdI">今日已完成 <b id="fkPomoCount" data-page-node-id="lHWPAb33bnhWpHYIVEDYny">0</b> 个番茄</p>
       </div>
     </section>
 
     <!-- 娱乐激励 -->
-    <section class="panel" id="panel-fun">
-      <div class="card full">
-        <h3><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l2.4 7.4H22l-6 4.4 2.3 7.2L12 16.8 5.7 21l2.3-7.2-6-4.4h7.6z"/></svg>积分商城</h3>
-        <div class="fun-stats" id="funStats"></div>
-        <p style="color:var(--muted);font-size:13px;margin:0 0 4px;">积分由完成其他页面的任务自动获得（如：健身热身 +10 · 英语学习 +30 · 目标关键结果达 100% +10 · 待办按各自设定分值）。休息放松页是纯参考，不打卡、不加分。</p>
+    <section class="panel" id="panel-fun" data-page-node-id="zvlraUTHIOa5e9njzxK1jf">
+      <div class="card full" data-page-node-id="sFuzMcjDRotpXJ8zWhvOYN">
+        <h3 data-page-node-id="y7LvMgnzw082R3FIpwJH2K"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-page-node-id="vDxeUycT9qN7d8D5nYXPGT"><path d="M12 2l2.4 7.4H22l-6 4.4 2.3 7.2L12 16.8 5.7 21l2.3-7.2-6-4.4h7.6z" data-page-node-id="WtAmbU7AkwvSRZlfCRPUph"/></svg>积分商城</h3>
+        <div class="fun-stats" id="funStats" data-page-node-id="AviERPP5ovCHFCnzCF4XgO"></div>
+        <p style="color:var(--muted);font-size:13px;margin:0 0 4px;" data-page-node-id="AB2ESvMZ9fvIENlOwrTc7T">积分由完成其他页面的任务自动获得（如：健身热身 +10 · 英语学习 +30 · 目标关键结果达 100% +10 · 待办按各自设定分值）。休息放松页是纯参考，不打卡、不加分。</p>
       </div>
-      <div class="card">
-        <h3><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12v10H4V12M2 7h20v5H2zM12 22V7M12 7S10 2 7 4l5 3 5-3c-3-2-5 3-5 3z"/></svg>娱乐奖励</h3>
-        <div id="rewardList"></div>
-        <div class="row rw-form" style="margin-top:10px;">
-          <input type="text" id="rwName" placeholder="奖励名，如看一集剧" style="flex:1 1 auto;min-width:0;">
-          <input type="number" id="rwCost" min="1" placeholder="积分" style="flex:0 0 90px;width:90px;">
-          <button class="btn primary" id="rwAdd" style="flex:0 0 auto;">添加</button>
+      <div class="card" data-page-node-id="ENVOGN4yu70olzKA5IB3B1">
+        <h3 data-page-node-id="W0d11MhgyW46uTcFQeU6EH"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-page-node-id="rKPLgns76DP0TRIl8ANYNQ"><path d="M20 12v10H4V12M2 7h20v5H2zM12 22V7M12 7S10 2 7 4l5 3 5-3c-3-2-5 3-5 3z" data-page-node-id="f8KWCQHY6B3Uckb2MEF7WC"/></svg>娱乐奖励</h3>
+        <div id="rewardList" data-page-node-id="8u8gs8TP4erNIC8nKjKMUa"></div>
+        <div class="row rw-form" style="margin-top:10px;" data-page-node-id="h4pZaGzf5q9DcpXo0D9Ksz">
+          <input type="text" id="rwName" placeholder="奖励名，如看一集剧" style="flex:1 1 auto;min-width:0;" data-page-node-id="NWqmycNhIFYSohnselVMgV">
+          <input type="number" id="rwCost" min="1" placeholder="积分" style="flex:0 0 90px;width:90px;" data-page-node-id="Kk9iVVQiDrUHKAm9slcXeO">
+          <button class="btn primary" id="rwAdd" style="flex:0 0 auto;" data-page-node-id="uEI8lSkAIrtXcERGeIm2vo">添加</button>
         </div>
       </div>
-      <div class="card">
-        <h3><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18M7 14l4-4 3 3 5-6"/></svg>积分流水</h3>
-        <div id="funLog"></div>
+      <div class="card" data-page-node-id="EjZe2ieG59FXxDPBxJNy2H">
+        <h3 data-page-node-id="k4cfLB73s0AkjR7wehGmli"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-page-node-id="EFeeBFcnjCkEmzTi22JTcr"><path d="M3 3v18h18M7 14l4-4 3 3 5-6" data-page-node-id="cLLouvS6sRas3qt3nmGy1h"/></svg>积分流水</h3>
+        <div id="funLog" data-page-node-id="JHYVIWXLYHjrTWjO29JsR9"></div>
       </div>
     </section>
 
     <!-- 记账理财 -->
-    <section class="panel" id="panel-fin">
-      <div class="card">
-        <h3><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>记每日花销</h3>
-      <form id="dailyForm">
-        <div class="row fin-actions daily-row">
-          <div class="field fin-date"><label>日期</label><input type="date" id="dailyDate"></div>
-          <div class="field fin-type"><label>类型</label><select id="dailyType"><option value="exp">支出</option><option value="inc">收入</option></select></div>
-          <div class="field fin-cat"><label>分类</label><span id="catWrap"></span></div>
-          <div class="field fin-amt"><label>金额 ¥</label><input type="text" id="dailyAmt" inputmode="decimal" autocomplete="off" placeholder="0.00"></div>
-          <div class="field fin-note"><label>备注</label><input type="text" id="dailyNote" autocomplete="off" placeholder="如：午饭 / 地铁"></div>
-          <button class="btn primary" type="submit">添加记录</button>
+    <section class="panel" id="panel-fin" data-page-node-id="FpUEIR5qSPiad6eeIyhiL2">
+      <div class="card" data-page-node-id="0Ol439XrmQH751fzcFsuyi">
+        <h3 data-page-node-id="6wKH1E4ImjfQK6g9Uip3qK"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-page-node-id="lOyvx5RvWgWCPn1p2lZ1dR"><path d="M12 5v14M5 12h14" data-page-node-id="iMbyPfYKpx9SkhjO2MzQPV"/></svg>记每日花销</h3>
+      <form id="dailyForm" data-page-node-id="4o9bJTAHKS6uuvDP7RgUs2">
+        <div class="row fin-actions daily-row" data-page-node-id="biaaJZq7hiptB1XdphPSJQ">
+          <div class="field fin-date" data-page-node-id="nFjjsbW39xG1DbwJXem6rL"><label data-page-node-id="4NkSuGNAMCiwsqhPqeewvR">日期</label><input type="date" id="dailyDate" data-page-node-id="UGpgco7V7qYXTkKfvY5Red"></div>
+          <div class="field fin-type" data-page-node-id="nuspX52PqgZgB8CtYPlBg6"><label data-page-node-id="nHt4vG7oDAsw560UFS9mF8">类型</label><select id="dailyType" data-page-node-id="BSbExnIvcHkVexmu0tMlvA"><option value="exp" data-page-node-id="CDA3z88Ywxs3iDg0OGVVXC">支出</option><option value="inc" data-page-node-id="ebDDXThuHlYqwQrICBMAtS">收入</option></select></div>
+          <div class="field fin-cat" data-page-node-id="7wHE5J0wyGAFTP1HtB8Bki"><label data-page-node-id="WDGIEHFcBHZ73NFU8r4ZwO">分类</label><span id="catWrap" data-page-node-id="XB6bVYh5qqTtCkuAe2mjpH"></span></div>
+          <div class="field fin-amt" data-page-node-id="duM3QmiPfGWSgsXZKu13cI"><label data-page-node-id="bPDUkH4sNFdJ1rJDMxf7BM">金额 ¥</label><input type="text" id="dailyAmt" inputmode="decimal" autocomplete="off" placeholder="0.00" data-page-node-id="cqSB7VI4cEeZWprLxUBvqE"></div>
+          <div class="field fin-note" data-page-node-id="t6LJSJNFpxJ4i1JKkFzz5X"><label data-page-node-id="CnoBinUOSIF4Oy6tHmbi90">备注</label><input type="text" id="dailyNote" autocomplete="off" placeholder="如：午饭 / 地铁" data-page-node-id="eeqnt659VoH46a64Es4yde"></div>
+          <button class="btn primary" type="submit" data-page-node-id="jvFIcYmGBTpQkfC1gCGOpX">添加记录</button>
         </div>
       </form>
-        <div id="dailyHint" style="font-size:12px;color:var(--muted);margin-top:10px;"></div>
+        <div id="dailyHint" style="font-size:12px;color:var(--muted);margin-top:10px;" data-page-node-id="irTBzhZGO9YC64NV69UGxf"></div>
       </div>
-      <div class="card">
-        <h3><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18M7 14l4-4 3 3 5-6"/></svg>本月概览</h3>
-        <div class="fun-stats" id="finStats"></div>
-        <div class="ring-wrap"><div id="ringBox"></div><div><div style="font-size:13px;color:var(--muted);">月度预算</div><div style="font-size:19px;font-weight:700;" id="budgetTxt"></div><div class="field" style="margin-top:8px;margin-bottom:0;"><label>设置预算 ¥</label><input type="number" id="budgetInput" min="0" step="100"></div></div></div>
+      <div class="card" data-page-node-id="Xr4KAS224gxLH6wF4EK9sh">
+        <h3 data-page-node-id="ScTkV7nnFhESbF11OlwNpq"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-page-node-id="TIxhX3LyFS7ygMaf8QKF9K"><path d="M3 3v18h18M7 14l4-4 3 3 5-6" data-page-node-id="bC2JxRw8pHLWzZSD1lFmaB"/></svg>本月概览</h3>
+        <div class="fun-stats" id="finStats" data-page-node-id="vEnAaPZdqc9Swk28UxciuD"></div>
+        <div class="ring-wrap" data-page-node-id="HFpev4tcSOqdqCDjCaivPf"><div id="ringBox" data-page-node-id="o7JUfUFsqnzdfp5aZyflqA"></div><div data-page-node-id="mRqL7QNZdapRDZ8cwDi2z2"><div style="font-size:13px;color:var(--muted);" data-page-node-id="YHwliFHTvfApHJhOnNh9Hn">月度预算</div><div style="font-size:19px;font-weight:700;" id="budgetTxt" data-page-node-id="GNdsLmFpvC8R9gzkOz3tD6"></div><div class="field" style="margin-top:8px;margin-bottom:0;" data-page-node-id="taFE6HOeUw98n2UPUFoXLN"><label data-page-node-id="TqHcZJ6rAkFWAShSVLr4VW">设置预算 ¥</label><input type="number" id="budgetInput" min="0" step="100" data-page-node-id="Va4Oozu0CulFDXHtglV4QI"></div></div></div>
       </div>
-      <div class="card full">
-        <h3><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.21 15.89A10 10 0 1 1 8 2.83M22 12A10 10 0 0 0 12 2v10z"/></svg>月度分类（<span id="catMonthLabel"></span>）</h3>
-        <div class="row" style="margin-bottom:12px;"><div class="field" style="flex:0 0 110px;"><label>年份</label><select id="spendYear"></select></div><div class="field" style="flex:0 0 100px;"><label>月份</label><select id="spendMonth"></select></div></div>
-        <div id="catBox"></div>
+      <div class="card full" data-page-node-id="f5ctjaZs3FwGUk2gRYIBV8">
+        <h3 data-page-node-id="1HkBWZWu7V3HeTmwqXv6WA"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-page-node-id="pT9Uy3rzNMCLjqrS1IUJWe"><path d="M21.21 15.89A10 10 0 1 1 8 2.83M22 12A10 10 0 0 0 12 2v10z" data-page-node-id="4o0JVAG0GYHXOoeKkLKgUC"/></svg>月度分类（<span id="catMonthLabel" data-page-node-id="CdHV3v36doaHAXCh5GVSCC"></span>）</h3>
+        <div class="row" style="margin-bottom:12px;" data-page-node-id="grS0AKlEl6GHBJvQTZZLXL"><div class="field" style="flex:0 0 110px;" data-page-node-id="hgSdPj6zilmfGXXKwLKtWl"><label data-page-node-id="OIjDzfJNr3TFDlPyHnBvqx">年份</label><select id="spendYear" data-page-node-id="O92k0p5AfIqTvFp2mySw1k"></select></div><div class="field" style="flex:0 0 100px;" data-page-node-id="9rMlLmFGs3HoeqHdGbmAMa"><label data-page-node-id="pUZ1J30232YFynEcL5BdsO">月份</label><select id="spendMonth" data-page-node-id="2ZSGDbGWXcaVfADZagIAQd"></select></div></div>
+        <div id="catBox" data-page-node-id="XW9kBc1MTt3DYr8DYtk6zG"></div>
       </div>
-      <div class="card full">
-        <h3><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M4 12h16M4 18h10"/></svg>记录明细（<span id="txnMonthLabel"></span>）</h3>
-        <div class="row" style="margin-bottom:12px;"><div class="field" style="flex:0 0 90px;"><label>年份</label><select id="txnYear"></select></div><div class="field" style="flex:0 0 90px;"><label>月份</label><select id="txnMonth"></select></div><span id="txnSum" style="margin-left:auto;align-self:center;font-size:13px;color:var(--muted);flex:0 0 auto;"></span></div>
-        <div id="txnBox"></div>
+      <div class="card full" data-page-node-id="2Hgjut1A9wL6ethFAR8cDD">
+        <h3 data-page-node-id="PFhbCOMl00c9FiBDMnjBEk"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-page-node-id="RIab65TiMwTO4BuPuJ2yVH"><path d="M4 6h16M4 12h16M4 18h10" data-page-node-id="6VBXIaik7IahCphqX54g30"/></svg>记录明细（<span id="txnMonthLabel" data-page-node-id="EAwIzXTKrjb4QQQcEnDRHU"></span>）</h3>
+        <div class="row" style="margin-bottom:12px;" data-page-node-id="jmErhOdPYcMo6Bxrbn55iF"><div class="field" style="flex:0 0 90px;" data-page-node-id="TtnoaXjXHZszWFK5fAaCuk"><label data-page-node-id="Uac7YEZIfN8AioPETsDDOE">年份</label><select id="txnYear" data-page-node-id="fPilVFUjvoa9EtnUhGXCOV"></select></div><div class="field" style="flex:0 0 90px;" data-page-node-id="NUOU6MwYFxAdQGGpkRimc5"><label data-page-node-id="qNtpOsCaXIrOEboi2HMTZF">月份</label><select id="txnMonth" data-page-node-id="1glVZp1jbuAyamm6TVS9JJ"></select></div><span id="txnSum" style="margin-left:auto;align-self:center;font-size:13px;color:var(--muted);flex:0 0 auto;" data-page-node-id="OyK3JqPVqrWXb84iHkNDta"></span></div>
+        <div id="txnBox" data-page-node-id="VYG37WHaeQoThSCMBVKjGh"></div>
       </div>
-      <div class="card full">
-        <h3><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3h18v18H3zM3 9h18M9 21V9"/></svg>按分类查看</h3>
-        <div class="row" style="margin-bottom:12px;">
-          <div class="field" style="flex:0 0 110px;"><label>年份</label><select id="bcYear"></select></div><div class="field" style="flex:0 0 100px;"><label>月份</label><select id="bcMonth"></select></div>
-          <div class="field" style="flex:0 0 200px;min-width:0;"><label>分类</label><select id="bcCat"></select></div>
-          <span id="bcSum" style="margin-left:auto;align-self:center;font-size:13px;color:var(--muted);"></span>
+      <div class="card full" data-page-node-id="RWegVDO2R0jBmvmsfcOPu1">
+        <h3 data-page-node-id="gnN1F5LOpKu3xnfaSGFuJd"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-page-node-id="M7wQLepif78tKeYKIehl82"><path d="M3 3h18v18H3zM3 9h18M9 21V9" data-page-node-id="SbKGApa7CgHpAqIs03Vj78"/></svg>按分类查看</h3>
+        <div class="row" style="margin-bottom:12px;" data-page-node-id="BH7cO3J7ki2BG1OotPcxXU">
+          <div class="field" style="flex:0 0 110px;" data-page-node-id="v2qXiC8o5HiUF3AcIUq4YN"><label data-page-node-id="6t7dlP3m9pAW3u5jN6owp3">年份</label><select id="bcYear" data-page-node-id="saHgOUy5XmdJ7jQ55FCJ1U"></select></div><div class="field" style="flex:0 0 100px;" data-page-node-id="6fH8OPA10JQhbI0ynDgEAq"><label data-page-node-id="ufpF4UPP1ypaewZXu1ZHzi">月份</label><select id="bcMonth" data-page-node-id="KTUtHwtCeMoaupJ2Ggg0Pw"></select></div>
+          <div class="field" style="flex:0 0 200px;min-width:0;" data-page-node-id="bGBXNVQXJQMP6Cf482PBWx"><label data-page-node-id="S2pVbp7mqnAdMytHHJAZkr">分类</label><select id="bcCat" data-page-node-id="TpTjF5E2WEDCaUqxiyhALE"></select></div>
+          <span id="bcSum" style="margin-left:auto;align-self:center;font-size:13px;color:var(--muted);" data-page-node-id="t2DkIv1QZDRH5voZMTswOU"></span>
         </div>
-        <div id="bcBox"></div>
+        <div id="bcBox" data-page-node-id="AKjEfBXigy0qsE5jGyc7jn"></div>
       </div>
-      <div class="card full">
-        <h3 id="yearHead" style="cursor:pointer;display:flex;justify-content:space-between;align-items:center;"><span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V10M9 20V4M14 20v-7M19 20V13"/></svg>按年统计</span><span id="yearToggleTxt" style="font-size:13px;font-weight:400;color:var(--muted);">点击展开 ▾</span></h3>
-        <div id="yearPanel" style="display:none;">
-          <div class="row" style="margin-bottom:12px;">
-            <div class="field" style="flex:0 0 110px;min-width:0;"><label>年份</label><select id="yearSel"></select></div>
-            <span id="yearTotalTxt" style="margin-left:auto;align-self:center;font-size:13px;color:var(--muted);"></span>
+      <div class="card full" data-page-node-id="ViEfzGLmIHhjlRYDhqq2CG">
+        <h3 id="yearHead" style="cursor:pointer;display:flex;justify-content:space-between;align-items:center;" data-page-node-id="EjXlPHG4837oYHHshhxZpK"><span data-page-node-id="PdZYvVoSceF4FaFF8GVUQK"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-page-node-id="L0zbMjk394AefhocC2TsLP"><path d="M4 20V10M9 20V4M14 20v-7M19 20V13" data-page-node-id="F8Dsvs7wLv1jok908LF3TY"/></svg>按年统计</span><span id="yearToggleTxt" style="font-size:13px;font-weight:400;color:var(--muted);" data-page-node-id="A0lzMLLSlQPyuewf6R45Na">点击展开 ▾</span></h3>
+        <div id="yearPanel" style="display:none;" data-page-node-id="hb7ZXMjg25Y8A7mqgttLGY">
+          <div class="row" style="margin-bottom:12px;" data-page-node-id="LpeAXSFzGyO3xpD2fUhB7L">
+            <div class="field" style="flex:0 0 110px;min-width:0;" data-page-node-id="X1up6grh6lgWEJk0HgFQpd"><label data-page-node-id="T7sTGKro8KdKHQHKBnAiuX">年份</label><select id="yearSel" data-page-node-id="Yovk2tJxBQ2975L7QsNm4m"></select></div>
+            <span id="yearTotalTxt" style="margin-left:auto;align-self:center;font-size:13px;color:var(--muted);" data-page-node-id="MADAJ5t1jgCe8KyeauRLTy"></span>
           </div>
-          <div id="yearMonthBox"></div>
-          <div id="yearCatBox"></div>
+          <div id="yearMonthBox" data-page-node-id="wZxpSsfVAnWG189SAElQYD"></div>
+          <div id="yearCatBox" data-page-node-id="b3Ejc9wGPphCa9PAWBkBBm"></div>
         </div>
       </div>
     </section>
 
     <!-- 休息放松 -->
-    <section class="panel" id="panel-rest">
-      <div class="card full">
-        <div class="rest-top">
-          <div>
-            <h3><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8h1a4 4 0 0 1 0 8h-1M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/><line x1="6" y1="2" x2="6" y2="5"/><line x1="10" y1="2" x2="10" y2="5"/><line x1="14" y1="2" x2="14" y2="5"/></svg>高效休息清单</h3>
-            <p class="rest-desc">随时来翻 · 不打卡、不计数、不内疚。累了就挑一件，做到「停手信号」就停。</p>
+    <section class="panel" id="panel-rest" data-page-node-id="h1mhRxdQET9dHDCpUiVP8G">
+      <div class="card full" data-page-node-id="Sdid9rlw4LS1DCv5wwIeAq">
+        <div class="rest-top" data-page-node-id="Bx3CkTVxr2WEzflHiIH6FR">
+          <div data-page-node-id="PN2YLzCMdx6pJxwq1y6xJm">
+            <h3 data-page-node-id="ptTmAU5mMlI0mhpcv5NFkR"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-page-node-id="yAlYG2U3N8CADFnIFCzePO"><path d="M18 8h1a4 4 0 0 1 0 8h-1M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z" data-page-node-id="DNsXSfBlHBcCmIinGUKKga"/><line x1="6" y1="2" x2="6" y2="5" data-page-node-id="YjP7GDw4rihVJBtkDOjMQS"/><line x1="10" y1="2" x2="10" y2="5" data-page-node-id="DoyR2d9SS0rdAHOsDv284k"/><line x1="14" y1="2" x2="14" y2="5" data-page-node-id="iQkhCdfbVp1NpTFNJasA9X"/></svg>高效休息清单</h3>
+            <p class="rest-desc" data-page-node-id="kFnXzaVUQTlRw6EhBwAPXs">随时来翻 · 不打卡、不计数、不内疚。累了就挑一件，做到「停手信号」就停。</p>
           </div>
-          <button class="btn primary" id="restPick">🎲 帮我挑一个</button>
+          <button class="btn primary" id="restPick" data-page-node-id="e9kZWPpXMe615Q5QC5i3HF">🎲 帮我挑一个</button>
         </div>
-        <div class="rest-filter" id="restFilter"></div>
-        <div class="rest-result" id="restResult" hidden></div>
-        <div id="restBox"></div>
+        <div class="rest-filter" id="restFilter" data-page-node-id="tJktOkoANJJn8ShRW1Wnpl"></div>
+        <div class="rest-result" id="restResult" hidden data-page-node-id="wqsKjc5uLIeLe55VBy0kNe"></div>
+        <div id="restBox" data-page-node-id="WYTYAZmaiAtAmN7efKMWer"></div>
       </div>
     </section>
 
     <!-- 目标复盘 -->
-    <section class="panel" id="panel-goal">
-      <div class="card">
-        <h3><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>新增目标</h3>
-        <form id="goalForm">
-          <div class="field"><label>目标标题</label><input type="text" id="gTitle" placeholder="如：2026 通过法考" required></div>
-          <button class="btn primary" type="submit" style="width:100%;justify-content:center;">添加目标</button>
+    <section class="panel" id="panel-goal" data-page-node-id="1vgvKHrOgMtKmMBBsweSxR">
+      <div class="card" data-page-node-id="c5dAXjuETGEnDvThMU4U1o">
+        <h3 data-page-node-id="39urMWv1EMuooA2M9Nk2Bd"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-page-node-id="LeAYuel5WChFO75LkBaPu9"><path d="M12 5v14M5 12h14" data-page-node-id="FQR97TVxMkWygjbk7YyYTz"/></svg>新增目标</h3>
+        <form id="goalForm" data-page-node-id="raQl0DlRBhQvZ0uqntLAud">
+          <div class="field" data-page-node-id="GlpdWh7AqQ3AdhAxaS72Ci"><label data-page-node-id="HwUW4vNVuSYZLnJ9GP0keQ">目标标题</label><input type="text" id="gTitle" placeholder="如：2026 通过法考" required data-page-node-id="LOpaoUQrecXLQ4XIG9wcoE"></div>
+          <button class="btn primary" type="submit" style="width:100%;justify-content:center;" data-page-node-id="ypLlP6eVb30elnUZD41nA2">添加目标</button>
         </form>
       </div>
-      <div class="card full">
-        <h3><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3h18v18H3zM3 9h18M3 15h18M9 3v18M15 3v18"/></svg>目标树（OKR）</h3>
-        <div id="goals"></div>
+      <div class="card full" data-page-node-id="TSl2JtLVy0UwlF8I1baYtV">
+        <h3 data-page-node-id="Wyvl1WgDZSkUwPsdhYDdZz"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-page-node-id="E8307DII1iGttjS4GoOn6p"><path d="M3 3h18v18H3zM3 9h18M3 15h18M9 3v18M15 3v18" data-page-node-id="ZRlSdXHiFpMhNVVAMRjRA6"/></svg>目标树（OKR）</h3>
+        <div id="goals" data-page-node-id="BxiUTRRlyQV4GvjW0yWy7q"></div>
       </div>
-      <div class="card full">
-        <h3><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M9 13h6M9 17h6"/></svg>周 / 月复盘</h3>
-        <form id="revForm">
-          <div class="row">
-            <div class="field"><label>周期</label><select id="rPeriod"><option value="周">本周复盘</option><option value="月">本月复盘</option><option value="季">本季复盘</option></select></div>
-            <div class="field"><label>日期</label><input type="date" id="rDate"></div>
+      <div class="card full" data-page-node-id="CjyrgbwtxCxz0sEBUI0UQg">
+        <h3 data-page-node-id="qn54fyWeVKdtJtWyu205qP"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-page-node-id="lVcmfi6E9ROQniaabXENH8"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" data-page-node-id="dtFH29wQsFtGGr5RY6lYT4"/><path d="M14 2v6h6M9 13h6M9 17h6" data-page-node-id="PsL5bZYidsT91vllIUgBL2"/></svg>周 / 月复盘</h3>
+        <form id="revForm" data-page-node-id="oUGls9QrdDcoQz2lvAhYUF">
+          <div class="row" data-page-node-id="xJlLiv0ln0m8Wmx4R8VkKu">
+            <div class="field" data-page-node-id="Q1vYleOkVSG0ykKLmApgdD"><label data-page-node-id="h8ygYyZFFlnAtsHa6avA32">周期</label><select id="rPeriod" data-page-node-id="B2TDZxMgJPBtyGhKhm1Uhj"><option value="周" data-page-node-id="Ozx9HyTwgGpIWtK6w8PuK1">本周复盘</option><option value="月" data-page-node-id="1yJlZPArGJs5Ns3HCQUcp1">本月复盘</option><option value="季" data-page-node-id="x10p0JoInatMuFf9odFLFA">本季复盘</option></select></div>
+            <div class="field" data-page-node-id="J9OOpQEmLx0B1dkNsj8jAO"><label data-page-node-id="S9Xigqi3RP8gX1NowsOAbz">日期</label><input type="date" id="rDate" data-page-node-id="Sj3veAanPDXKFZRuKoPg2q"></div>
           </div>
-          <div class="field"><label>复盘内容</label><textarea id="rText" placeholder="做了什么 / 亮点 / 不足 / 下一步"></textarea></div>
-          <button class="btn primary" type="submit" style="width:100%;justify-content:center;">保存复盘</button>
+          <div class="field" data-page-node-id="qlLjJAbUQiQHVUagS5QfrT"><label data-page-node-id="Z3DjbJTJaMIFwu0CwCctuk">复盘内容</label><textarea id="rText" placeholder="做了什么 / 亮点 / 不足 / 下一步"></textarea></div>
+          <button class="btn primary" type="submit" style="width:100%;justify-content:center;" data-page-node-id="Cto8m3hdxQd6tzW1vh8AwV">保存复盘</button>
         </form>
-        <div id="revs" style="margin-top:16px;"></div>
+        <div id="revs" style="margin-top:16px;" data-page-node-id="ggNB7F4XPdBfY5CeKyAACc"></div>
       </div>
     </section>
 
     <!-- 英语学习 -->
-    <section class="panel" id="panel-eng">
-      <div class="card full" style="display:flex;flex-wrap:wrap;gap:14px;align-items:center;justify-content:space-between;">
-        <div style="font-size:14px;color:var(--muted);">英语学习 · 每天 30 分钟即可</div>
-        <div style="font-size:14px;">今日打卡 <b id="engDone" style="color:var(--primary);font-size:16px;">0/11</b></div>
+    <section class="panel" id="panel-eng" data-page-node-id="yXx5EIrfZvPrTQXy7YAWrU">
+      <div class="card full" style="display:flex;flex-wrap:wrap;gap:14px;align-items:center;justify-content:space-between;" data-page-node-id="qKqcFhZZdNCfkpYQXvqPZ0">
+        <div style="font-size:14px;color:var(--muted);" data-page-node-id="GafAH6SnCXvhKQWfB0vg85">英语学习 · 每天 30 分钟即可</div>
+        <div style="font-size:14px;" data-page-node-id="6IpNZPY5gRMHHaswtXS7kr">今日打卡 <b id="engDone" style="color:var(--primary);font-size:16px;" data-page-node-id="J9sbiN239sCvCyZdCoPuE6">0/11</b></div>
       </div>
-      <div class="card">
-        <h3><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2 2M12 1v2M9 3l1 2M15 3l-1 2"/></svg>番茄钟</h3>
-        <div class="pomo">
-          <div class="pomo-time" id="pomoTime">25:00</div>
-          <div class="pomo-mode" id="pomoMode">专注</div>
-          <div class="pomo-btns">
-            <button class="btn primary" id="pomoToggle">开始</button>
-            <button class="btn" id="pomoReset">重置</button>
+      <div class="card" data-page-node-id="L3f2rKdpTZeFGO7afFkSv6">
+        <h3 data-page-node-id="GeQxsCuAZ4I2UC9WBBdqo2"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-page-node-id="dbpJoxqXATHZHQ8mV9qHoU"><circle cx="12" cy="13" r="8" data-page-node-id="PY90lWXbCnK1cBeejhntMg"/><path d="M12 9v4l2 2M12 1v2M9 3l1 2M15 3l-1 2" data-page-node-id="fKSlZiAZOZlJoLcTYD9tz3"/></svg>番茄钟</h3>
+        <div class="pomo" data-page-node-id="rRw1A7zHDujKEmK1WBvvil">
+          <div class="pomo-time" id="pomoTime" data-page-node-id="wA9FyHN4eNL4FDv3k88Y9C">25:00</div>
+          <div class="pomo-mode" id="pomoMode" data-page-node-id="C5x5Qua7bjISjdJn1als3H">专注</div>
+          <div class="pomo-btns" data-page-node-id="PNm0DToqkAOeXPHzNSGSFE">
+            <button class="btn primary" id="pomoToggle" data-page-node-id="OYvfdpkcaWmcv99iQ0BqXU">开始</button>
+            <button class="btn" id="pomoReset" data-page-node-id="ihetOUikxhfSzGeZFpxgcs">重置</button>
           </div>
-          <div class="pomo-prog"><div class="pomo-bar" id="pomoBar"></div></div>
-          <div class="pomo-today">今日专注 <b id="engFocus">0</b> / 30 分钟</div>
+          <div class="pomo-prog" data-page-node-id="AME7z6JmnXZw4WrHYRPlRp"><div class="pomo-bar" id="pomoBar" data-page-node-id="A0wfCFhgTojiCvdcTRZ7nC"></div></div>
+          <div class="pomo-today" data-page-node-id="RNKmhNbtWAiaPmpaind7Z9">今日专注 <b id="engFocus" data-page-node-id="sAMBPmgrVuFTL1izkPTAoH">0</b> / 30 分钟</div>
         </div>
       </div>
-      <div class="card">
-        <h3><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>基础模块（核心）</h3>
-        <div id="engBase" class="chk"></div>
+      <div class="card" data-page-node-id="CU9CqL3mJZ15OaLxRuS98l">
+        <h3 data-page-node-id="iPtzNHPPj8QNkmTBGb24Bc"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-page-node-id="wDSElJKBZNZROUO1tUqklB"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" data-page-node-id="3mv4xloo8RVWSx5d7d1pF9"/></svg>基础模块（核心）</h3>
+        <div id="engBase" class="chk" data-page-node-id="qHdrNZTGoAHwCxzeCmSQfM"></div>
       </div>
-      <div class="card">
-        <h3><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l2.4 7.4H22l-6 4.4 2.3 7.2L12 16.8 5.7 21l2.3-7.2-6-4.4h7.6z"/></svg>更多训练（轮换）</h3>
-        <div id="engMore" class="chk"></div>
+      <div class="card" data-page-node-id="EXNudICmTBFhPmxmxBdNjX">
+        <h3 data-page-node-id="kWCHe4PFhB3ToMBt9WeRMO"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-page-node-id="Nor9KZLihqJOBPkX9FnbB7"><path d="M12 2l2.4 7.4H22l-6 4.4 2.3 7.2L12 16.8 5.7 21l2.3-7.2-6-4.4h7.6z" data-page-node-id="24VopLBhwnMnlJjg5739Uh"/></svg>更多训练（轮换）</h3>
+        <div id="engMore" class="chk" data-page-node-id="8CLHFqLNyHbajH7PuqAtlW"></div>
       </div>
     </section>
 
     <!-- 记事本 -->
-    <section class="panel" id="panel-notes">
-      <div class="card full">
-        <h3><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16v16H4z"/><path d="M8 9h8M8 13h8M8 17h5"/></svg>记事本</h3>
-        <p style="font-size:13px;color:var(--muted);margin:0 0 14px;">随时记下突然想到的点子、待办、灵感 —— 自动存本地浏览器，刷新不丢。</p>
-        <div class="notes-add">
+    <section class="panel" id="panel-notes" data-page-node-id="JoIrKrDYXe0obl5VbB72yC">
+      <div class="card full" data-page-node-id="BrwPJ3FU7EL6cNdICkA3I0">
+        <h3 data-page-node-id="PTHR4eBRpAaFZ8PbH9wAjb"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-page-node-id="rL01ruaL61HldtyEzH1Iop"><path d="M4 4h16v16H4z" data-page-node-id="PFLZIzNr3iOSgd6wWHg1CF"/><path d="M8 9h8M8 13h8M8 17h5" data-page-node-id="pR55pRzM8VNUNBzVbFBtuV"/></svg>记事本</h3>
+        <p style="font-size:13px;color:var(--muted);margin:0 0 14px;" data-page-node-id="aaxklMTy9e2v468o2UlIPo">随时记下突然想到的点子、待办、灵感 —— 自动存本地浏览器，刷新不丢。</p>
+        <div class="notes-add" data-page-node-id="HjJLHXBzXCcXV8Cr869zoO">
           <textarea id="noteInput" placeholder="突然想到的…（Ctrl+Enter 快速记录）"></textarea>
-          <div class="acts">
-            <button class="btn primary" id="noteAdd">记一笔</button>
-            <span class="cnt" id="noteCnt"></span>
+          <div class="acts" data-page-node-id="XYW9F3NLA8E7v8AwTqfMpd">
+            <button class="btn primary" id="noteAdd" data-page-node-id="pwBrExDwsTGXnSsimInKUt">记一笔</button>
+            <span class="cnt" id="noteCnt" data-page-node-id="5mqmxHz5FhsiGyieunZk8H"></span>
           </div>
         </div>
-        <div id="noteList"></div>
+        <div id="noteList" data-page-node-id="cpnHXgvC1Uiky4kfkL5zIA"></div>
       </div>
     </section>
 
   </div>
 </div>
-<div class="toast" id="toast"></div>
-<div class="modal-bg" id="modalBg"><div class="modal"><h4 id="mTitle"></h4><p id="mText"></p><div class="acts"><button class="btn" id="mCancel">取消</button><button class="btn danger" id="mOk">确定</button></div></div></div>
-<div class="modal-bg" id="rwEditBg"><div class="modal"><h4>编辑奖励</h4><div class="field" style="margin-top:6px;"><label>奖励名称</label><input type="text" id="rwEditName" style="width:100%;"></div><div class="field"><label>所需积分</label><input type="number" id="rwEditCost" min="1" style="width:100%;"></div><div class="acts"><button class="btn" id="rwEditCancel">取消</button><button class="btn primary" id="rwEditOk">保存</button></div></div></div>
-<div class="modal-bg" id="recBg"><div class="modal" style="max-width:420px;"><h4>管理推荐</h4><div id="recListManage" style="max-height:46vh;overflow:auto;margin-bottom:6px;"></div><div class="rec-add"><select id="recAddType"><option value="book">书</option><option value="novel">小说</option><option value="movie">影</option><option value="drama">剧</option><option value="anime">动漫</option><option value="game">游戏</option><option value="eng">英语</option><option value="tip">行动</option></select><input type="text" id="recAddTitle" placeholder="标题，如《活着》"><input type="text" id="recAddNote" placeholder="一句话推荐理由（可选）" style="flex:2 1 160px;"><button class="btn primary" id="recAddBtn">添加</button></div><div class="acts" style="margin-top:14px;"><button class="btn" id="recClose">完成</button></div></div></div>
-<div class="modal-bg" id="settingsBg"><div class="modal" style="max-width:520px;"><h4>⚙️ 设置</h4>
-  <div class="settings-section"><h5>数据管理</h5><div class="settings-btns">
-    <button class="btn" id="btnExport"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>导出全部</button>
-    <button class="btn" id="btnImport"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>导入</button>
-    <button class="btn danger" id="btnClear"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>清空全部</button>
+<div class="toast" id="toast" data-page-node-id="L2P94sVYORvJzUSURhDcnz"></div>
+<div class="modal-bg" id="modalBg" data-page-node-id="VAhoaX3low262aSX6vsWW6"><div class="modal" data-page-node-id="N4shDqlATquLUahDdo4c5t"><h4 id="mTitle" data-page-node-id="9yB6qsATccTew0jtXFAB3T"></h4><p id="mText" data-page-node-id="aJdJMR4HHn3uNONwCsIGuC"></p><div class="acts" data-page-node-id="thHF6eg2vKRRRCOhExEgnA"><button class="btn" id="mCancel" data-page-node-id="kRF5wOwMP3nRr06PRFcuFc">取消</button><button class="btn danger" id="mOk" data-page-node-id="Zv9MEwDgikw4y9hmogK7BM">确定</button></div></div></div>
+<div class="modal-bg" id="rwEditBg" data-page-node-id="BfdRQK3GqTrQWL3Zzk6sEQ"><div class="modal" data-page-node-id="PIAKRQQBZEzuQMTTlbWUl2"><h4 data-page-node-id="rblVAmBM98toOExzksxjHp">编辑奖励</h4><div class="field" style="margin-top:6px;" data-page-node-id="XjcsxdSh6KJCGjfVJcPWr5"><label data-page-node-id="MTnHO0Vxf9pcWZyfbCj7Rv">奖励名称</label><input type="text" id="rwEditName" style="width:100%;" data-page-node-id="muwdhQiHs86Iq5JjdXLoQF"></div><div class="field" data-page-node-id="cv1K0dAz7uoJDRxuyWEKF7"><label data-page-node-id="uqoJ4MAVwg2GZU0wXTEI8Y">所需积分</label><input type="number" id="rwEditCost" min="1" style="width:100%;" data-page-node-id="RaOTKsBAAg4qpBgT6xtRXZ"></div><div class="acts" data-page-node-id="TKyWClJyQD3FOKdVnMh3Z1"><button class="btn" id="rwEditCancel" data-page-node-id="uiGqbaAk2HHGFtPtuveY7r">取消</button><button class="btn primary" id="rwEditOk" data-page-node-id="wvpWGqWKNfuEDoCrwMIrEE">保存</button></div></div></div>
+<div class="modal-bg" id="recBg" data-page-node-id="4BuRnFs9dwAZTI8dTsYT0m"><div class="modal" style="max-width:420px;" data-page-node-id="YpxDtGGWTAxs1jb7Mi1IuD"><h4 data-page-node-id="6k0tda4GNgslEaWO5okvaN">管理推荐</h4><div id="recListManage" style="max-height:46vh;overflow:auto;margin-bottom:6px;" data-page-node-id="pFaJPIyk506bSqaNMMTgyc"></div><div class="rec-add" data-page-node-id="reUesqWTY9j2j17zh5Ru1b"><select id="recAddType" data-page-node-id="HFn9CKZDKfxHRPNUmbFuEP"><option value="book" data-page-node-id="PTDwxniFFIHvPWEDTtDCUF">书</option><option value="novel" data-page-node-id="kp1ryyNiQEMvM3evr9FgGj">小说</option><option value="movie" data-page-node-id="yRTAPxk1SJz97FaC0KNCZR">影</option><option value="drama" data-page-node-id="LsFWgQalYyrZaLsyqv3aaB">剧</option><option value="anime" data-page-node-id="KPmxNb7XbN3dj6wFxtjQAL">动漫</option><option value="game" data-page-node-id="2yGdBKCRZR7xcTCgsKOs32">游戏</option><option value="eng" data-page-node-id="mrLonIPRznGMmsmkkVKw5X">英语</option><option value="tip" data-page-node-id="W5dE9Q4BotdW0D4CEEr8U1">行动</option></select><input type="text" id="recAddTitle" placeholder="标题，如《活着》" data-page-node-id="1ojjns3Etn8iDsEYYy3GRC"><input type="text" id="recAddNote" placeholder="一句话推荐理由（可选）" style="flex:2 1 160px;" data-page-node-id="yiVg3TEG1mCGfiFDOXP4u7"><button class="btn primary" id="recAddBtn" data-page-node-id="hlV5uyeOKqFC9sNnJiAFbI">添加</button></div><div class="acts" style="margin-top:14px;" data-page-node-id="PRweAo6qf7D7noTlQytHOk"><button class="btn" id="recClose" data-page-node-id="XcPh6Px6vt9Lis5VYmjyjq">完成</button></div></div></div>
+<div class="modal-bg" id="settingsBg" data-page-node-id="8MDCsfOBU5Yzr89cxUQ9BS"><div class="modal" style="max-width:520px;" data-page-node-id="K5k51ECQSg9RGCIs3PF03R"><h4 data-page-node-id="YjdOmVwiGFMCo9iJBW5eD5">⚙️ 设置</h4>
+  <div class="settings-section" data-page-node-id="xKuZKfog69rho5bizdjsuA"><h5 data-page-node-id="e7qdwDFwNEislmq0nZxM2B">数据管理</h5><div class="settings-btns" data-page-node-id="OKOKDw0wCQvmNUWkeDcALj">
+    <button class="btn" id="btnExport" data-page-node-id="qLs5Nojz5HGKZRda5U4VER"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-page-node-id="pedoGKeTLoe7BcUBikjd7s"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3" data-page-node-id="5wW3iwDr3VhQXXuM0ovZ7I"/></svg>导出全部</button>
+    <button class="btn" id="btnImport" data-page-node-id="L0p9ibnU94TWrNMVs3rzrh"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-page-node-id="psGqPNMdHkkVq9xQjgsRZe"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12" data-page-node-id="QhEx5lB6RNrbthzS7G5tAs"/></svg>导入</button>
+    <button class="btn danger" id="btnClear" data-page-node-id="fnuFdZZwdrscZLAcEcvBdV"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-page-node-id="1LxyFV3UjK6XxZkx1HZwDY"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" data-page-node-id="dDCs9ecBA4fT0eA2IpvLp5"/></svg>清空全部</button>
   </div></div>
-  <div class="settings-section"><h5>外观</h5><div class="settings-btns">
-    <button class="btn" id="btnBg"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 16l4-4 4 4 4-6 4 6M4 4h16v16H4z"/></svg>设置背景</button>
-    <button class="btn" id="btnBgClear" style="display:none;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>清除背景</button>
+  <div class="settings-section" data-page-node-id="EQ4JABaIIC5hYe2bieSYNI"><h5 data-page-node-id="anZOft4d5I2jtH3ZCEIIDu">外观</h5><div class="settings-btns" data-page-node-id="1pPdzao4aNqGYerG0VzZu7">
+    <button class="btn" id="btnBg" data-page-node-id="q5SSAC4YHV4b7heCOjHwfb"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-page-node-id="31Sm6WJEOdZbJVQWNGgDb7"><path d="M4 16l4-4 4 4 4-6 4 6M4 4h16v16H4z" data-page-node-id="oDOObEhtudseYZGYpwyTw5"/></svg>设置背景</button>
+    <button class="btn" id="btnBgClear" style="display:none;" data-page-node-id="Kcu20vYNjaXm6wZIhnOmK3"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-page-node-id="M7VeEEBtG72n9v9eO5R3ai"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" data-page-node-id="r26zuA3Co89MU8QEmDkZ2K"/></svg>清除背景</button>
   </div></div>
-  <input type="file" id="bgInput" accept="image/*" style="display:none">
-  <div class="acts"><button class="btn" id="settingsClose">关闭</button></div>
+  <input type="file" id="bgInput" accept="image/*" style="display:none" data-page-node-id="hrGVehykP2QfiyQ06aCUWp">
+  <div class="acts" data-page-node-id="p1DqxylIKKu8n3mkZ9lWLr"><button class="btn" id="settingsClose" data-page-node-id="em2UQPFMiKFj4H8eCG44yV">关闭</button></div>
 </div></div>
-<input type="file" id="fileInput" accept="application/json" style="display:none">
+<input type="file" id="fileInput" accept="application/json" style="display:none" data-page-node-id="CtyMjZAWqjpb7NpX4f1pfW">
 <script>
 function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,7);}
 function todayStr(){var d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
@@ -862,6 +879,7 @@ var S={
   fit:ls('wb_allday_fit',null),
   bar:ls('wb_allday_bar',null),
   meta:ls('wb_allday_meta',{examDate:'2026-09-19'}),
+  body:ls('wb_allday_body',{height:'',age:'',sex:'m'}),
   fun:ls('wb_allday_fun',null),
   spend:ls('wb_fin_spend',null),
   income:ls('wb_fin_income',null),
@@ -887,19 +905,26 @@ if(!Array.isArray(S.txns))S.txns=[];
 if(!S.spend)S.spend={};
 if(!S.income)S.income={};
 if(!Array.isArray(S.notes))S.notes=[];
+if(!S.body)S.body={};
+if(S.body.height===undefined)S.body.height='';
+if(S.body.age===undefined)S.body.age='';
+if(S.body.sex===undefined)S.body.sex='m';
 // 防御：localStorage 可能存下 "null"（JSON.parse 返回 null），后续渲染会抛错
 if(!Array.isArray(S.tasks))S.tasks=[];
 if(!Array.isArray(S.fit))S.fit=[];
 // 健身记录按日期去重：同一天多条合并为一条，避免同日显示多条
-// 合并规则：体重取首个非空 / 热身取任意「已做」/ 运动取首条非空
+// 合并规则：早/晚体重取首个非空 / 热身取任意「已做」/ 运动取首条非空
+// 兼容旧数据：旧记录只有 weight 字段，迁移到 早体重(weightM)
 (function(){
   if(!S.fit||!S.fit.length)return;
+  S.fit.forEach(function(r){ if(r.weight!==undefined&&r.weight!==''&&!('weightM' in r)){ r.weightM=r.weight; } });
   var byDate={},order=[];
   S.fit.forEach(function(r){
     var d=r.date;
     if(byDate[d]){
       var e=byDate[d];
-      if(!e.weight&&r.weight)e.weight=r.weight;
+      if(!e.weightM&&r.weightM)e.weightM=r.weightM;
+      if(!e.weightE&&r.weightE)e.weightE=r.weightE;
       if(!e.warmup&&r.warmup)e.warmup=true;
       if(!e.note&&r.note)e.note=r.note;
     }else{byDate[d]=r;order.push(d);}
@@ -1023,7 +1048,7 @@ renderCatField();
 function seedAllday(){
   var y=new Date(Date.now()-86400000*2).toISOString().slice(0,10),to=todayStr();
   S.tasks=[{id:uid(),title:'完成民法精讲复盘',prio:'p1',due:to,done:false,note:''},{id:uid(),title:'提交报销单',prio:'p0',due:y,done:false,note:'记得附发票'},{id:uid(),title:'买菜',prio:'p2',due:to,done:true,note:''}];
-  S.fit=[{id:uid(),date:y,weight:72.5,warmup:true,note:'跑步5km'},{id:uid(),date:to,weight:72.2,warmup:false,note:'力量训练'}];
+  S.fit=[{id:uid(),date:y,weightM:72.5,weightE:71.8,warmup:true,note:'跑步5km'},{id:uid(),date:to,weightM:72.2,weightE:71.5,warmup:false,note:'力量训练'}];
   S.fun={points:60,rewards:[{id:uid(),name:'看一集剧',cost:30},{id:uid(),name:'打游戏1小时',cost:50},{id:uid(),name:'奶茶',cost:40},{id:uid(),name:'周末外出玩',cost:120}],log:[]};
   S.seededA=true;
 }
@@ -1054,7 +1079,7 @@ if(S.seededA===undefined||!S.tasks)seedAllday();
 if(S.seededF===undefined||!S.spend)seedFin();
 if(S.seededG===undefined||!S.goals)seedGoal();
 function persist(){
-  sv('wb_allday_tasks',S.tasks);sv('wb_allday_fit',S.fit);sv('wb_allday_bar',S.bar);sv('wb_allday_meta',S.meta);sv('wb_allday_fun',S.fun);sv('wb_allday_seeded',S.seededA);
+  sv('wb_allday_tasks',S.tasks);sv('wb_allday_fit',S.fit);sv('wb_allday_bar',S.bar);sv('wb_allday_meta',S.meta);sv('wb_allday_fun',S.fun);sv('wb_allday_seeded',S.seededA);sv('wb_allday_body',S.body);
   sv('wb_fin_spend',S.spend);sv('wb_fin_income',S.income);sv('wb_fin_meta',S.fmeta);sv('wb_fin_seeded',S.seededF);sv('wb_fin_txns',S.txns);
   sv('wb_goal_goals',S.goals);sv('wb_goal_reviews',S.reviews);sv('wb_goal_seeded',S.seededG);
   sv('wb_bg',S.bg);sv('wb_fakao_link',S.fakaoLink);sv('wb_fakao_checked',S.fakaoChecked);sv('wb_eng_data',S.eng);sv('wb_weather',S.weather);sv('wb_recs',S.recs);sv('wb_rec_seen',S.recSeen);sv('wb_rec_avoid',S.recAvoid);sv('wb_notes',S.notes);
@@ -1078,7 +1103,7 @@ function syncSnapshot(){
     spend:S.spend,income:S.income,fmeta:S.fmeta,seededF:S.seededF,txns:S.txns,
     goals:S.goals,reviews:S.reviews,seededG:S.seededG,
     fakaoLink:S.fakaoLink,fakaoChecked:S.fakaoChecked,eng:S.eng,weather:S.weather,
-    recs:S.recs,recSeen:S.recSeen,recAvoid:S.recAvoid,notes:S.notes};
+    recs:S.recs,recSeen:S.recSeen,recAvoid:S.recAvoid,notes:S.notes,body:S.body};
   o.__ts=syncLocalTs()||Date.now();
   return o;
 }
@@ -2101,52 +2126,70 @@ function spawnRepeat(t){
 
 /* ---------- 健康身体 ---------- */
 function buildFitChart(){
-  var data=S.fit.filter(function(d){return +d.weight;}).sort(function(a,b){return a.date<b.date?-1:1;});
-  if(data.length<2){return '<div class="empty">至少需要 2 条带体重的记录才能画图</div>';}
-  var W=460,H=220,pl=34,pr=14,pt=14,pb=24;
-  var iw=W-pl-pr,ih=H-pt-pb;
-  var ws=data.map(function(d){return +d.weight;}).filter(function(v){return v;});
-  var wmin=Math.min.apply(null,ws),wmax=Math.max.apply(null,ws);
-  var pad=function(a){var r=(a.max-a.min)||1;return [a.min-r*0.15,a.max+r*0.15];};
-  var wr=pad({min:wmin,max:wmax});
+  var data=S.fit.slice().sort(function(a,b){return a.date<b.date?-1:1;});
+  var hasM=function(d){return +(d.weightM||d.weight);};
+  var hasE=function(d){return +(d.weightE);};
+  var anyM=data.some(hasM), anyE=data.some(hasE);
+  if(!anyM&&!anyE){return '<div class="empty">记录体重后自动生成趋势图</div>';}
+  var pts=data.filter(function(d){return hasM(d)||hasE(d);});
+  if(pts.length<2){return '<div class="empty">至少需要 2 天体重记录才能画图</div>';}
+  var W=460,H=220,pl=34,pr=14,pt=14,pb=24,iw=W-pl-pr,ih=H-pt-pb;
+  var vals=[];data.forEach(function(d){var mv=hasM(d),ev=hasE(d);if(mv)vals.push(mv);if(ev)vals.push(ev);});
+  var wmin=Math.min.apply(null,vals),wmax=Math.max.apply(null,vals);
+  var span=(wmax-wmin)||1;var wr=[wmin-span*0.15,wmax+span*0.15];
   var X=function(i){return pl+iw*i/(data.length-1);};
   var Yw=function(v){return pt+ih*(1-(v-wr[0])/(wr[1]-wr[0]));};
   var grid='';for(var g=0;g<=4;g++){var yy=pt+ih*g/4;grid+='<line x1="'+pl+'" y1="'+yy+'" x2="'+(W-pr)+'" y2="'+yy+'" stroke="#eef0f4" stroke-width="1"/>';}
-  var wPts=data.map(function(d,i){if(!(+d.weight))return '';return X(i)+','+Yw(+d.weight);}).filter(Boolean).join(' ');
-  var wDots=data.map(function(d,i){if(!(+d.weight))return '';return '<circle cx="'+X(i)+'" cy="'+Yw(+d.weight)+'" r="3" fill="#5b9bf3"/>';}).join('');
+  function segs(values,color,dash){
+    var out='',cur=[];
+    values.forEach(function(v,i){if(v>0){cur.push(X(i)+','+Yw(v));}else{if(cur.length>1)out+=seg(cur,color,dash);cur=[];}});
+    if(cur.length>1)out+=seg(cur,color,dash);
+    return out;
+  }
+  function seg(arr,color,dash){return '<polyline points="'+arr.join(' ')+'" fill="none" stroke="'+color+'" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"'+(dash?' stroke-dasharray="5 4"':'')+'/>';}
+  function dots(values,color){var s='';values.forEach(function(v,i){if(v>0)s+='<circle cx="'+X(i)+'" cy="'+Yw(v)+'" r="3" fill="'+color+'"/>';});return s;}
+  var mArr=data.map(hasM), eArr=data.map(hasE);
   var xl='';data.forEach(function(d,i){if(i%Math.ceil(data.length/6)===0)xl+='<text x="'+X(i)+'" y="'+(H-6)+'" font-size="10" fill="#9ca3af" text-anchor="middle">'+d.date.slice(5)+'</text>';});
-  return '<svg class="chart" viewBox="0 0 '+W+' '+H+'">'+grid+
-    (wPts?'<polyline points="'+wPts+'" fill="none" stroke="#5b9bf3" stroke-width="2.5" stroke-linejoin="round"/>'+wDots:'')+
-    xl+'</svg><div class="legend"><span><i style="background:#5b9bf3"></i>体重(kg)</span></div>';
+  var leg='<div class="legend">';
+  if(anyM)leg+='<span><i style="background:#5b9bf3"></i>早体重(kg)</span>';
+  if(anyE)leg+='<span><i style="background:#f59e0b"></i>晚体重(kg)</span>';
+  leg+='</div>';
+  // 先画晚体重(虚线)再画早体重(实线)，早体重为主置顶
+  return '<svg class="chart" viewBox="0 0 '+W+' '+H+'">'+grid+segs(eArr,'#f59e0b',true)+dots(eArr,'#f59e0b')+segs(mArr,'#5b9bf3',false)+dots(mArr,'#5b9bf3')+xl+'</svg>'+leg;
 }
 function renderFit(){
   document.getElementById('fitChart').innerHTML=buildFitChart();
   var box=document.getElementById('fitList');
-  if(!S.fit.length){box.innerHTML='<div class="empty">暂无记录</div>';return;}
+  if(!S.fit.length){box.innerHTML='<div class="empty">暂无记录</div>';renderBmr();return;}
   var arr=S.fit.slice().sort(function(a,b){return a.date<b.date?1:-1;});
-  box.innerHTML='<table><thead><tr><th>日期</th><th>体重</th><th>热身</th><th>运动</th><th></th></tr></thead><tbody>'+
-    arr.map(function(x){return '<tr><td>'+x.date+'</td><td>'+(x.weight||'-')+'</td><td>'+(x.warmup?'<span style="color:var(--primary);font-weight:600">✓ 已做</span>':'<span style="color:#ef4444;font-weight:600">✗ 未做</span>')+'</td><td>'+(x.note||'')+'</td><td><button class="del" data-delf="'+x.id+'"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></button></td></tr>';}).join('')+'</tbody></table>';
+  box.innerHTML='<table><thead><tr><th>日期</th><th>早体重</th><th>晚体重</th><th>热身</th><th>运动</th><th></th></tr></thead><tbody>'+
+    arr.map(function(x){
+      var wm=x.weightM||x.weight||'', we=x.weightE||'';
+      return '<tr><td>'+x.date+'</td><td>'+(wm||'-')+'</td><td>'+(we||'-')+'</td><td>'+(x.warmup?'<span style="color:var(--primary);font-weight:600">✓ 已做</span>':'<span style="color:#ef4444;font-weight:600">✗ 未做</span>')+'</td><td>'+(x.note||'')+'</td><td><button class="del" data-delf="'+x.id+'"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></button></td></tr>';
+    }).join('')+'</tbody></table>';
+  renderBmr();
 }
 document.getElementById('fDate').value=todayStr();
 document.getElementById('fitForm').addEventListener('submit',function(e){
   e.preventDefault();
   var date=document.getElementById('fDate').value||todayStr();
-  var w=parseFloat(document.getElementById('fWeight').value),note=document.getElementById('fNote').value.trim();
+  var wm=parseFloat(document.getElementById('fWeightM').value),we=parseFloat(document.getElementById('fWeightE').value),note=document.getElementById('fNote').value.trim();
   var warmOn=document.getElementById('fWarm').checked;
-  if(!(w>0)&&!warmOn&&!note){toast('请至少记录一项（体重/热身/运动）');return;}
+  if(!(wm>0)&&!(we>0)&&!warmOn&&!note){toast('请至少记录一项（早/晚体重/热身/运动）');return;}
   // 同一天：合并到已有记录而非新增；空白字段不覆盖，其余作为编辑
   var existing=null;
   for(var i=0;i<S.fit.length;i++){if(S.fit[i].date===date){existing=S.fit[i];break;}}
   if(existing){
     var hadWarm=!!existing.warmup, hadNote=!!(existing.note&&existing.note.trim());
-    if(w>0)existing.weight=w;        // 体重：填了才更新
-    if(note)existing.note=note;      // 运动：填了才更新
-    if(warmOn)existing.warmup=true;  // 热身：勾选才置「已做」，未勾选保留原值
+    if(wm>0)existing.weightM=wm;          // 早体重：填了才更新
+    if(we>0)existing.weightE=we;          // 晚体重：填了才更新
+    if(note)existing.note=note;          // 运动：填了才更新
+    if(warmOn)existing.warmup=true;      // 热身：勾选才置「已做」，未勾选保留原值
     if(warmOn&&!hadWarm)earn('健身热身',10);
     if(note&&!hadNote)earn('健身内容·'+note,10);
     toast('已更新当天打卡');
   }else{
-    S.fit.push({id:uid(),date:date,weight:w||'',warmup:warmOn,note:note});
+    S.fit.push({id:uid(),date:date,weightM:wm||'',weightE:we||'',warmup:warmOn,note:note});
     if(warmOn)earn('健身热身',10);
     if(note)earn('健身内容·'+note,10);
     toast('已打卡');
@@ -2154,6 +2197,35 @@ document.getElementById('fitForm').addEventListener('submit',function(e){
   persist();renderFit();this.reset();document.getElementById('fDate').value=todayStr();
   document.getElementById('fWarm').checked=false;
 });
+/* ---------- 身体参数 & 基础代谢 ---------- */
+function calcBmr(){
+  var b=S.body||{}, h=parseFloat(b.height),a=parseFloat(b.age),sex=b.sex;
+  if(!(h>0)||!(a>0)||!sex)return null;
+  var arr=S.fit.slice().sort(function(x,y){return x.date<y.date?1:-1;});
+  var w=null;
+  for(var i=0;i<arr.length;i++){var v=parseFloat(arr[i].weightM)||parseFloat(arr[i].weight);if(v>0){w=v;break;}}
+  if(!(w>0))return null;
+  var bmr=10*w+6.25*h-5*a+(sex==='m'?5:-161);   // Mifflin-St Jeor
+  return {w:w,bmr:Math.round(bmr),tdee:Math.round(bmr*1.2)};
+}
+function renderBmr(){
+  var el=document.getElementById('bmrOut');if(!el)return;
+  var r=calcBmr();
+  if(!r){el.className='bmr-out';el.textContent='填写身高 / 年龄 / 性别与早体重后，自动估算基础代谢';return;}
+  el.className='bmr-out has';
+  el.innerHTML='基础代谢 <b>'+r.bmr+'</b> kcal/天　·　日推荐摄入(久坐) <b>'+r.tdee+'</b> kcal（按早体重 '+r.w+'kg 估算 · Mifflin-St Jeor）';
+}
+function saveBody(){
+  S.body={height:document.getElementById('bHeight').value.trim(),age:document.getElementById('bAge').value.trim(),sex:document.getElementById('bSex').value};
+  persist();renderBmr();
+}
+(function initBody(){
+  var b=S.body||{};
+  document.getElementById('bHeight').value=b.height||'';
+  document.getElementById('bAge').value=b.age||'';
+  document.getElementById('bSex').value=b.sex||'m';
+  ['bHeight','bAge','bSex'].forEach(function(id){var el=document.getElementById(id);el.addEventListener('input',saveBody);el.addEventListener('change',saveBody);});
+})();
 document.getElementById('fitList').addEventListener('click',function(e){var b=e.target.closest('.del');if(!b)return;var id=b.dataset.delf;S.fit=S.fit.filter(function(x){return x.id!==id;});persist();renderFit();});
 
 /* ---------- 法考学习（链接到外部表格） ---------- */
@@ -2757,7 +2829,7 @@ function mergeById(base,inc){var map={},out=[];base.forEach(function(x){out.push
 function mergeSpend(base,inc){inc=inc||{};Object.keys(inc).forEach(function(m){base[m]=base[m]||{};Object.keys(inc[m]).forEach(function(c){base[m][c]=(base[m][c]||0)+(+inc[m][c]||0);});});return base;}
 document.getElementById('btnExport').onclick=function(){
   var data={type:'全能生活台',version:3,exportedAt:new Date().toISOString(),
-    tasks:S.tasks,fit:S.fit,bar:S.bar,meta:S.meta,fun:S.fun,spend:S.spend,fmeta:S.fmeta,txns:S.txns,goals:S.goals,reviews:S.reviews,bg:S.bg,fakaoLink:S.fakaoLink,eng:S.eng};
+    tasks:S.tasks,fit:S.fit,bar:S.bar,meta:S.meta,fun:S.fun,spend:S.spend,fmeta:S.fmeta,txns:S.txns,goals:S.goals,reviews:S.reviews,bg:S.bg,fakaoLink:S.fakaoLink,eng:S.eng,body:S.body};
   var blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
   var a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='全能生活台-备份-'+new Date().toISOString().slice(0,10).replace(/-/g,'')+'.json';a.click();toast('已导出全部');
 };
@@ -2769,6 +2841,7 @@ document.getElementById('fileInput').addEventListener('change',function(e){var f
     if(d.fun){if(!S.fun)S.fun=d.fun;else{var rmap={};S.fun.rewards.forEach(function(r){rmap[r.id]=1;});(d.fun.rewards||[]).forEach(function(r){if(!rmap[r.id])S.fun.rewards.push(r);});var lset={};S.fun.log.forEach(function(l){lset[l.date+'|'+l.reason+'|'+l.delta]=1;});(d.fun.log||[]).forEach(function(l){var k=l.date+'|'+l.reason+'|'+l.delta;if(!lset[k])S.fun.log.push(l);});S.fun.points=Math.max(S.fun.points,d.fun.points||0);}tags.push('积分(合并)');}
     if(d.tasks){var r1=mergeById(S.tasks,d.tasks);S.tasks=r1.arr;tags.push('待办 +'+r1.added);}
     if(d.fit){var r2=mergeById(S.fit,d.fit);S.fit=r2.arr;tags.push('健身 +'+r2.added);}
+    if(d.body){S.body=Object.assign({height:'',age:'',sex:'m'},S.body,d.body);tags.push('身体参数');}
     if(d.bar){var r3=mergeById(S.bar,d.bar);S.bar=r3.arr;tags.push('学习 +'+r3.added);}
     if(d.goals){var r5=mergeById(S.goals,d.goals);S.goals=r5.arr;tags.push('目标 +'+r5.added);}
     if(d.reviews){var r6=mergeById(S.reviews,d.reviews);S.reviews=r6.arr;tags.push('复盘 +'+r6.added);}
@@ -2877,7 +2950,7 @@ window.onunhandledrejection=function(e){showInitErr(e.reason,'unhandledrejection
 try{console.log('[init] start v'+APP_VER);autoSettle();console.log('[init] autoSettle ok');applyBg();console.log('[init] applyBg ok');renderAll();console.log('[init] renderAll ok');switchTab('overview');console.log('[init] switchTab ok');}catch(e){showInitErr(e,'init');}
 console.log('[init] done');
 </script>
-<div id="vwdbg" style="display:none;position:fixed;left:8px;bottom:8px;z-index:99999;background:rgba(0,0,0,.82);color:#39ff14;font:12px/1.4 monospace;padding:5px 9px;border-radius:7px;pointer-events:none;"></div>
+<div id="vwdbg" style="display:none;position:fixed;left:8px;bottom:8px;z-index:99999;background:rgba(0,0,0,.82);color:#39ff14;font:12px/1.4 monospace;padding:5px 9px;border-radius:7px;pointer-events:none;" data-page-node-id="SzjICN07UGOYG5oyzQOk6a"></div>
 <script>
 try{
   if(location.search.indexOf('debug=1')>=0){
