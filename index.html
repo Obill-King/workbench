@@ -1036,6 +1036,7 @@ renderCatField();
 function seedAllday(){
   var y=new Date(Date.now()-86400000*2).toISOString().slice(0,10),to=todayStr();
   S.tasks=[{id:uid(),title:'完成民法精讲复盘',prio:'p1',due:to,done:false,note:''},{id:uid(),title:'提交报销单',prio:'p0',due:y,done:false,note:'记得附发票'},{id:uid(),title:'买菜',prio:'p2',due:to,done:true,note:''}];
+  /* ⚠️ 示例数据：仅首次打开演示用，体重 72.5/72.2 是占位假数据，不是真实记录。真实数据存在浏览器 localStorage 里，源码读不到。 */
   S.fit=[{id:uid(),date:y,weightM:72.5,weightE:71.8,warmup:true,note:'跑步5km'},{id:uid(),date:to,weightM:72.2,weightE:71.5,warmup:false,note:'力量训练'}];
   S.fun={points:60,rewards:[{id:uid(),name:'看一集剧',cost:30},{id:uid(),name:'打游戏1小时',cost:50},{id:uid(),name:'奶茶',cost:40},{id:uid(),name:'周末外出玩',cost:120}],log:[]};
   S.seededA=true;
