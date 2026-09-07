@@ -158,6 +158,7 @@ select option{background:#fff;color:var(--text);}
 .body-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;}
 .body-row .field{margin-bottom:0;}
 .bmr-out{margin-top:12px;font-size:13px;color:var(--muted);line-height:1.6;background:var(--bg);border-radius:9px;padding:10px 12px;}
+.bmr-note{margin-bottom:10px;font-size:12px;color:var(--muted);}
 .bmr-out.has{color:var(--text);}
 .bmr-out b{color:var(--primary);font-size:15px;font-variant-numeric:tabular-nums;}
 @media (max-width:1024px){.body-row{grid-template-columns:1fr 1fr 1fr;}}
@@ -648,12 +649,8 @@ svg.chart{width:100%;height:auto;display:block;}
           </div>
         </form>
         <div class="body-box" data-page-node-id="wbBB1">
-          <div class="body-row" data-page-node-id="wbBB2">
-            <div class="field" data-page-node-id="wbBB3"><label data-page-node-id="wbBB4">身高(cm)</label><input type="text" id="bHeight" inputmode="decimal" placeholder="如 175" data-page-node-id="wbBB5"></div>
-            <div class="field" data-page-node-id="wbBB6"><label data-page-node-id="wbBB7">年龄</label><input type="text" id="bAge" inputmode="numeric" placeholder="如 30" data-page-node-id="wbBB8"></div>
-            <div class="field" data-page-node-id="wbBB9"><label data-page-node-id="wbBB10">性别</label><select id="bSex" data-page-node-id="wbBB11"><option value="m">男</option><option value="f">女</option></select></div>
-          </div>
-          <div class="bmr-out" id="bmrOut" data-page-node-id="wbBB12">填写身高 / 年龄 / 性别与早体重后，自动估算基础代谢</div>
+          <div class="bmr-note" data-page-node-id="wbBB2">身体参数已预设：1992年生 · 女 · 165cm（用于估算基础代谢，无需填写）</div>
+          <div class="bmr-out" id="bmrOut" data-page-node-id="wbBB12">记录早体重后，自动估算基础代谢</div>
         </div>
       </div>
       <div class="card full" data-page-node-id="4JDGwqEoy8cVWT8ot2KuEu">
@@ -879,7 +876,7 @@ var S={
   fit:ls('wb_allday_fit',null),
   bar:ls('wb_allday_bar',null),
   meta:ls('wb_allday_meta',{examDate:'2026-09-19'}),
-  body:ls('wb_allday_body',{height:'',age:'',sex:'m'}),
+  body:ls('wb_allday_body',{height:'165',age:String(new Date().getFullYear()-1992),sex:'f'}),
   fun:ls('wb_allday_fun',null),
   spend:ls('wb_fin_spend',null),
   income:ls('wb_fin_income',null),
@@ -2211,20 +2208,16 @@ function calcBmr(){
 function renderBmr(){
   var el=document.getElementById('bmrOut');if(!el)return;
   var r=calcBmr();
-  if(!r){el.className='bmr-out';el.textContent='填写身高 / 年龄 / 性别与早体重后，自动估算基础代谢';return;}
+  if(!r){el.className='bmr-out';el.textContent='记录早体重后，自动估算基础代谢（参数：1992年生·女·165cm）';return;}
   el.className='bmr-out has';
   el.innerHTML='基础代谢 <b>'+r.bmr+'</b> kcal/天　·　日推荐摄入(久坐) <b>'+r.tdee+'</b> kcal（按早体重 '+r.w+'kg 估算 · Mifflin-St Jeor）';
 }
-function saveBody(){
-  S.body={height:document.getElementById('bHeight').value.trim(),age:document.getElementById('bAge').value.trim(),sex:document.getElementById('bSex').value};
-  persist();renderBmr();
-}
-(function initBody(){
+(function ensureBody(){
   var b=S.body||{};
-  document.getElementById('bHeight').value=b.height||'';
-  document.getElementById('bAge').value=b.age||'';
-  document.getElementById('bSex').value=b.sex||'m';
-  ['bHeight','bAge','bSex'].forEach(function(id){var el=document.getElementById(id);el.addEventListener('input',saveBody);el.addEventListener('change',saveBody);});
+  if(!b.sex||!(parseFloat(b.height)>0)||!(parseFloat(b.age)>0)){
+    S.body={height:'165',age:String(new Date().getFullYear()-1992),sex:'f'};
+    sv('wb_allday_body',S.body);
+  }
 })();
 document.getElementById('fitList').addEventListener('click',function(e){var b=e.target.closest('.del');if(!b)return;var id=b.dataset.delf;S.fit=S.fit.filter(function(x){return x.id!==id;});persist();renderFit();});
 
