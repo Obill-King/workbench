@@ -1253,14 +1253,13 @@ function renderOverview(){
   var remaining=S.tasks.filter(function(x){return !x.done;}).length;
   var overdue=S.tasks.filter(function(x){return !x.done&&x.due&&x.due<t;}).length;
   var hasFit=S.fit.some(function(x){return x.date===t;});
-  var bmrNow=calcBmr();
   var points=S.fun?S.fun.points:0;
   var finSpend=monthTotal(curMonth());
   var goalsActive=S.goals.length;
   var engLogT=S.eng.logs[todayStr()];var engFocus=engLogT?engLogT.focus:0;
   var cards=[
     {tab:'tasks',name:'日程待办',v:remaining,s:(overdue?('逾期 '+overdue+' 条'):'无逾期'),cls:overdue?'danger':''},
-    {tab:'fit',name:'健康身体',v:bmrNow?('<span id="ovFitBmrV">'+bmrNow.bmr+'</span>'):'<span id="ovFitBmrV">—</span>',s:(bmrNow?('基础代谢 kcal · <span id="ovFitBmrS">早体重'+bmrNow.w+'kg</span>'):'记录早体重显示基础代谢')+(hasFit?' · 已打卡':' · 待打卡'),cls:hasFit?'ok':''},
+    {tab:'fit',name:'健康身体',v:hasFit?'已打卡':'未打卡',s:'体重趋势 · 热身打卡',cls:hasFit?'ok':''},
     {tab:'fun',name:'娱乐激励',v:points,s:'可用积分',cls:''},
     {tab:'fin',name:'记账理财',v:'<span class="out">-¥'+finSpend.toFixed(0)+'</span>',s:'预算 ¥'+(+S.fmeta.budget||0).toFixed(0),cls:''},
     {tab:'rest',name:'休息放松',v:REST_LIST.length+' 类',s:'随时来翻',cls:''},
@@ -2149,14 +2148,14 @@ function buildFitChart(){
 function renderFit(){
   document.getElementById('fitChart').innerHTML=buildFitChart();
   var box=document.getElementById('fitList');
-  if(!S.fit.length){box.innerHTML='<div class="empty">暂无记录</div>';renderBmr();return;}
+  if(!S.fit.length){box.innerHTML='<div class="empty">暂无记录</div>';return;}
   var arr=S.fit.slice().sort(function(a,b){return a.date<b.date?1:-1;});
-  box.innerHTML='<table><thead><tr><th>日期</th><th>早体重</th><th>晚体重</th><th>热身</th><th>运动</th><th></th></tr></thead><tbody>'+
+  box.innerHTML='<table><thead><tr><th>日期</th><th>早体重</th><th>晚体重</th><th>热身</th><th>运动</th><th>基础代谢</th><th></th></tr></thead><tbody>'+
     arr.map(function(x){
       var wm=x.weightM||x.weight||'', we=x.weightE||'';
-      return '<tr><td>'+x.date+'</td><td>'+(wm||'-')+'</td><td>'+(we||'-')+'</td><td>'+(x.warmup?'<span style="color:var(--primary);font-weight:600">✓ 已做</span>':'<span style="color:#ef4444;font-weight:600">✗ 未做</span>')+'</td><td>'+(x.note||'')+'</td><td><button class="del" data-delf="'+x.id+'"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></button></td></tr>';
+      var br=calcBmr(x.date);
+      return '<tr><td>'+x.date+'</td><td>'+(wm||'-')+'</td><td>'+(we||'-')+'</td><td>'+(x.warmup?'<span style="color:var(--primary);font-weight:600">✓ 已做</span>':'<span style="color:#ef4444;font-weight:600">✗ 未做</span>')+'</td><td>'+(x.note||'')+'</td><td>'+(br?('<b style="color:var(--primary);font-variant-numeric:tabular-nums;">'+br.bmr+'</b> kcal'):'')+'</td><td><button class="del" data-delf="'+x.id+'"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></button></td></tr>';
     }).join('')+'</tbody></table>';
-  renderBmr();
 }
 document.getElementById('fDate').value=todayStr();
 document.getElementById('fitForm').addEventListener('submit',function(e){
@@ -2187,24 +2186,16 @@ document.getElementById('fitForm').addEventListener('submit',function(e){
   document.getElementById('fWarm').checked=false;
 });
 /* ---------- 身体参数 & 基础代谢 ---------- */
-function calcBmr(){
+function calcBmr(date){
   var b=S.body||{}, h=parseFloat(b.height),a=parseFloat(b.age),sex=b.sex;
   if(!(h>0)||!(a>0)||!sex)return null;
-  var arr=S.fit.slice().sort(function(x,y){return x.date<y.date?1:-1;});
-  var w=null;
-  for(var i=0;i<arr.length;i++){var v=parseFloat(arr[i].weightM)||parseFloat(arr[i].weight);if(v>0){w=v;break;}}
+  var d=date||todayStr(),rec=null;
+  for(var i=0;i<S.fit.length;i++){if(S.fit[i].date===d){rec=S.fit[i];break;}}
+  if(!rec)return null;
+  var w=parseFloat(rec.weightM)||parseFloat(rec.weight);
   if(!(w>0))return null;
   var bmr=10*w+6.25*h-5*a+(sex==='m'?5:-161);   // Mifflin-St Jeor
   return {w:w,bmr:Math.round(bmr),tdee:Math.round(bmr*1.2)};
-}
-function renderBmr(){
-  var v=document.getElementById('ovFitBmrV'),s=document.getElementById('ovFitBmrS');
-  if(!v&&!s)return;
-  var r=calcBmr();
-  var hasFit=S.fit.some(function(x){return x.date===todayStr();});
-  if(!r){if(v)v.textContent='—';if(s)s.innerHTML='记录早体重显示基础代谢'+(hasFit?' · 已打卡':' · 待打卡');return;}
-  if(v)v.innerHTML=String(r.bmr);
-  if(s)s.innerHTML='基础代谢 kcal · <span id="ovFitBmrS">早体重'+r.w+'kg</span>'+(hasFit?' · 已打卡':' · 待打卡');
 }
 (function ensureBody(){
   var b=S.body||{};
