@@ -685,6 +685,22 @@ svg.chart{width:100%;height:auto;display:block;}
       </div>
       <div class="card" data-page-node-id="EjZe2ieG59FXxDPBxJNy2H">
         <h3 data-page-node-id="k4cfLB73s0AkjR7wehGmli"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-page-node-id="EFeeBFcnjCkEmzTi22JTcr"><path d="M3 3v18h18M7 14l4-4 3 3 5-6" data-page-node-id="cLLouvS6sRas3qt3nmGy1h"/></svg>积分流水</h3>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin:-4px 0 8px;flex-wrap:wrap;gap:8px;">
+          <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;font-size:12px;color:var(--muted);">
+            <label>自动清零：
+              <select id="funResetType" style="font-size:12px;padding:3px 6px;border-radius:6px;border:1px solid var(--border);background:var(--card);">
+                <option value="off">不自动</option>
+                <option value="ndays">每隔 N 天</option>
+                <option value="yearly">每年指定日</option>
+                <option value="monthly">每月指定日</option>
+              </select>
+            </label>
+            <span id="resetNdaysWrap" style="display:none;">每隔 <input id="funResetN" type="number" min="1" max="365" value="30" style="width:54px;font-size:12px;padding:3px 6px;border-radius:6px;border:1px solid var(--border);background:var(--card);"> 天</span>
+            <span id="resetYearlyWrap" style="display:none;"><input id="funResetM" type="number" min="1" max="12" value="1" style="width:44px;font-size:12px;padding:3px 6px;border-radius:6px;border:1px solid var(--border);background:var(--card);">月<input id="funResetD1" type="number" min="1" max="31" value="1" style="width:44px;font-size:12px;padding:3px 6px;border-radius:6px;border:1px solid var(--border);background:var(--card);">日</span>
+            <span id="resetMonthlyWrap" style="display:none;">每月第 <input id="funResetD2" type="number" min="1" max="28" value="1" style="width:44px;font-size:12px;padding:3px 6px;border-radius:6px;border:1px solid var(--border);background:var(--card);"> 日</span>
+          </div>
+          <button class="btn" id="btnClearPoints" type="button" style="font-size:12px;padding:5px 10px;">清零积分</button>
+        </div>
         <div id="funLog" data-page-node-id="JHYVIWXLYHjrTWjO29JsR9"></div>
       </div>
     </section>
@@ -971,10 +987,16 @@ else{
 if(!S.weather._mig){S.weather._mig=true;if(S.weather.city==='北京')S.weather.city='大连';sv('wb_weather',S.weather);}
 var CATS=['餐饮','交通','购物','居住','娱乐','学习','医疗','其他'];
 var CAT_COLOR={'餐饮':'#5b9bf3','交通':'#f59e0b','购物':'#ef4444','居住':'#16a34a','娱乐':'#a855f7','学习':'#06b6d4','医疗':'#ec4899','其他':'#9ca3af'};
-/* 任意分类都给一个稳定颜色：内置 8 类用指定色，其余按名称哈希出固定色相，杜绝灰色回退 */
-function catHue(c){var h=0;for(var i=0;i<c.length;i++){h=(h*131+c.charCodeAt(i))%360;}return h;}
-function catColor(c){if(CAT_COLOR[c])return CAT_COLOR[c];return 'hsl('+catHue(c)+',62%,50%)';}
-function catTint(c){if(CAT_COLOR[c])return CAT_COLOR[c]+'22';return 'hsla('+catHue(c)+',62%,50%,0.16)';}
+/* 任意分类都给一个稳定颜色：内置 8 类用指定色；其余按"在所有分类中的排序序号×黄金角"映射出色相。
+   黄金角(≈137.5°)是无理数倍数 → 任意两个不同序号的色相在数学上绝不重合，彻底杜绝撞色（旧版 name%360 直接当色相易撞） */
+var CAT_IDX={};
+function rebuildCatColors(){
+  var all=CATS.slice();
+  if(S.txns)S.txns.forEach(function(t){if(t.cat&&all.indexOf(t.cat)<0)all.push(t.cat);});
+  all.sort();CAT_IDX={};all.forEach(function(c,i){CAT_IDX[c]=i;});
+}
+function catColor(c){if(CAT_COLOR[c])return CAT_COLOR[c];var i=CAT_IDX[c]||0;return 'hsl('+Math.round((i*137.50776)%360)+',62%,50%)';}
+function catTint(c){if(CAT_COLOR[c])return CAT_COLOR[c]+'22';var i=CAT_IDX[c]||0;return 'hsla('+Math.round((i*137.50776)%360)+',62%,50%,0.16)';}
 var REP_LABEL={daily:'每天',weekly:'每周',monthly:'每月',yearly:'每年'};
 var PRIO_IDX={p0:0,p1:1,p2:2};   // 排序用：P0 最前
 function prioIdx(p){var v=PRIO_IDX[p];return (v==null)?9:v;}   // 注意 P0=0，不能用 ||9 兜底
@@ -1320,7 +1342,7 @@ function renderRecs(){
   box.innerHTML=html;
 }
 document.getElementById('ovGrid').addEventListener('click',function(e){var c=e.target.closest('.ov-card');if(c)switchTab(c.dataset.go);});
-document.getElementById('ovTodo').addEventListener('click',function(e){var k=e.target.closest('.ck');if(!k)return;var id=k.dataset.id;var t=S.tasks.find(function(x){return x.id===id;});if(t&&!t.done){t.done=true;t.doneAt=Date.now();var rw=+t.reward||0;if(rw>0&&!t.awarded){earn(t.title,rw);t.awarded=true;}spawnRepeat(t);persist();renderOverview();renderTasks();toast('已完成');}});
+document.getElementById('ovTodo').addEventListener('click',function(e){var k=e.target.closest('.ck');if(!k)return;var id=k.dataset.id;var t=S.tasks.find(function(x){return x.id===id;});if(t&&!t.done){t.done=true;t.doneAt=Date.now();var rw=+t.reward||0;if(rw>0&&!t.awarded){earn(t.title,rw,'task:'+t.id);t.awarded=true;}spawnRepeat(t);persist();renderOverview();renderTasks();toast('已完成');}});
 
 var solarLunar = {
 
@@ -2092,8 +2114,8 @@ function renderTasks(){
   }).join('');
 }
 document.getElementById('taskList').addEventListener('click',function(e){
-  var k=e.target.closest('.ck');if(k){var id=k.dataset.id;var t=S.tasks.find(function(x){return x.id===id;});if(t){var was=t.done;t.done=!t.done;if(!was&&t.done){t.doneAt=Date.now();if(!t.awarded){var rw=+t.reward||0;if(rw>0){earn(t.title,rw);t.awarded=true;}}spawnRepeat(t);}persist();renderTasks();return;}}
-  var b=e.target.closest('.del');if(b){var id2=b.dataset.del;S.tasks=S.tasks.filter(function(x){return x.id!==id2;});persist();renderTasks();}
+  var k=e.target.closest('.ck');if(k){var id=k.dataset.id;var t=S.tasks.find(function(x){return x.id===id;});if(t){var was=t.done;t.done=!t.done;if(!was&&t.done){t.doneAt=Date.now();if(!t.awarded){var rw=+t.reward||0;if(rw>0){earn(t.title,rw,'task:'+t.id);t.awarded=true;}}spawnRepeat(t);}persist();renderTasks();return;}}
+  var b=e.target.closest('.del');if(b){var id2=b.dataset.del;var t2=S.tasks.find(function(x){return x.id===id2;});if(t2&&t2.awarded)refundPrefix('task:'+id2);S.tasks=S.tasks.filter(function(x){return x.id!==id2;});persist();renderTasks();}
 });
 document.getElementById('taskForm').addEventListener('submit',function(e){
   e.preventDefault();var title=document.getElementById('tTitle').value.trim();if(!title){toast('请输入事项');return;}
@@ -2171,13 +2193,13 @@ document.getElementById('fitForm').addEventListener('submit',function(e){
     if(wm>0)existing.weightM=wm;          // 体重：填了才更新
     if(note)existing.note=note;          // 运动：填了才更新
     if(warmOn)existing.warmup=true;      // 热身：勾选才置「已做」，未勾选保留原值
-    if(warmOn&&!hadWarm)earn('健身热身',10);
-    if(note&&!hadNote)earn('健身内容·'+note,10);
+    if(warmOn&&!hadWarm)earn('健身热身',10,'fit:'+date);
+    if(note&&!hadNote)earn('健身内容·'+note,10,'fit:'+date);
     toast('已更新当天打卡');
   }else{
     S.fit.push({id:uid(),date:date,weightM:wm||'',warmup:warmOn,note:note});
-    if(warmOn)earn('健身热身',10);
-    if(note)earn('健身内容·'+note,10);
+    if(warmOn)earn('健身热身',10,'fit:'+date);
+    if(note)earn('健身内容·'+note,10,'fit:'+date);
     toast('已打卡');
   }
   persist();renderFit();renderOverview();this.reset();document.getElementById('fDate').value=todayStr();
@@ -2202,7 +2224,7 @@ function calcBmr(date){
     sv('wb_allday_body',S.body);
   }
 })();
-document.getElementById('fitList').addEventListener('click',function(e){var b=e.target.closest('.del');if(!b)return;var id=b.dataset.delf;S.fit=S.fit.filter(function(x){return x.id!==id;});persist();renderFit();});
+document.getElementById('fitList').addEventListener('click',function(e){var b=e.target.closest('.del');if(!b)return;var id=b.dataset.delf;var rec=S.fit.find(function(x){return x.id===id;});if(rec)refundPrefix('fit:'+rec.date);S.fit=S.fit.filter(function(x){return x.id!==id;});persist();renderFit();renderOverview();});
 
 /* ---------- 法考学习（链接到外部表格） ---------- */
 function effFakaoHref(raw){
@@ -2232,7 +2254,7 @@ function renderFakaoCheckin(){
 }
 document.getElementById('fakaoCheckin').addEventListener('click',function(){
   if(S.fakaoChecked===todayStr()){toast('今日已签到');return;}
-  earn('法考学习打卡',50);
+  earn('法考学习打卡',50,'fakao:'+todayStr());
   S.fakaoChecked=todayStr();persist();renderFakaoCheckin();
 });
 
@@ -2291,16 +2313,71 @@ function renderFun(){
   }).join('');
   var log=S.fun.log.slice().sort(function(a,b){return a.date<b.date?1:-1;}).slice(0,20);
   if(log.length){
-    document.getElementById('funLog').innerHTML=log.map(function(l){return '<div class="logrow"><span class="lv '+(l.delta>=0?'pos':'neg')+'">'+(l.delta>=0?'+':'')+l.delta+'</span><span>'+l.reason+'</span><span class="lt">'+l.date+'</span></div>';}).join('');
+    document.getElementById('funLog').innerHTML=log.map(function(l){return '<div class="logrow"><span class="lv '+(l.delta>=0?'pos':'neg')+'">'+(l.delta>=0?'+':'')+l.delta+'</span><span>'+l.reason+'</span><span class="lt">'+l.date+'</span><button class="del" data-dellog="'+l.id+'" title="删除并回退该积分"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18M6 6l12 12"/></svg></button></div>';}).join('');
   }else{
     document.getElementById('funLog').innerHTML='<div class="empty">还没有积分记录</div>';
   }
 }
-function earn(reason,delta){if(!S.fun)S.fun={points:0,rewards:[],log:[]};S.fun.points+=delta;S.fun.log.push({date:todayStr(),reason:reason,delta:delta});persist();renderFun();toast(reason+' +'+delta);}
+function earn(reason,delta,src){if(!S.fun)S.fun={points:0,rewards:[],log:[]};if(!S.fun.reset)S.fun.reset={type:'off'};if(!S.fun.lastReset)S.fun.lastReset='';S.fun.points+=delta;S.fun.log.push({id:uid(),date:todayStr(),reason:reason,delta:delta,src:src||''});persist();renderFun();toast(reason+' +'+delta);}
+/* 按 src 前缀回退某来源产生的全部积分（删源记录时调用，避免删记录不退回积分） */
+function refundPrefix(prefix){if(!S.fun||!S.fun.log)return;var removed=S.fun.log.filter(function(l){return l.src&&l.src.indexOf(prefix)===0;});var back=removed.reduce(function(a,b){return a+(b.delta||0);},0);if(back)S.fun.points=Math.max(0,S.fun.points-back);S.fun.log=S.fun.log.filter(function(l){return !(l.src&&l.src.indexOf(prefix)===0);});persist();renderFun();}
+/* 回退单条积分记录（积分流水里手动删除某一项时调用） */
+function refundOne(id){var l=null;if(S.fun&&S.fun.log)l=S.fun.log.find(function(x){return x.id===id;});if(!l)return;S.fun.points=Math.max(0,S.fun.points-(l.delta||0));S.fun.log=S.fun.log.filter(function(x){return x.id!==id;});persist();renderFun();toast('已删除该积分，回退 '+(l.delta||0)+' 分');}
+/* 按规则自动清零（页面加载时检查；当天首次到达清零锚点才清，不会误清历史） */
+function checkAutoReset(){
+  if(!S.fun)return;
+  var r=S.fun.reset; if(!r||!r.type||r.type==='off')return;
+  var t=new Date(); var today=todayStr();
+  if(S.fun.lastReset===today)return;           // 今天已清过，跳过
+  var due=false;
+  if(r.type==='ndays'){
+    var n=Math.max(1,parseInt(r.n,10)||30);
+    var base=S.fun.lastReset? new Date(S.fun.lastReset.replace(/-/g,'/')) : null;
+    if(!base){ S.fun.lastReset=today; persist(); return; }   // 首次设置：从今天起算，不立即清
+    if(Math.floor((t-base)/(86400000))>=n) due=true;
+  } else if(r.type==='yearly'){
+    if((t.getMonth()+1)===(parseInt(r.m,10)||1) && t.getDate()===(parseInt(r.d,10)||1)) due=true;
+  } else if(r.type==='monthly'){
+    if(t.getDate()===(parseInt(r.d,10)||1)) due=true;
+  }
+  if(due){ S.fun.log=[]; S.fun.points=0; S.fun.lastReset=today; persist(); renderFun(); toast('已按设置自动清零积分'); }
+}
 document.getElementById('rewardList').addEventListener('click',function(e){
   var b=e.target.closest('[data-rw]');if(b){var id=b.dataset.rw;var r=S.fun.rewards.find(function(x){return x.id===id;});if(r&&S.fun.points>=r.cost){showModal('兑换确认','确定用 '+r.cost+' 积分兑换「'+r.name+'」吗？',function(){S.fun.points-=r.cost;S.fun.log.push({date:todayStr(),reason:'兑换：'+r.name,delta:-r.cost});persist();renderFun();toast('已兑换');});}return;}
   var ed=e.target.closest('[data-editrw]');if(ed){var rid=ed.dataset.editrw;openRwEdit(rid);return;}
   var d=e.target.closest('[data-delrw]');if(d){var id2=d.dataset.delrw;S.fun.rewards=S.fun.rewards.filter(function(x){return x.id!==id2;});persist();renderFun();}
+});
+/* 积分流水单条删除（删除并回退该条积分） */
+document.getElementById('funLog').addEventListener('click',function(e){var b=e.target.closest('[data-dellog]');if(!b)return;refundOne(b.dataset.dellog);});
+/* 手动清零积分：清空可用积分与全部流水，保留奖励定义 */
+document.getElementById('btnClearPoints').onclick=function(){
+  if(!S.fun||(!S.fun.points&&!S.fun.log.length)){toast('暂无积分');return;}
+  showModal('清零积分','将清空可用积分（'+((S.fun&&S.fun.points)||0)+' 分）与全部积分流水，奖励定义保留。确定吗？',function(){
+    S.fun.points=0;S.fun.log=[];S.fun.lastReset=todayStr();persist();renderFun();toast('已清零积分');
+  });
+};
+/* 自动清零规则：完全自定义（每隔N天 / 每年指定日 / 每月指定日） */
+function showResetWrap(){
+  var type=document.getElementById('funResetType').value;
+  document.getElementById('resetNdaysWrap').style.display=type==='ndays'?'':'none';
+  document.getElementById('resetYearlyWrap').style.display=type==='yearly'?'':'none';
+  document.getElementById('resetMonthlyWrap').style.display=type==='monthly'?'':'none';
+}
+function saveResetRule(){
+  if(!S.fun)S.fun={points:0,rewards:[],log:[]};
+  var type=document.getElementById('funResetType').value;
+  var r={type:type};
+  if(type==='ndays')r.n=Math.max(1,parseInt(document.getElementById('funResetN').value,10)||30);
+  if(type==='yearly'){r.m=Math.min(12,Math.max(1,parseInt(document.getElementById('funResetM').value,10)||1));r.d=Math.min(31,Math.max(1,parseInt(document.getElementById('funResetD1').value,10)||1));}
+  if(type==='monthly')r.d=Math.min(28,Math.max(1,parseInt(document.getElementById('funResetD2').value,10)||1));
+  S.fun.reset=r;
+  if(type==='off')S.fun.lastReset='';        // 关闭则清零锚点复位
+  persist();
+  toast(type==='off'?'已关闭自动清零':'已设置自动清零');
+}
+document.getElementById('funResetType').onchange=function(){showResetWrap();saveResetRule();};
+['funResetN','funResetM','funResetD1','funResetD2'].forEach(function(id){
+  document.getElementById(id).addEventListener('change',saveResetRule);
 });
 var rwEditId=null;
 function openRwEdit(id){var r=S.fun.rewards.find(function(x){return x.id===id;});if(!r)return;rwEditId=id;document.getElementById('rwEditName').value=r.name;document.getElementById('rwEditCost').value=r.cost;document.getElementById('rwEditBg').classList.add('show');}
@@ -2751,7 +2828,7 @@ document.getElementById('goals').addEventListener('click',function(e){
   if(b.dataset.delk){var kid=b.dataset.delk,gid=e.target.closest('.kr').dataset.g;var g=S.goals.find(function(x){return x.id===gid;});g.krs=g.krs.filter(function(k){return k.id!==kid;});persist();renderGoal();return;}
   if(b.dataset.addkrb){var gid2=b.dataset.addkrb;var inp=document.querySelector('input[data-addkr="'+gid2+'"]');var txt=inp.value.trim();if(!txt){toast('请输入关键结果');return;}var g2=S.goals.find(function(x){return x.id===gid2;});g2.krs.push({id:uid(),text:txt,progress:0});persist();renderGoal();return;}
 });
-document.getElementById('goals').addEventListener('change',function(e){var r=e.target.closest('input[type=range]');if(!r)return;var gid=e.target.closest('.goal').dataset.g,kid=r.dataset.k;var g=S.goals.find(function(x){return x.id===gid;});var k=g.krs.find(function(x){return x.id===kid;});k.progress=+r.value;if(k.progress>=100&&!k.awarded){earn('目标达成·'+k.text,10);k.awarded=true;}persist();renderGoal();});
+document.getElementById('goals').addEventListener('change',function(e){var r=e.target.closest('input[type=range]');if(!r)return;var gid=e.target.closest('.goal').dataset.g,kid=r.dataset.k;var g=S.goals.find(function(x){return x.id===gid;});var k=g.krs.find(function(x){return x.id===kid;});k.progress=+r.value;if(k.progress>=100&&!k.awarded){earn('目标达成·'+k.text,10,'goal:'+gid+':'+kid);k.awarded=true;}persist();renderGoal();});
 document.getElementById('goals').addEventListener('input',function(e){var r=e.target.closest('input[type=range]');if(!r)return;var goalEl=e.target.closest('.goal'),krEl=e.target.closest('.kr');var g=S.goals.find(function(x){return x.id===goalEl.dataset.g;});var k=g.krs.find(function(x){return x.id===r.dataset.k;});k.progress=+r.value;krEl.querySelector('.kp').textContent=k.progress+'%';var kb=krEl.querySelector('.kr-bar i');if(kb){kb.style.width=k.progress+'%';kb.classList.toggle('done',k.progress>=100);}var p=goalProgress(g);var bar=goalEl.querySelector('.pbar i');bar.style.width=p+'%';bar.classList.toggle('done',p>=100);goalEl.querySelector('.ptxt').textContent=(p>=100?'总进度 100% · 已完成':'总进度 '+p+'%（'+g.krs.length+' 个关键结果）');});
 document.getElementById('revs').addEventListener('click',function(e){var b=e.target.closest('.del');if(!b)return;var id=b.dataset.delr;S.reviews=S.reviews.filter(function(x){return x.id!==id;});persist();renderGoal();});
 document.getElementById('goalForm').addEventListener('submit',function(e){e.preventDefault();var t=document.getElementById('gTitle').value.trim();if(!t){toast('请输入标题');return;}S.goals.push({id:uid(),title:t,krs:[]});persist();renderGoal();this.reset();toast('已添加');});
@@ -2780,7 +2857,7 @@ function pomoStop(){if(pomoTimer){clearInterval(pomoTimer);pomoTimer=null;}pomoR
 function pomoTick(){
   pomoRemain--;
   if(pomoRemain<=0){
-    if(pomoMode==='focus'){var log=engLog();log.focus+=25;if(!log.awarded&&log.focus>=30){earn('英语学习(当日达标)',30);log.awarded=true;}persist();var f=document.getElementById('engFocus');if(f)f.textContent=log.focus;}
+    if(pomoMode==='focus'){var log=engLog();log.focus+=25;if(!log.awarded&&log.focus>=30){earn('英语学习(当日达标)',30,'eng:'+todayStr());log.awarded=true;}persist();var f=document.getElementById('engFocus');if(f)f.textContent=log.focus;}
     pomoMode=pomoMode==='focus'?'break':'focus';
     pomoRemain=(pomoMode==='focus'?25:5)*60;
     toast(pomoMode==='focus'?'休息结束，开始下一轮专注':'专注完成！已记入今日时长');
@@ -2905,9 +2982,9 @@ function switchTab(name){
   if(name==='notes')renderNotes();
 }
 document.querySelectorAll('.sidebar button.nav').forEach(function(b){if(!b.dataset.tab)return;b.onclick=function(){switchTab(b.dataset.tab);};});
-function renderAll(){renderOverview();renderTasks();renderFit();renderFun();renderFin();renderRest();renderGoal();renderFakao();renderEng();renderFakaoCheckin();renderCalendar();renderWxDate();renderNotes();}
+function renderAll(){rebuildCatColors();renderOverview();renderTasks();renderFit();renderFun();renderFin();renderRest();renderGoal();renderFakao();renderEng();renderFakaoCheckin();renderCalendar();renderWxDate();renderNotes();}
 /* 版本号：每次发布改动后在此 +0.1，便于核对 Chrome 是否为最新版 */
-var APP_VER='2.05';
+var APP_VER='2.08';
 var _av=document.getElementById('appVer');if(_av)_av.textContent='v'+APP_VER;
 /* 清理已弃用的习惯打卡旧数据（v1.28 起不再使用，仅清孤立 key，不影响任何功能） */
 try{localStorage.removeItem('wb_hab_habits');localStorage.removeItem('wb_hab_seeded');}catch(e){}
@@ -2923,7 +3000,17 @@ function showInitErr(e,src){
 }
 window.onerror=function(msg,url,line,col,err){showInitErr(err||msg,'window.onerror');};
 window.onunhandledrejection=function(e){showInitErr(e.reason,'unhandledrejection');};
-try{console.log('[init] start v'+APP_VER);autoSettle();console.log('[init] autoSettle ok');applyBg();console.log('[init] applyBg ok');renderAll();console.log('[init] renderAll ok');switchTab('overview');console.log('[init] switchTab ok');}catch(e){showInitErr(e,'init');}
+try{console.log('[init] start v'+APP_VER);autoSettle();console.log('[init] autoSettle ok');applyBg();console.log('[init] applyBg ok');renderAll();console.log('[init] renderAll ok');if(S.fun&&S.fun.log)S.fun.log.forEach(function(l){if(!l.id)l.id=uid();});
+if(S.fun){
+  if(S.fun.resetRule&&!S.fun.reset){var rm={'m1':{type:'monthly',d:1},'m15':{type:'monthly',d:15},'w1':{type:'ndays',n:7}};S.fun.reset=rm[S.fun.resetRule]||{type:'off'};delete S.fun.resetRule;}
+  if(!S.fun.reset)S.fun.reset={type:'off'};
+  var rt=document.getElementById('funResetType');
+  if(rt){rt.value=S.fun.reset.type||'off';showResetWrap();
+    if(S.fun.reset.type==='ndays'&&document.getElementById('funResetN'))document.getElementById('funResetN').value=S.fun.reset.n||30;
+    if(S.fun.reset.type==='yearly'){if(document.getElementById('funResetM'))document.getElementById('funResetM').value=S.fun.reset.m||1;if(document.getElementById('funResetD1'))document.getElementById('funResetD1').value=S.fun.reset.d||1;}
+    if(S.fun.reset.type==='monthly'&&document.getElementById('funResetD2'))document.getElementById('funResetD2').value=S.fun.reset.d||1;}
+}
+checkAutoReset();switchTab('overview');console.log('[init] switchTab ok');}catch(e){showInitErr(e,'init');}
 console.log('[init] done');
 </script>
 <div id="vwdbg" style="display:none;position:fixed;left:8px;bottom:8px;z-index:99999;background:rgba(0,0,0,.82);color:#39ff14;font:12px/1.4 monospace;padding:5px 9px;border-radius:7px;pointer-events:none;" data-page-node-id="SzjICN07UGOYG5oyzQOk6a"></div>
