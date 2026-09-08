@@ -636,8 +636,7 @@ svg.chart{width:100%;height:auto;display:block;}
         <form id="fitForm" data-page-node-id="Hq5F0NoW0ibiFymnv1hw8Y">
           <div class="fit-grid" data-page-node-id="FSHQprQI8UsvYsAQk9ovg1">
             <div class="field" data-page-node-id="qIfjnL5BcTWyvbDzVsVqjO"><label data-page-node-id="BRWHaNFBmPcTF3tHMZAfR1">日期</label><input type="date" id="fDate" data-page-node-id="qBWBbGG7uN4Sh2AIahGctF"></div>
-            <div class="field" data-page-node-id="1BBHhG0Xx6P94nVZxtGBFH"><label data-page-node-id="zYy9lBToYNxgif3Gh1n7Zt">早体重(kg)</label><input type="text" id="fWeightM" inputmode="decimal" placeholder="可选" data-page-node-id="V7JJs1hUwPPU2ArNv5XSQi"></div>
-            <div class="field" data-page-node-id="wbWE1"><label data-page-node-id="wbWE2">晚体重(kg)</label><input type="text" id="fWeightE" inputmode="decimal" placeholder="可选" data-page-node-id="wbWE3"></div>
+            <div class="field" data-page-node-id="1BBHhG0Xx6P94nVZxtGBFH"><label data-page-node-id="zYy9lBToYNxgif3Gh1n7Zt">体重(kg)</label><input type="text" id="fWeightM" inputmode="decimal" placeholder="如 62.5" data-page-node-id="V7JJs1hUwPPU2ArNv5XSQi"></div>
             <div class="field w-wide" data-page-node-id="ihnQGhyZkYq9AO6qLyn8lM"><label data-page-node-id="6M4yif2Ws4xpFInZIU04AE">运动内容</label><input type="text" id="fNote" placeholder="如：跑步5km" data-page-node-id="3dwulgz1j81kAVRDOWkr24"></div>
             <div class="field warm-field" data-page-node-id="LF2GqGY5GSNKniUZ3BsJD2"><label data-page-node-id="G1mrPYFZZCwGgOIEJ8Vf9L">热身</label><label class="switch" data-page-node-id="bjwg1EdozkXCf5I4rZKhFM"><input type="checkbox" id="fWarm" data-page-node-id="SzreYnXxEvQmjvXqbQyF3c"><span class="slider" data-page-node-id="2LroYtFfcucQtjeEhjw7ta"></span></label></div>
             <div class="field fit-btn" data-page-node-id="xK42jPpnBm08wf1984Ztdk"><label data-page-node-id="Q7BOcQEvAirhC3sqJ506ok">&nbsp;</label><button class="btn primary" type="submit" data-page-node-id="KOKg62AXUdVnWEtiplUJg1">记录打卡</button></div>
@@ -901,8 +900,8 @@ if(S.body.sex===undefined)S.body.sex='m';
 if(!Array.isArray(S.tasks))S.tasks=[];
 if(!Array.isArray(S.fit))S.fit=[];
 // 健身记录按日期去重：同一天多条合并为一条，避免同日显示多条
-// 合并规则：早/晚体重取首个非空 / 热身取任意「已做」/ 运动取首条非空
-// 兼容旧数据：旧记录只有 weight 字段，迁移到 早体重(weightM)
+// 合并规则：体重取首个非空 / 热身取任意「已做」/ 运动取首条非空
+// 兼容旧数据：旧记录只有 weight 字段，迁移到 体重(weightM)
 (function(){
   if(!S.fit||!S.fit.length)return;
   S.fit.forEach(function(r){ if(r.weight!==undefined&&r.weight!==''&&!('weightM' in r)){ r.weightM=r.weight; } });
@@ -912,7 +911,6 @@ if(!Array.isArray(S.fit))S.fit=[];
     if(byDate[d]){
       var e=byDate[d];
       if(!e.weightM&&r.weightM)e.weightM=r.weightM;
-      if(!e.weightE&&r.weightE)e.weightE=r.weightE;
       if(!e.warmup&&r.warmup)e.warmup=true;
       if(!e.note&&r.note)e.note=r.note;
     }else{byDate[d]=r;order.push(d);}
@@ -1038,8 +1036,8 @@ renderCatField();
 function seedAllday(){
   var y=new Date(Date.now()-86400000*2).toISOString().slice(0,10),to=todayStr();
   S.tasks=[{id:uid(),title:'完成民法精讲复盘',prio:'p1',due:to,done:false,note:''},{id:uid(),title:'提交报销单',prio:'p0',due:y,done:false,note:'记得附发票'},{id:uid(),title:'买菜',prio:'p2',due:to,done:true,note:''}];
-  /* ⚠️ 示例数据：仅首次打开演示用，体重 72.5/72.2 是占位假数据，不是真实记录。真实数据存在浏览器 localStorage 里，源码读不到。 */
-  S.fit=[{id:uid(),date:y,weightM:72.5,weightE:71.8,warmup:true,note:'跑步5km'},{id:uid(),date:to,weightM:72.2,weightE:71.5,warmup:false,note:'力量训练'}];
+  /* ⚠️ 示例数据：仅首次打开演示用，体重 62.5/62.3 是占位假数据，不是真实记录。真实数据存在浏览器 localStorage 里，源码读不到。 */
+  S.fit=[{id:uid(),date:y,weightM:62.5,warmup:true,note:'跑步5km'},{id:uid(),date:to,weightM:62.3,warmup:false,note:'力量训练'}];
   S.fun={points:60,rewards:[{id:uid(),name:'看一集剧',cost:30},{id:uid(),name:'打游戏1小时',cost:50},{id:uid(),name:'奶茶',cost:40},{id:uid(),name:'周末外出玩',cost:120}],log:[]};
   S.seededA=true;
 }
@@ -2120,13 +2118,12 @@ function spawnRepeat(t){
 function buildFitChart(){
   var data=S.fit.slice().sort(function(a,b){return a.date<b.date?-1:1;});
   var hasM=function(d){return +(d.weightM||d.weight);};
-  var hasE=function(d){return +(d.weightE);};
-  var anyM=data.some(hasM), anyE=data.some(hasE);
-  if(!anyM&&!anyE){return '<div class="empty">记录体重后自动生成趋势图</div>';}
-  var pts=data.filter(function(d){return hasM(d)||hasE(d);});
+  var anyM=data.some(hasM);
+  if(!anyM){return '<div class="empty">记录体重后自动生成趋势图</div>';}
+  var pts=data.filter(hasM);
   if(pts.length<2){return '<div class="empty">至少需要 2 天体重记录才能画图</div>';}
   var W=460,H=220,pl=34,pr=14,pt=14,pb=24,iw=W-pl-pr,ih=H-pt-pb;
-  var vals=[];data.forEach(function(d){var mv=hasM(d),ev=hasE(d);if(mv)vals.push(mv);if(ev)vals.push(ev);});
+  var vals=[];data.forEach(function(d){var mv=hasM(d);if(mv)vals.push(mv);});
   var wmin=Math.min.apply(null,vals),wmax=Math.max.apply(null,vals);
   var span=(wmax-wmin)||1;var wr=[wmin-span*0.15,wmax+span*0.15];
   var X=function(i){return pl+iw*i/(data.length-1);};
@@ -2140,48 +2137,45 @@ function buildFitChart(){
   }
   function seg(arr,color,dash){return '<polyline points="'+arr.join(' ')+'" fill="none" stroke="'+color+'" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"'+(dash?' stroke-dasharray="5 4"':'')+'/>';}
   function dots(values,color){var s='';values.forEach(function(v,i){if(v>0)s+='<circle cx="'+X(i)+'" cy="'+Yw(v)+'" r="3" fill="'+color+'"/>';});return s;}
-  var mArr=data.map(hasM), eArr=data.map(hasE);
+  var mArr=data.map(hasM);
   var xl='';data.forEach(function(d,i){if(i%Math.ceil(data.length/6)===0)xl+='<text x="'+X(i)+'" y="'+(H-6)+'" font-size="10" fill="#9ca3af" text-anchor="middle">'+d.date.slice(5)+'</text>';});
   var leg='<div class="legend">';
-  if(anyM)leg+='<span><i style="background:#5b9bf3"></i>早体重(kg)</span>';
-  if(anyE)leg+='<span><i style="background:#f59e0b"></i>晚体重(kg)</span>';
+  if(anyM)leg+='<span><i style="background:#5b9bf3"></i>体重(kg)</span>';
   leg+='</div>';
-  // 先画晚体重(虚线)再画早体重(实线)，早体重为主置顶
-  return '<svg class="chart" viewBox="0 0 '+W+' '+H+'">'+grid+segs(eArr,'#f59e0b',true)+dots(eArr,'#f59e0b')+segs(mArr,'#5b9bf3',false)+dots(mArr,'#5b9bf3')+xl+'</svg>'+leg;
+  return '<svg class="chart" viewBox="0 0 '+W+' '+H+'">'+grid+segs(mArr,'#5b9bf3',false)+dots(mArr,'#5b9bf3')+xl+'</svg>'+leg;
 }
 function renderFit(){
   document.getElementById('fitChart').innerHTML=buildFitChart();
   var box=document.getElementById('fitList');
   if(!S.fit.length){box.innerHTML='<div class="empty">暂无记录</div>';return;}
   var arr=S.fit.slice().sort(function(a,b){return a.date<b.date?1:-1;});
-  box.innerHTML='<table><thead><tr><th>日期</th><th>早体重</th><th>晚体重</th><th>热身</th><th>运动</th><th>基础代谢</th><th></th></tr></thead><tbody>'+
+  box.innerHTML='<table><thead><tr><th>日期</th><th>体重</th><th>热身</th><th>运动</th><th>基础代谢</th><th></th></tr></thead><tbody>'+
     arr.map(function(x){
-      var wm=x.weightM||x.weight||'', we=x.weightE||'';
+      var wm=x.weightM||x.weight||'';
       var br=calcBmr(x.date);
-      return '<tr><td>'+x.date+'</td><td>'+(wm||'-')+'</td><td>'+(we||'-')+'</td><td>'+(x.warmup?'<span style="color:var(--primary);font-weight:600">✓ 已做</span>':'<span style="color:#ef4444;font-weight:600">✗ 未做</span>')+'</td><td>'+(x.note||'')+'</td><td>'+(br?('<b style="color:var(--primary);font-variant-numeric:tabular-nums;">'+br.bmr+'</b> kcal'):'')+'</td><td><button class="del" data-delf="'+x.id+'"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></button></td></tr>';
+      return '<tr><td>'+x.date+'</td><td>'+(wm||'-')+'</td><td>'+(x.warmup?'<span style="color:var(--primary);font-weight:600">✓ 已做</span>':'<span style="color:#ef4444;font-weight:600">✗ 未做</span>')+'</td><td>'+(x.note||'')+'</td><td>'+(br?('<b style="color:var(--primary);font-variant-numeric:tabular-nums;">'+br.bmr+'</b> kcal'):'')+'</td><td><button class="del" data-delf="'+x.id+'"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></button></td></tr>';
     }).join('')+'</tbody></table>';
 }
 document.getElementById('fDate').value=todayStr();
 document.getElementById('fitForm').addEventListener('submit',function(e){
   e.preventDefault();
   var date=document.getElementById('fDate').value||todayStr();
-  var wm=parseFloat(document.getElementById('fWeightM').value),we=parseFloat(document.getElementById('fWeightE').value),note=document.getElementById('fNote').value.trim();
+  var wm=parseFloat(document.getElementById('fWeightM').value),note=document.getElementById('fNote').value.trim();
   var warmOn=document.getElementById('fWarm').checked;
-  if(!(wm>0)&&!(we>0)&&!warmOn&&!note){toast('请至少记录一项（早/晚体重/热身/运动）');return;}
+  if(!(wm>0)&&!warmOn&&!note){toast('请至少记录一项（体重/热身/运动）');return;}
   // 同一天：合并到已有记录而非新增；空白字段不覆盖，其余作为编辑
   var existing=null;
   for(var i=0;i<S.fit.length;i++){if(S.fit[i].date===date){existing=S.fit[i];break;}}
   if(existing){
     var hadWarm=!!existing.warmup, hadNote=!!(existing.note&&existing.note.trim());
-    if(wm>0)existing.weightM=wm;          // 早体重：填了才更新
-    if(we>0)existing.weightE=we;          // 晚体重：填了才更新
+    if(wm>0)existing.weightM=wm;          // 体重：填了才更新
     if(note)existing.note=note;          // 运动：填了才更新
     if(warmOn)existing.warmup=true;      // 热身：勾选才置「已做」，未勾选保留原值
     if(warmOn&&!hadWarm)earn('健身热身',10);
     if(note&&!hadNote)earn('健身内容·'+note,10);
     toast('已更新当天打卡');
   }else{
-    S.fit.push({id:uid(),date:date,weightM:wm||'',weightE:we||'',warmup:warmOn,note:note});
+    S.fit.push({id:uid(),date:date,weightM:wm||'',warmup:warmOn,note:note});
     if(warmOn)earn('健身热身',10);
     if(note)earn('健身内容·'+note,10);
     toast('已打卡');
@@ -2913,7 +2907,7 @@ function switchTab(name){
 document.querySelectorAll('.sidebar button.nav').forEach(function(b){if(!b.dataset.tab)return;b.onclick=function(){switchTab(b.dataset.tab);};});
 function renderAll(){renderOverview();renderTasks();renderFit();renderFun();renderFin();renderRest();renderGoal();renderFakao();renderEng();renderFakaoCheckin();renderCalendar();renderWxDate();renderNotes();}
 /* 版本号：每次发布改动后在此 +0.1，便于核对 Chrome 是否为最新版 */
-var APP_VER='2.04';
+var APP_VER='2.05';
 var _av=document.getElementById('appVer');if(_av)_av.textContent='v'+APP_VER;
 /* 清理已弃用的习惯打卡旧数据（v1.28 起不再使用，仅清孤立 key，不影响任何功能） */
 try{localStorage.removeItem('wb_hab_habits');localStorage.removeItem('wb_hab_seeded');}catch(e){}
