@@ -1304,7 +1304,8 @@ function renderOverview(){
       var ov=x.due&&x.due<t;
       var pill=ov?'<span class="pill over">逾期</span>':'<span class="pill '+x.prio+(x.done?' done-pill':'')+'">'+(x.prio==='p0'?'P0':x.prio==='p1'?'P1':'P2')+'</span>';
       var doneTag=x.done?'<span class="done-tag">已完成</span>':'';
-      return '<div class="todo'+(x.done?' done':'')+'" data-id="'+x.id+'"><div class="ck'+(x.done?' done':'')+'\" data-id="'+x.id+'"></div><div class="ttl"><span class="t">'+esc(x.title)+'</span>'+(x.note&&x.note.trim()?'<span class="tnote">'+esc(x.note)+'</span>':'')+(x.repeat&&x.repeat!=='none'?'<span class="rep-tag">↻ '+REP_LABEL[x.repeat]+'</span>':'')+'</div>'+pill+'<span class="tm">'+(x.due||'')+'</span><span class="tm">'+(x.reward>0?'+'+x.reward+'分':'')+'</span>'+doneTag+'</div>';
+      var dateShow=(x.repeat&&x.repeat!=='none')?'':(x.due||'');
+      return '<div class="todo'+(x.done?' done':'')+'" data-id="'+x.id+'"><div class="ck'+(x.done?' done':'')+'\" data-id="'+x.id+'"></div><div class="ttl"><span class="t">'+esc(x.title)+'</span>'+(x.note&&x.note.trim()?'<span class="tnote">'+esc(x.note)+'</span>':'')+(x.repeat&&x.repeat!=='none'?'<span class="rep-tag">↻ '+REP_LABEL[x.repeat]+'</span>':'')+'</div>'+pill+'<span class="tm">'+dateShow+'</span><span class="tm">'+(x.reward>0?'+'+x.reward+'分':'')+'</span>'+doneTag+'</div>';
     }).join('');
   }
   refreshWeather();
@@ -2106,7 +2107,7 @@ function renderTasks(){
       '<div class="ck '+(x.done?'done':'')+'" data-id="'+x.id+'">'+(x.done?'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5 9-11"/></svg>':'')+'</div>'+
       '<div class="ttl"><span class="t">'+esc(x.title)+'</span>'+noteHtml+(x.repeat&&x.repeat!=='none'?'<span class="rep-tag">↻ '+REP_LABEL[x.repeat]+'</span>':'')+'</div>'+
       prio+
-      '<span class="tm">'+(x.due||'')+'</span>'+
+      '<span class="tm">'+((x.repeat&&x.repeat!=='none')?'':(x.due||''))+'</span>'+
       '<span class="tm">'+(x.reward>0?'+'+x.reward+'分':'')+'</span>'+
       doneTag+
       '<button class="del" data-del="'+x.id+'"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></button>'+
@@ -3022,7 +3023,7 @@ function switchTab(name){
 document.querySelectorAll('.sidebar button.nav').forEach(function(b){if(!b.dataset.tab)return;b.onclick=function(){switchTab(b.dataset.tab);};});
 function renderAll(){rebuildCatColors();renderOverview();renderTasks();renderFit();renderFun();renderFin();renderRest();renderGoal();renderFakao();renderEng();renderFakaoCheckin();renderCalendar();renderWxDate();renderNotes();}
 /* 版本号：每次发布改动后在此 +0.1，便于核对 Chrome 是否为最新版 */
-var APP_VER='2.10';
+var APP_VER='2.11';
 var _av=document.getElementById('appVer');if(_av)_av.textContent='v'+APP_VER;
 /* 清理已弃用的习惯打卡旧数据（v1.28 起不再使用，仅清孤立 key，不影响任何功能） */
 try{localStorage.removeItem('wb_hab_habits');localStorage.removeItem('wb_hab_seeded');}catch(e){}
