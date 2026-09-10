@@ -2129,11 +2129,46 @@ function nextDue(d,rep){
   else if(rep==='weekly')dt.setDate(dt.getDate()+7);
   else if(rep==='monthly')dt.setMonth(dt.getMonth()+1);
   else if(rep==='yearly')dt.setFullYear(dt.getFullYear()+1);
-  return dt.toISOString().slice(0,10);
+  return fmtDate(dt);
 }
+/* 本地日期格式化：避开 toISOString() 的 UTC 偏移（东八区下本地 0 点经 toISOString 会变成前一天 16 点，导致日期差一天） */
+function fmtDate(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
 function spawnRepeat(t){
   if(!t.repeat||t.repeat==='none')return;
   S.tasks.push({id:uid(),title:t.title,prio:t.prio,due:nextDue(t.due,t.repeat),note:t.note||'',done:false,reward:t.reward||0,awarded:false,repeat:t.repeat});
+}
+/* 重复任务 iPhone 式滚动：未完成的重复任务一旦逾期，自动滚到「当前该做的那一次」。
+   这样就不再卡在好几天前的日期、无限期显示「逾期」。完成时仍由 spawnRepeat 往后推一个周期。 */
+function rollToCurrent(d,rep,t){
+  var dt=new Date(d+'T00:00:00');if(isNaN(dt))return t;
+  if(rep==='daily')return t;
+  if(rep==='weekly'){
+    var dow=dt.getDay(),now=new Date(t+'T00:00:00'),cur=now.getDay();
+    now.setDate(now.getDate()+((dow-cur+7)%7));return fmtDate(now);
+  }
+  if(rep==='monthly'){
+    var dt2=new Date(d+'T00:00:00'),day=dt2.getDate(),now=new Date(t+'T00:00:00');
+    var nd=new Date(now.getFullYear(),now.getMonth(),Math.min(day,28));
+    if(nd<now)nd=new Date(now.getFullYear(),now.getMonth()+1,Math.min(day,28));
+    return fmtDate(nd);
+  }
+  if(rep==='yearly'){
+    var dt3=new Date(d+'T00:00:00'),mo=dt3.getMonth(),day=dt3.getDate(),now=new Date(t+'T00:00:00');
+    var ny=new Date(now.getFullYear(),mo,Math.min(day,28));
+    if(ny<now)ny=new Date(now.getFullYear()+1,mo,Math.min(day,28));
+    return fmtDate(ny);
+  }
+  return t;
+}
+function rollRepeatDue(){
+  var t=todayStr();
+  S.tasks.forEach(function(x){
+    if(x.done)return;
+    if(!x.repeat||x.repeat==='none')return;
+    if(!x.due)return;
+    if(x.due>=t)return;
+    x.due=rollToCurrent(x.due,x.repeat,t);
+  });
 }
 
 /* ---------- 健康身体 ---------- */
@@ -2987,7 +3022,7 @@ function switchTab(name){
 document.querySelectorAll('.sidebar button.nav').forEach(function(b){if(!b.dataset.tab)return;b.onclick=function(){switchTab(b.dataset.tab);};});
 function renderAll(){rebuildCatColors();renderOverview();renderTasks();renderFit();renderFun();renderFin();renderRest();renderGoal();renderFakao();renderEng();renderFakaoCheckin();renderCalendar();renderWxDate();renderNotes();}
 /* 版本号：每次发布改动后在此 +0.1，便于核对 Chrome 是否为最新版 */
-var APP_VER='2.09';
+var APP_VER='2.10';
 var _av=document.getElementById('appVer');if(_av)_av.textContent='v'+APP_VER;
 /* 清理已弃用的习惯打卡旧数据（v1.28 起不再使用，仅清孤立 key，不影响任何功能） */
 try{localStorage.removeItem('wb_hab_habits');localStorage.removeItem('wb_hab_seeded');}catch(e){}
@@ -3003,7 +3038,7 @@ function showInitErr(e,src){
 }
 window.onerror=function(msg,url,line,col,err){showInitErr(err||msg,'window.onerror');};
 window.onunhandledrejection=function(e){showInitErr(e.reason,'unhandledrejection');};
-try{console.log('[init] start v'+APP_VER);autoSettle();console.log('[init] autoSettle ok');applyBg();console.log('[init] applyBg ok');renderAll();console.log('[init] renderAll ok');if(S.fun&&S.fun.log)S.fun.log.forEach(function(l){if(!l.id)l.id=uid();});
+try{console.log('[init] start v'+APP_VER);autoSettle();rollRepeatDue();persist();console.log('[init] autoSettle ok');applyBg();console.log('[init] applyBg ok');renderAll();console.log('[init] renderAll ok');if(S.fun&&S.fun.log)S.fun.log.forEach(function(l){if(!l.id)l.id=uid();});
 if(S.fun){
   if(S.fun.resetRule&&!S.fun.reset){var rm={'m1':{type:'monthly',d:1},'m15':{type:'monthly',d:15},'w1':{type:'ndays',n:7}};S.fun.reset=rm[S.fun.resetRule]||{type:'off'};delete S.fun.resetRule;}
   if(!S.fun.reset)S.fun.reset={type:'off'};
