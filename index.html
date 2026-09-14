@@ -1121,10 +1121,20 @@ function syncSnapshot(){
 var SYNC_KEYS=['tasks','fit','bar','meta','fun','seededA','spend','income','fmeta','seededF','txns','goals','reviews','seededG','fakaoLink','fakaoChecked','eng','weather','recs','recSeen','recAvoid','notes'];
 function syncApply(o){
   if(!o||typeof o!=='object')return false;
-  _syncFromCloud=true;                                   /* 刚从云端拉取，抑制随后的自动上传回写，避免状态被覆盖成“已上传” */
+  _syncFromCloud=true;
+  var _localNotes=(S.notes||[]).slice();
   SYNC_KEYS.forEach(function(k){if(k in o)S[k]=o[k];});
+  var _merged=false;
+  if(Array.isArray(o.notes)){
+    var _map={};
+    _localNotes.forEach(function(n){if(n&&n.id)_map[n.id]=n;});
+    o.notes.forEach(function(n){if(n&&n.id){var _c=_map[n.id];if(!_c||(n.ts||0)>=(_c.ts||0)){_map[n.id]=n;_merged=true;}}});
+    S.notes=Object.keys(_map).map(function(k){return _map[k];});
+  }
   persist();_syncFromCloud=false;
-  renderAll();return true;
+  renderAll();
+  if(_merged&&SYNC.auto&&SYNC.token&&SYNC.gist&&!_syncBusy)syncPush();
+  return true;
 }
 function syncSetStatus(m,err){var el=document.getElementById('syncStatus');if(el){el.textContent=m;el.style.color=err?'var(--danger)':'var(--muted)';}}
 /* 云同步错误：把笼统的报错翻成能照着做的排查建议 */
