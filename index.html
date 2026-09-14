@@ -1122,15 +1122,19 @@ var SYNC_KEYS=['tasks','fit','bar','meta','fun','seededA','spend','income','fmet
 function syncApply(o){
   if(!o||typeof o!=='object')return false;
   _syncFromCloud=true;
-  var _localNotes=(S.notes||[]).slice();
-  SYNC_KEYS.forEach(function(k){if(k in o)S[k]=o[k];});
   var _merged=false;
-  if(Array.isArray(o.notes)){
-    var _map={};
-    _localNotes.forEach(function(n){if(n&&n.id)_map[n.id]=n;});
-    o.notes.forEach(function(n){if(n&&n.id){var _c=_map[n.id];if(!_c||(n.ts||0)>=(_c.ts||0)){_map[n.id]=n;_merged=true;}}});
-    S.notes=Object.keys(_map).map(function(k){return _map[k];});
-  }
+  function _isIdArr(v){return Array.isArray(v)&&v.length>0&&v.every(function(x){return x&&typeof x==='object'&&x.id!=null;});}
+  SYNC_KEYS.forEach(function(k){
+    if(!(k in o))return;
+    var loc=S[k], rem=o[k];
+    if(Array.isArray(loc)&&Array.isArray(rem)&&_isIdArr(loc)&&_isIdArr(rem)){
+      var r=mergeById(loc,rem);
+      S[k]=r.arr;
+      r.arr.forEach(function(x){if(x&&x.id!=null&&rem.every(function(y){return !y||y.id!==x.id;}))_merged=true;});
+    }else{
+      S[k]=rem;
+    }
+  });
   persist();_syncFromCloud=false;
   renderAll();
   if(_merged&&SYNC.auto&&SYNC.token&&SYNC.gist&&!_syncBusy)syncPush();
