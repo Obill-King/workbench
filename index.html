@@ -1288,7 +1288,7 @@ var OV_META={
 function renderOverview(){
   var t=todayStr();
   var remaining=S.tasks.filter(function(x){return !x.done;}).length;
-  var overdue=S.tasks.filter(function(x){return !x.done&&x.due&&x.due<t;}).length;
+  var overdue=S.tasks.filter(function(x){return !x.done&&x.due&&x.due<t&&!(x.repeat&&x.repeat!=='none');}).length;
   var hasFit=S.fit.some(function(x){return x.date===t&&x.warmup;});   // 打卡标准 = 当天是否热身
   var points=S.fun?S.fun.points:0;
   var finSpend=monthTotal(curMonth());
@@ -1315,7 +1315,7 @@ function renderOverview(){
   if(!ds.length){document.getElementById('ovTodo').innerHTML='<div class="empty">今天没有待办，也没有逾期，去享受生活吧</div>';}
   else{
     document.getElementById('ovTodo').innerHTML=ds.map(function(x){
-      var ov=x.due&&x.due<t;
+      var ov=x.due&&x.due<t&&!(x.repeat&&x.repeat!=='none');
       var pill=ov?'<span class="pill over">逾期</span>':'<span class="pill '+x.prio+(x.done?' done-pill':'')+'">'+(x.prio==='p0'?'P0':x.prio==='p1'?'P1':'P2')+'</span>';
       var doneTag=x.done?'<span class="done-tag">已完成</span>':'';
       var dateShow=(x.repeat&&x.repeat!=='none')?'':(x.due||'');
@@ -2113,7 +2113,7 @@ function renderTasks(){
   });
   if(!arr.length){box.innerHTML='<div class="empty">暂无待办</div>';return;}
   box.innerHTML=arr.map(function(x){
-    var ov=x.due&&!x.done&&x.due<t;
+    var ov=x.due&&!x.done&&x.due<t&&!(x.repeat&&x.repeat!=='none');
     var prio=ov?'<span class="pill over">逾期</span>':'<span class="pill '+x.prio+(x.done?' done-pill':'')+'">'+(x.prio==='p0'?'P0':x.prio==='p1'?'P1':'P2')+'</span>';
     var noteHtml=(x.note&&x.note.trim())?'<span class="tnote">'+esc(x.note)+'</span>':'';
     var doneTag=x.done?'<span class="done-tag">已完成</span>':'';
@@ -3037,7 +3037,7 @@ function switchTab(name){
 document.querySelectorAll('.sidebar button.nav').forEach(function(b){if(!b.dataset.tab)return;b.onclick=function(){switchTab(b.dataset.tab);};});
 function renderAll(){rebuildCatColors();renderOverview();renderTasks();renderFit();renderFun();renderFin();renderRest();renderGoal();renderFakao();renderEng();renderFakaoCheckin();renderCalendar();renderWxDate();renderNotes();}
 /* 版本号：每次发布改动后在此 +0.1，便于核对 Chrome 是否为最新版 */
-var APP_VER='2.13';
+var APP_VER='2.14';
 var _av=document.getElementById('appVer');if(_av)_av.textContent='v'+APP_VER;
 /* 清理已弃用的习惯打卡旧数据（v1.28 起不再使用，仅清孤立 key，不影响任何功能） */
 try{localStorage.removeItem('wb_hab_habits');localStorage.removeItem('wb_hab_seeded');}catch(e){}
