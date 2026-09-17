@@ -2108,8 +2108,11 @@ function renderTasks(){
     if(x.repeat&&x.repeat!=='none'){
       return !!(x.doneAt&&fmtDate(new Date(x.doneAt))===t);
     }
-    if(x.doneAt)return x.doneAt>=cutoff;
-    return true;
+    /* 单次任务：完成记录保留 15 天，计时按「截止日期 vs 实际勾掉时刻，取较晚者」，
+       与列表里显示的日期一致（旧版完成记录没有时间戳，按截止日期算，不再永久挂着）。 */
+    var last=x.doneAt||0;
+    if(x.due){var dd=new Date(x.due+'T23:59:59').getTime();if(!isNaN(dd)&&dd>last)last=dd;}
+    return last>=cutoff;
   }).sort(function(a,b){
     if(a.done!==b.done)return a.done?1:-1;
     var da=a.due||'9999',db=b.due||'9999';
@@ -3042,7 +3045,7 @@ function switchTab(name){
 document.querySelectorAll('.sidebar button.nav').forEach(function(b){if(!b.dataset.tab)return;b.onclick=function(){switchTab(b.dataset.tab);};});
 function renderAll(){rebuildCatColors();renderOverview();renderTasks();renderFit();renderFun();renderFin();renderRest();renderGoal();renderFakao();renderEng();renderFakaoCheckin();renderCalendar();renderWxDate();renderNotes();}
 /* 版本号：每次发布改动后在此 +0.1，便于核对 Chrome 是否为最新版 */
-var APP_VER='2.15';
+var APP_VER='2.16';
 var _av=document.getElementById('appVer');if(_av)_av.textContent='v'+APP_VER;
 /* 清理已弃用的习惯打卡旧数据（v1.28 起不再使用，仅清孤立 key，不影响任何功能） */
 try{localStorage.removeItem('wb_hab_habits');localStorage.removeItem('wb_hab_seeded');}catch(e){}
