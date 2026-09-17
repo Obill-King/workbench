@@ -901,13 +901,15 @@ var S={
   recs:ls('wb_recs',null),
   recSeen:ls('wb_rec_seen',ls('wb_rec_hide',[])),   /* 看过了的条目：仅屏蔽这条具体的，同类照常推（旧 wb_rec_hide 迁移而来） */
   recAvoid:ls('wb_rec_avoid',[]),                    /* 不喜欢的类型：屏蔽该类型，同类不再推（记住偏好） */
-  notes:ls('wb_notes',null)                          /* 记事本：随手记的突发想法 */
+  notes:ls('wb_notes',null),                         /* 记事本：随手记的突发想法 */
+  noteDel:ls('wb_note_del',[])                       /* 记事本删除墓碑：记录已删 note 的 id，用于多设备删除同步 */
 };
 // 明细记录（逐笔每日花销/收入）为输入源，月度 spend/income 由明细汇总而来
 if(!Array.isArray(S.txns))S.txns=[];
 if(!S.spend)S.spend={};
 if(!S.income)S.income={};
 if(!Array.isArray(S.notes))S.notes=[];
+if(!Array.isArray(S.noteDel))S.noteDel=[];
 if(!S.body)S.body={};
 if(S.body.height===undefined)S.body.height='';
 if(S.body.age===undefined)S.body.age='';
@@ -1114,7 +1116,7 @@ function syncSnapshot(){
     spend:S.spend,income:S.income,fmeta:S.fmeta,seededF:S.seededF,txns:S.txns,
     goals:S.goals,reviews:S.reviews,seededG:S.seededG,
     fakaoLink:S.fakaoLink,fakaoChecked:S.fakaoChecked,eng:S.eng,weather:S.weather,
-    recs:S.recs,recSeen:S.recSeen,recAvoid:S.recAvoid,notes:S.notes,body:S.body};
+    recs:S.recs,recSeen:S.recSeen,recAvoid:S.recAvoid,notes:S.notes,noteDel:S.noteDel,body:S.body};
   o.__ts=syncLocalTs()||Date.now();
   return o;
 }
@@ -1135,6 +1137,12 @@ function syncApply(o){
       S[k]=rem;
     }
   });
+  /* 记事本删除墓碑：合并本地与云端的已删 id（取并集），移除本机中对应的记事本条目，实现多设备删除同步 */
+  if('noteDel' in o){
+    var _u={};(S.noteDel||[]).forEach(function(id){_u[id]=1;});(o.noteDel||[]).forEach(function(id){_u[id]=1;});
+    S.noteDel=Object.keys(_u);
+    S.notes=S.notes.filter(function(n){return !_u[n.id];});
+  }
   persist();_syncFromCloud=false;
   renderAll();
   if(_merged&&SYNC.auto&&SYNC.token&&SYNC.gist&&!_syncBusy)syncPush();
@@ -2108,11 +2116,14 @@ function renderTasks(){
     if(x.repeat&&x.repeat!=='none'){
       return !!(x.doneAt&&fmtDate(new Date(x.doneAt))===t);
     }
-    /* 单次任务：完成记录保留 15 天，计时按「截止日期 vs 实际勾掉时刻，取较晚者」，
-       与列表里显示的日期一致（旧版完成记录没有时间戳，按截止日期算，不再永久挂着）。 */
-    var last=x.doneAt||0;
-    if(x.due){var dd=new Date(x.due+'T23:59:59').getTime();if(!isNaN(dd)&&dd>last)last=dd;}
-    return last>=cutoff;
+    /* 单次任务：完成记录保留 15 天，按列表里显示的「截止日期」算（你看得见的那个日期）；
+       没有截止日期的（随手记类），才按实际勾掉时刻算。这样 2026-08-31 截止的任务，
+       过 15 天后必然消失，不再受"哪天勾掉"影响而赖着不走。 */
+    if(x.due){
+      var dd=new Date(x.due+'T23:59:59').getTime();
+      if(!isNaN(dd))return dd>=cutoff;
+    }
+    return (x.doneAt||0)>=cutoff;
   }).sort(function(a,b){
     if(a.done!==b.done)return a.done?1:-1;
     var da=a.due||'9999',db=b.due||'9999';
@@ -3024,7 +3035,7 @@ function editNote(id){
 document.getElementById('noteAdd').addEventListener('click',addNote);
 document.getElementById('noteInput').addEventListener('keydown',function(e){if((e.ctrlKey||e.metaKey)&&e.key==='Enter'){e.preventDefault();addNote();}});
 document.getElementById('noteList').addEventListener('click',function(e){
-  var del=e.target.closest('[data-del]');if(del){S.notes=S.notes.filter(function(x){return x.id!==del.dataset.del;});persist();renderNotes();return;}
+  var del=e.target.closest('[data-del]');if(del){var _did=del.dataset.del;if(S.noteDel.indexOf(_did)<0)S.noteDel.push(_did);S.notes=S.notes.filter(function(x){return x.id!==_did;});persist();renderNotes();return;}
   var ed=e.target.closest('[data-edit]');if(ed){editNote(ed.dataset.edit);}
 });
 function switchTab(name){
@@ -3045,7 +3056,7 @@ function switchTab(name){
 document.querySelectorAll('.sidebar button.nav').forEach(function(b){if(!b.dataset.tab)return;b.onclick=function(){switchTab(b.dataset.tab);};});
 function renderAll(){rebuildCatColors();renderOverview();renderTasks();renderFit();renderFun();renderFin();renderRest();renderGoal();renderFakao();renderEng();renderFakaoCheckin();renderCalendar();renderWxDate();renderNotes();}
 /* 版本号：每次发布改动后在此 +0.1，便于核对 Chrome 是否为最新版 */
-var APP_VER='2.16';
+var APP_VER='2.17';
 var _av=document.getElementById('appVer');if(_av)_av.textContent='v'+APP_VER;
 /* 清理已弃用的习惯打卡旧数据（v1.28 起不再使用，仅清孤立 key，不影响任何功能） */
 try{localStorage.removeItem('wb_hab_habits');localStorage.removeItem('wb_hab_seeded');}catch(e){}
