@@ -1095,7 +1095,7 @@ function persist(){
   sv('wb_allday_tasks',S.tasks);sv('wb_allday_fit',S.fit);sv('wb_allday_bar',S.bar);sv('wb_allday_meta',S.meta);sv('wb_allday_fun',S.fun);sv('wb_allday_seeded',S.seededA);sv('wb_allday_body',S.body);
   sv('wb_fin_spend',S.spend);sv('wb_fin_income',S.income);sv('wb_fin_meta',S.fmeta);sv('wb_fin_seeded',S.seededF);sv('wb_fin_txns',S.txns);
   sv('wb_goal_goals',S.goals);sv('wb_goal_reviews',S.reviews);sv('wb_goal_seeded',S.seededG);
-  sv('wb_bg',S.bg);sv('wb_fakao_link',S.fakaoLink);sv('wb_fakao_checked',S.fakaoChecked);sv('wb_eng_data',S.eng);sv('wb_weather',S.weather);sv('wb_recs',S.recs);sv('wb_rec_seen',S.recSeen);sv('wb_rec_avoid',S.recAvoid);sv('wb_notes',S.notes);
+  sv('wb_bg',S.bg);sv('wb_fakao_link',S.fakaoLink);sv('wb_fakao_checked',S.fakaoChecked);sv('wb_eng_data',S.eng);sv('wb_weather',S.weather);sv('wb_recs',S.recs);sv('wb_rec_seen',S.recSeen);sv('wb_rec_avoid',S.recAvoid);sv('wb_notes',S.notes);sv('wb_note_del',S.noteDel);
   syncTouch();
   syncPersistHook();
 }
@@ -1121,6 +1121,19 @@ function syncSnapshot(){
   return o;
 }
 var SYNC_KEYS=['tasks','fit','bar','meta','fun','seededA','spend','income','fmeta','seededF','txns','goals','reviews','seededG','fakaoLink','fakaoChecked','eng','weather','recs','recSeen','recAvoid','notes'];
+/* 记事本删除墓碑：合并本地与云端的已删 id（取并集），移除本机对应条目。
+   纯移除操作、安全幂等——即便本地数据较新、被时间戳闸门挡住整次合并，也应单独应用，
+   因为删除不会"回滚"任何已完成内容（这正是 v2.17 删除传不过去的根因）。 */
+function applyNoteDeletions(cloudNoteDel){
+  if(!cloudNoteDel||!cloudNoteDel.length)return;
+  var _u={};(S.noteDel||[]).forEach(function(id){_u[id]=1;});cloudNoteDel.forEach(function(id){_u[id]=1;});
+  S.noteDel=Object.keys(_u);
+  var before=(S.notes||[]).length;
+  S.notes=(S.notes||[]).filter(function(n){return !_u[n.id];});
+  /* 无论是否真删了条目，都持久化墓碑并集（noteDel 此前漏存 localStorage，现已补上） */
+  persist();
+  if((S.notes||[]).length!==before)renderNotes();
+}
 function syncApply(o){
   if(!o||typeof o!=='object')return false;
   _syncFromCloud=true;
@@ -1137,12 +1150,7 @@ function syncApply(o){
       S[k]=rem;
     }
   });
-  /* 记事本删除墓碑：合并本地与云端的已删 id（取并集），移除本机中对应的记事本条目，实现多设备删除同步 */
-  if('noteDel' in o){
-    var _u={};(S.noteDel||[]).forEach(function(id){_u[id]=1;});(o.noteDel||[]).forEach(function(id){_u[id]=1;});
-    S.noteDel=Object.keys(_u);
-    S.notes=S.notes.filter(function(n){return !_u[n.id];});
-  }
+  if('noteDel' in o)applyNoteDeletions(o.noteDel);
   persist();_syncFromCloud=false;
   renderAll();
   if(_merged&&SYNC.auto&&SYNC.token&&SYNC.gist&&!_syncBusy)syncPush();
@@ -1204,9 +1212,10 @@ function syncPull(force){
       if(!force&&ever&&cloudTs&&cloudTs<=localTs){
         syncSetStatus('本机数据较新（'+(new Date(localTs)).toLocaleString()+'），已保留本机内容未覆盖。要采用云端请点「云 → 本机」');
         if(cloudTs<localTs)syncPush();
+        applyNoteDeletions(cloud.noteDel);   /* 即便整次合并被跳过，删除也应应用 */
         return;
       }
-      if(!force&&ever&&!cloudTs&&localTs){syncSetStatus('云端数据无时间戳，已保留本机内容并上传');syncPush();return;}
+      if(!force&&ever&&!cloudTs&&localTs){syncSetStatus('云端数据无时间戳，已保留本机内容并上传');syncPush();applyNoteDeletions(cloud.noteDel);return;}
       if(syncApply(cloud)){syncTouch(cloudTs||Date.now());syncMarkEver();syncSetStatus('已从云端同步到本机 · '+new Date().toLocaleTimeString());}
     });
 }
@@ -3056,7 +3065,7 @@ function switchTab(name){
 document.querySelectorAll('.sidebar button.nav').forEach(function(b){if(!b.dataset.tab)return;b.onclick=function(){switchTab(b.dataset.tab);};});
 function renderAll(){rebuildCatColors();renderOverview();renderTasks();renderFit();renderFun();renderFin();renderRest();renderGoal();renderFakao();renderEng();renderFakaoCheckin();renderCalendar();renderWxDate();renderNotes();}
 /* 版本号：每次发布改动后在此 +0.1，便于核对 Chrome 是否为最新版 */
-var APP_VER='2.17';
+var APP_VER='2.18';
 var _av=document.getElementById('appVer');if(_av)_av.textContent='v'+APP_VER;
 /* 清理已弃用的习惯打卡旧数据（v1.28 起不再使用，仅清孤立 key，不影响任何功能） */
 try{localStorage.removeItem('wb_hab_habits');localStorage.removeItem('wb_hab_seeded');}catch(e){}
