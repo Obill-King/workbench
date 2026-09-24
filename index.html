@@ -1187,36 +1187,63 @@ function syncRequest(url,opts,act,onOk,retry){
     _syncBusy=false;_syncReady=true;
   });
 }
+/* 判断某数组是否为「带 id 的对象数组」（合并的判定条件，提到模块作用域供多处复用） */
+function _isIdArr(v){return Array.isArray(v)&&v.length>0&&v.every(function(x){return x&&typeof x==='object'&&x.id!=null;});}
+/* 合并两个快照：以 base 为底，把 inc 的数据并入（按 id 合并数组，标量覆盖）。
+   用于上传时「先拉云端、合并本机再上传」，避免覆盖另一台设备的独有数据。 */
+function mergeSnapshots(base,inc){
+  var m={};
+  SYNC_KEYS.forEach(function(k){
+    if(!(k in inc)){ if(k in base)m[k]=base[k]; return; }
+    var b=base[k], c=inc[k];
+    if(Array.isArray(b)&&Array.isArray(c)&&_isIdArr(b)&&_isIdArr(c)){
+      m[k]=mergeById(b,c).arr;
+    }else if(k in base){
+      m[k]=(c!==undefined)?c:base[k];
+    }else{ m[k]=c; }
+  });
+  /* 删除墓碑取并集，确保两端删除都能传播 */
+  var _u={};(base.noteDel||[]).forEach(function(id){_u[id]=1;});(inc.noteDel||[]).forEach(function(id){_u[id]=1;});
+  m.noteDel=Object.keys(_u);
+  m.__ts=Math.max(+(base&&base.__ts||0),+(inc&&inc.__ts||0))||Date.now();
+  return m;
+}
 function syncPush(){
-  if(_syncBusy)return;
+  if(_syncBusy){syncSetStatus('同步进行中，请稍候…',true);return;}
   if(!SYNC.token||!SYNC.gist){syncSetStatus('请先填 Token 并点「连接 / 创建」',true);return;}
-  var payload=JSON.stringify(syncSnapshot());
-  _syncBusy=true;syncSetStatus('上传中…');
-  syncRequest('https://api.github.com/gists/'+SYNC.gist,{method:'PATCH',
-    headers:{'Authorization':'Bearer '+SYNC.token,'Accept':'application/vnd.github+json','Content-Type':'application/json'},
-    body:JSON.stringify({description:'全能生活台云同步',public:false,files:{[GIST_FILE]:{content:payload}}})},
-    '上传',function(){syncMarkEver();syncSetStatus('已上传到云端 · '+new Date().toLocaleTimeString());});
+  _syncBusy=true;syncSetStatus('上传中（先合并云端再上传）…');
+  var H={'Authorization':'Bearer '+SYNC.token,'Accept':'application/vnd.github+json','Content-Type':'application/json'};
+  fetch('https://api.github.com/gists/'+SYNC.gist,{headers:H})
+    .then(function(r){if(!r.ok)throw new Error('HTTP '+r.status);return r.json();})
+    .then(function(d){
+      var f=d&&d.files&&d.files[GIST_FILE];var c=f&&f.content;
+      var base=(c?JSON.parse(c):{});
+      var merged=mergeSnapshots(base,syncSnapshot());
+      var payload=JSON.stringify(merged);
+      return fetch('https://api.github.com/gists/'+SYNC.gist,{method:'PATCH',headers:H,
+        body:JSON.stringify({description:'全能生活台云同步',public:false,files:{[GIST_FILE]:{content:payload}}})})
+        .then(function(r){if(!r.ok)throw new Error('HTTP '+r.status);return r.json();})
+        .then(function(){syncMarkEver();syncTouch(merged.__ts);
+          syncSetStatus('已上传到云端（已合并两端数据，本机 '+ (S.tasks?S.tasks.length:0) +' 任务 / '+(S.notes?S.notes.length:0)+' 记事） · '+new Date().toLocaleTimeString());});
+    })
+    .catch(function(e){syncSetStatus(syncErrMsg(e,'上传'),true);})
+    .then(function(){_syncBusy=false;_syncReady=true;});
 }
 function syncPull(force){
-  if(_syncBusy)return;
+  if(_syncBusy){syncSetStatus('同步进行中，请稍候…',true);return;}
   if(!SYNC.token||!SYNC.gist){_syncReady=true;return;}
   _syncBusy=true;syncSetStatus(force?'强制下载中…':'下载中…');
   syncRequest('https://api.github.com/gists/'+SYNC.gist,{headers:{'Authorization':'Bearer '+SYNC.token,'Accept':'application/vnd.github+json'}},
     '下载',function(d){
       var f=d&&d.files&&d.files[GIST_FILE];var c=f&&f.content;
-      if(!c){syncSetStatus('云端暂无数据',true);return;}
-      var cloud=JSON.parse(c);
-      var cloudTs=+(cloud&&cloud.__ts)||0, localTs=syncLocalTs(), ever=syncEver();
-      /* 云端不比本地新 → 绝不用云端覆盖本地（这正是"完成的待办被回滚"的成因）。
-         首次连接（ever=false）不做此保护，无条件采用云端 */
-      if(!force&&ever&&cloudTs&&cloudTs<=localTs){
-        syncSetStatus('本机数据较新（'+(new Date(localTs)).toLocaleString()+'），已保留本机内容未覆盖。要采用云端请点「云 → 本机」');
-        if(cloudTs<localTs)syncPush();
-        applyNoteDeletions(cloud.noteDel);   /* 即便整次合并被跳过，删除也应应用 */
-        return;
-      }
-      if(!force&&ever&&!cloudTs&&localTs){syncSetStatus('云端数据无时间戳，已保留本机内容并上传');syncPush();applyNoteDeletions(cloud.noteDel);return;}
-      if(syncApply(cloud)){syncTouch(cloudTs||Date.now());syncMarkEver();syncSetStatus('已从云端同步到本机 · '+new Date().toLocaleTimeString());}
+      if(!c){syncSetStatus('云端暂无数据（该 Gist 是空的——检查两台设备是否填了同一个 Gist ID）',true);return;}
+      var cloud;
+      try{cloud=JSON.parse(c);}catch(e){syncSetStatus('云端数据损坏，无法解析',true);return;}
+      syncSetStatus('云端：'+(cloud.tasks?cloud.tasks.length:0)+' 任务 / '+(cloud.notes?cloud.notes.length:0)+' 记事，正在合并到本机…');
+      /* 双向同步：永远以「合并」方式应用云端（不再用时间戳闸门跳过），
+         配合 syncPush 的合并上传，两端数据都不会被覆盖或回滚 */
+      if(syncApply(cloud)){syncTouch(cloud.__ts||Date.now());syncMarkEver();
+        syncSetStatus('已从云端同步（本机现 '+ (S.tasks?S.tasks.length:0) +' 任务 / '+(S.notes?S.notes.length:0)+' 记事） · '+new Date().toLocaleTimeString());}
     });
 }
 function syncShowCode(){
@@ -3065,7 +3092,7 @@ function switchTab(name){
 document.querySelectorAll('.sidebar button.nav').forEach(function(b){if(!b.dataset.tab)return;b.onclick=function(){switchTab(b.dataset.tab);};});
 function renderAll(){rebuildCatColors();renderOverview();renderTasks();renderFit();renderFun();renderFin();renderRest();renderGoal();renderFakao();renderEng();renderFakaoCheckin();renderCalendar();renderWxDate();renderNotes();}
 /* 版本号：每次发布改动后在此 +0.1，便于核对 Chrome 是否为最新版 */
-var APP_VER='2.18';
+var APP_VER='2.19';
 var _av=document.getElementById('appVer');if(_av)_av.textContent='v'+APP_VER;
 /* 清理已弃用的习惯打卡旧数据（v1.28 起不再使用，仅清孤立 key，不影响任何功能） */
 try{localStorage.removeItem('wb_hab_habits');localStorage.removeItem('wb_hab_seeded');}catch(e){}
