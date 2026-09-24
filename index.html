@@ -2447,6 +2447,7 @@ fkPomoUpdate();
 
 /* ---------- 娱乐激励 ---------- */
 function renderFun(){
+  if(!S.fun)S.fun={points:0,rewards:[],log:[]};
   var p=S.fun.points;
   var todayEarn=S.fun.log.filter(function(l){return l.reason&&l.date===todayStr()&&l.delta>0;}).reduce(function(a,b){return a+b.delta;},0);
   document.getElementById('funStats').innerHTML=
@@ -3134,7 +3135,7 @@ function switchTab(name){
 document.querySelectorAll('.sidebar button.nav').forEach(function(b){if(!b.dataset.tab)return;b.onclick=function(){switchTab(b.dataset.tab);};});
 function renderAll(){rebuildCatColors();renderOverview();renderTasks();renderFit();renderFun();renderFin();renderRest();renderGoal();renderFakao();renderEng();renderFakaoCheckin();renderCalendar();renderWxDate();renderNotes();}
 /* 版本号：每次发布改动后在此 +0.1，便于核对 Chrome 是否为最新版 */
-var APP_VER='2.22';
+var APP_VER='2.23';
 var _av=document.getElementById('appVer');if(_av)_av.textContent='v'+APP_VER;
 /* 清理已弃用的习惯打卡旧数据（v1.28 起不再使用，仅清孤立 key，不影响任何功能） */
 try{localStorage.removeItem('wb_hab_habits');localStorage.removeItem('wb_hab_seeded');}catch(e){}
