@@ -594,14 +594,14 @@ svg.chart{width:100%;height:auto;display:block;}
           <button class="btn ghost" id="syncProbe" style="margin:2px 0 10px;font-size:12px;">👁 只看云端（不动本机，验证连的是不是同一个仓库）</button>
 
           <div class="sync-row" data-page-node-id="KIqqaWmnji2GlUMReqzHjG">
-            <input type="text" id="syncKey" placeholder="GitHub Token（ghp_… 或 github_pat_…，仅勾 gist 权限）" data-page-node-id="roqFbYnucXxE9flCaaFbDC">
+            <input type="text" id="syncKey" placeholder="GitHub Token（ghp_… 或 github_pat_…，仅勾 gist 权限，两台填同一个）" data-page-node-id="roqFbYnucXxE9flCaaFbDC">
+          </div>
+          <div class="sync-row" data-page-node-id="kGLRYHlRNu9hWadhRyChxn">
+            <input type="text" id="syncGist" placeholder="② 把第一台给的 Gist ID 粘到这里（两台必须同一个）" style="flex:1;" data-page-node-id="EnTRnXtap0uKkVFIA11EyH2">
           </div>
           <div class="sync-row" style="gap:8px;flex-wrap:wrap;" data-page-node-id="MrGPz76612ZINgysoZDLEZ">
             <button class="btn primary" id="syncNew" data-page-node-id="KFmVxjxOxfaruUTtUJLowl">① 新建仓库（第一台用）</button>
             <button class="btn" id="syncConnect" data-page-node-id="EnTRnXtap0uKkVFIA11EyH">② 粘贴 ID 连接（第二台用）</button>
-          </div>
-          <div class="sync-row" data-page-node-id="kGLRYHlRNu9hWadhRyChxn">
-            <input type="text" id="syncGist" placeholder="② 把第一台给的 Gist ID 粘到这里" style="flex:1;" data-page-node-id="EnTRnXtap0uKkVFIA11EyH2">
           </div>
           <div class="sync-row" data-page-node-id="MrGPz76612ZINgysoZDLEZ2">
             <button class="btn" id="syncPush" data-page-node-id="KvMeiNyKkHBxefFNAhVxHr">本机 → 云（上传/合并）</button>
@@ -1282,12 +1282,13 @@ function syncNew(){
     .catch(function(e){syncSetStatus(syncErrMsg(e,'创建'),true);});
 }
 function syncConnect(){
-  var token=document.getElementById('syncKey').value.trim();
-  var gistInput=document.getElementById('syncGist')?document.getElementById('syncGist').value.trim():'';
-  if(!token){syncSetStatus('请先填入 GitHub Token（仅限 gist 权限）',true);return;}
-  if(!gistInput){syncSetStatus('② 模式：请把第一台给的 Gist ID 粘到上方输入框，再点此按钮',true);return;}
+  var token=(document.getElementById('syncKey').value||'').trim();
+  if(!token&&SYNC.token){token=SYNC.token;}  /* 输入框空但本地已存过 Token，直接复用 */
+  var gistInput=(document.getElementById('syncGist').value||'').trim();
+  if(!token){syncSetStatus('⚠️ 还差一步：请先在上方「GitHub Token」框填入你的 Token（ghp_… 或 github_pat_…，两台填【同一个】），再点 ②',true);try{document.getElementById('syncKey').focus();}catch(e){}return;}
+  if(!gistInput){syncSetStatus('⚠️ 请把第一台给的 Gist ID 粘到上方「Gist ID」输入框，再点 ②（别填到 Token 框里）',true);try{document.getElementById('syncGist').focus();}catch(e){}return;}
   SYNC.token=token;SYNC.gist=gistInput;sv('wb_sync',SYNC);
-  syncSetStatus('正在连接已有仓库并拉取…');syncRefreshUI();syncShowCode();syncPull();
+  syncSetStatus('正在连接 Gist '+gistInput+' 并拉取…');syncRefreshUI();syncShowCode();syncPull();
 }
 /* 只看云端：仅读取云端计数与更新时间，不改动本机（用于排查「两台是不是同一个仓库」） */
 function syncProbe(){
@@ -3133,7 +3134,7 @@ function switchTab(name){
 document.querySelectorAll('.sidebar button.nav').forEach(function(b){if(!b.dataset.tab)return;b.onclick=function(){switchTab(b.dataset.tab);};});
 function renderAll(){rebuildCatColors();renderOverview();renderTasks();renderFit();renderFun();renderFin();renderRest();renderGoal();renderFakao();renderEng();renderFakaoCheckin();renderCalendar();renderWxDate();renderNotes();}
 /* 版本号：每次发布改动后在此 +0.1，便于核对 Chrome 是否为最新版 */
-var APP_VER='2.21';
+var APP_VER='2.22';
 var _av=document.getElementById('appVer');if(_av)_av.textContent='v'+APP_VER;
 /* 清理已弃用的习惯打卡旧数据（v1.28 起不再使用，仅清孤立 key，不影响任何功能） */
 try{localStorage.removeItem('wb_hab_habits');localStorage.removeItem('wb_hab_seeded');}catch(e){}
