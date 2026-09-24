@@ -377,6 +377,11 @@ svg.chart{width:100%;height:auto;display:block;}
 .collapsible .coll-body{padding-top:12px;}
 .sync-code{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:8px 0 0;font-size:12px;color:var(--muted);}
 .sync-code code{background:var(--soft);border:1px solid var(--line);border-radius:6px;padding:3px 8px;font-size:11px;word-break:break-all;max-width:100%;flex:1 1 160px;}
+.sync-diag{display:flex;flex-direction:column;gap:4px;margin:8px 0;padding:8px 10px;background:var(--soft);border:1px solid var(--line);border-radius:8px;font-size:12px;}
+.sync-diag-row{display:flex;align-items:center;gap:8px;}
+.sync-diag-row .k{display:inline-block;min-width:34px;color:var(--muted);}
+.sync-diag-row .v{font-weight:600;}
+.sync-diag-row.gist .v{word-break:break-all;flex:1;}
 /* 设置面板 */
 .settings-section{margin:16px 0 6px;}
 .settings-section h5{margin:0 0 10px;font-size:13px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.5px;}
@@ -578,25 +583,36 @@ svg.chart{width:100%;height:auto;display:block;}
           <span id="syncToggleTxt" style="color:var(--muted);font-size:13px;" data-page-node-id="0m0srOALwfEwJ5cefzRid9">点击展开 ▾</span>
         </div>
         <div class="coll-body" id="syncBody" style="display:none;" data-page-node-id="E5aHaFf2PzpggL8n8wQMC9">
-          <p class="sync-status" id="syncStatus" data-page-node-id="BmyveaFxUVELE9QrdTBoNg">未连接。按下方清单拿到 GitHub Token（仅勾 gist 权限）后粘贴，点「连接 / 创建」即可在电脑与手机间自动互通。</p>
+          <p class="sync-status" id="syncStatus" data-page-node-id="BmyveaFxUVELE9QrdTBoNg">两台设备必须填<b>同一个 Gist ID + 同一个 Token</b>。先在「① 新建仓库」那台拿到 Gist ID，再到另一台「② 粘贴 ID 连接」。</p>
+
+          <!-- 常驻诊断条：一眼看出本机/云端是否对得上 -->
+          <div class="sync-diag" id="syncDiag" style="display:none;">
+            <div class="sync-diag-row"><span class="k">本机</span><span class="v" id="syncLocalCnt">—</span></div>
+            <div class="sync-diag-row"><span class="k">云端</span><span class="v" id="syncCloudCnt">未读取</span></div>
+            <div class="sync-diag-row gist"><span class="k">Gist</span><span class="v" id="syncGistShown">—</span><button class="btn ghost" id="syncCopy" style="padding:1px 8px;font-size:11px;">复制</button></div>
+          </div>
+          <button class="btn ghost" id="syncProbe" style="margin:2px 0 10px;font-size:12px;">👁 只看云端（不动本机，验证连的是不是同一个仓库）</button>
+
           <div class="sync-row" data-page-node-id="KIqqaWmnji2GlUMReqzHjG">
-            <input type="text" id="syncKey" placeholder="GitHub Token（ghp_… 或 github_pat_…）" data-page-node-id="roqFbYnucXxE9flCaaFbDC">
-            <button class="btn primary" id="syncConnect" data-page-node-id="KFmVxjxOxfaruUTtUJLowl">连接 / 创建</button>
+            <input type="text" id="syncKey" placeholder="GitHub Token（ghp_… 或 github_pat_…，仅勾 gist 权限）" data-page-node-id="roqFbYnucXxE9flCaaFbDC">
+          </div>
+          <div class="sync-row" style="gap:8px;flex-wrap:wrap;" data-page-node-id="MrGPz76612ZINgysoZDLEZ">
+            <button class="btn primary" id="syncNew" data-page-node-id="KFmVxjxOxfaruUTtUJLowl">① 新建仓库（第一台用）</button>
+            <button class="btn" id="syncConnect" data-page-node-id="EnTRnXtap0uKkVFIA11EyH">② 粘贴 ID 连接（第二台用）</button>
           </div>
           <div class="sync-row" data-page-node-id="kGLRYHlRNu9hWadhRyChxn">
-            <input type="text" id="syncGist" placeholder="Gist ID（第二台设备连接用，可留空）" style="flex:1;" data-page-node-id="EnTRnXtap0uKkVFIA11EyH">
+            <input type="text" id="syncGist" placeholder="② 把第一台给的 Gist ID 粘到这里" style="flex:1;" data-page-node-id="EnTRnXtap0uKkVFIA11EyH2">
           </div>
-          <div class="sync-row" data-page-node-id="MrGPz76612ZINgysoZDLEZ">
-            <button class="btn" id="syncPush" data-page-node-id="KvMeiNyKkHBxefFNAhVxHr">本机 → 云（上传）</button>
-            <button class="btn" id="syncPull" data-page-node-id="2FE6hCH9pDtpiIe4951ykA">云 → 本机（下载）</button>
+          <div class="sync-row" data-page-node-id="MrGPz76612ZINgysoZDLEZ2">
+            <button class="btn" id="syncPush" data-page-node-id="KvMeiNyKkHBxefFNAhVxHr">本机 → 云（上传/合并）</button>
+            <button class="btn" id="syncPull" data-page-node-id="2FE6hCH9pDtpiIe4951ykA">云 → 本机（下载/合并）</button>
             <label class="switch-line" data-page-node-id="2ya9Iy1788fzzCc3BfdE4q"><label class="switch" data-page-node-id="LLQgUTfhxWQKEzqlVutqcf"><input type="checkbox" id="syncAuto" data-page-node-id="n48GH7H9dCASYcQUF8QOfT"><span class="slider" data-page-node-id="eGqqkMwMNswGKJd8EjEN0F"></span></label>自动同步</label>
           </div>
           <div class="sync-code" id="syncCodeBox" style="display:none;" data-page-node-id="D0zjKWa3eeOATkvnfK4hCE">
-            <span data-page-node-id="OLs334ZVLubIIW1FWECLNn">Gist ID（复制到另一台设备，配同一 Token 即可连接）：</span>
+            <span data-page-node-id="OLs334ZVLubIIW1FWECLNn">✅ 仓库已建好！把下面这串 <b>Gist ID</b> 复制到另一台设备的「② 粘贴 ID」框（两台必须同一个）：</span><br data-page-node-id="br1">
             <code id="syncCodeText" data-page-node-id="O8Sc1wa0Kf1OitBDQbjG92"></code>
-            <button class="btn ghost" id="syncCopy" style="padding:2px 10px;font-size:12px;" data-page-node-id="GG02AkaueyM5A9uX9fHBFc">复制</button>
           </div>
-          <p class="sync-status" data-page-node-id="3KHSQoa9jgJ3pN1wZDCC8T">数据存于 GitHub Secret Gist（仅你有 Token 能读，不公开）。免费、无单文件大小上限，鲨鱼历史也能同步。Token 等同密码，勿外泄。</p>
+          <p class="sync-status" data-page-node-id="3KHSQoa9jgJ3pN1wZDCC8T">数据存于 GitHub Secret Gist（仅你有 Token 能读，不公开）。免费、无单文件大小上限。Token 等同密码，勿外泄。<b>若「只看云端」显示的计数和你期望的另一台不一致 = 两台填的不是同一个 Gist ID，这是同步不过去的唯一常见原因。</b></p>
         </div>
       </div>
     </section>
@@ -1224,7 +1240,7 @@ function syncPush(){
         body:JSON.stringify({description:'全能生活台云同步',public:false,files:{[GIST_FILE]:{content:payload}}})})
         .then(function(r){if(!r.ok)throw new Error('HTTP '+r.status);return r.json();})
         .then(function(){syncMarkEver();syncTouch(merged.__ts);
-          syncSetStatus('已上传到云端（已合并两端数据，本机 '+ (S.tasks?S.tasks.length:0) +' 任务 / '+(S.notes?S.notes.length:0)+' 记事） · '+new Date().toLocaleTimeString());});
+          syncSetStatus('已上传到云端（已合并两端数据，本机 '+ (S.tasks?S.tasks.length:0) +' 任务 / '+(S.notes?S.notes.length:0)+' 记事） · '+new Date().toLocaleTimeString());syncProbe();});
     })
     .catch(function(e){syncSetStatus(syncErrMsg(e,'上传'),true);})
     .then(function(){_syncBusy=false;_syncReady=true;});
@@ -1243,7 +1259,7 @@ function syncPull(force){
       /* 双向同步：永远以「合并」方式应用云端（不再用时间戳闸门跳过），
          配合 syncPush 的合并上传，两端数据都不会被覆盖或回滚 */
       if(syncApply(cloud)){syncTouch(cloud.__ts||Date.now());syncMarkEver();
-        syncSetStatus('已从云端同步（本机现 '+ (S.tasks?S.tasks.length:0) +' 任务 / '+(S.notes?S.notes.length:0)+' 记事） · '+new Date().toLocaleTimeString());}
+        syncSetStatus('已从云端同步（本机现 '+ (S.tasks?S.tasks.length:0) +' 任务 / '+(S.notes?S.notes.length:0)+' 记事） · '+new Date().toLocaleTimeString());syncProbe();}
     });
 }
 function syncShowCode(){
@@ -1251,32 +1267,53 @@ function syncShowCode(){
   var box=document.getElementById('syncCodeBox');var txt=document.getElementById('syncCodeText');
   if(box&&txt){txt.textContent=SYNC.gist;box.style.display='flex';}
 }
-function syncCreate(){
+function syncNew(){
+  var token=document.getElementById('syncKey').value.trim();
+  if(!token){syncSetStatus('请先填入 GitHub Token（仅限 gist 权限）',true);return;}
+  syncSetStatus('正在创建云端仓库（第一台设备）…');
+  fetch('https://api.github.com/gists',{method:'POST',
+    headers:{'Authorization':'Bearer '+token,'Accept':'application/vnd.github+json','Content-Type':'application/json'},
+    body:JSON.stringify({description:'全能生活台云同步',public:false,files:{[GIST_FILE]:{content:JSON.stringify(syncSnapshot())}}})})
+    .then(function(r){if(!r.ok)throw new Error('HTTP '+r.status);return r.json();})
+    .then(function(d){SYNC.token=token;SYNC.gist=d.id;sv('wb_sync',SYNC);
+      syncSetStatus('✅ 已创建仓库 · 请把下方 Gist ID 复制到第二台');syncRefreshUI();syncShowCode();syncUpdateDiag(0,0,null);})
+    .catch(function(e){syncSetStatus(syncErrMsg(e,'创建'),true);});
+}
+function syncConnect(){
   var token=document.getElementById('syncKey').value.trim();
   var gistInput=document.getElementById('syncGist')?document.getElementById('syncGist').value.trim():'';
   if(!token){syncSetStatus('请先填入 GitHub Token（仅限 gist 权限）',true);return;}
-  /* 粘贴了 Gist ID → 直接连到已有仓库并拉取 */
-  if(gistInput){
-    SYNC.token=token;SYNC.gist=gistInput;sv('wb_sync',SYNC);
-    syncSetStatus('正在连接已有仓库…');syncRefreshUI();syncShowCode();syncPull();return;
-  }
-  if(!SYNC.gist){
-    syncSetStatus('正在创建云端仓库…');
-    fetch('https://api.github.com/gists',{method:'POST',
-      headers:{'Authorization':'Bearer '+token,'Accept':'application/vnd.github+json','Content-Type':'application/json'},
-      body:JSON.stringify({description:'全能生活台云同步',public:false,files:{[GIST_FILE]:{content:JSON.stringify(syncSnapshot())}}})})
-      .then(function(r){if(!r.ok)throw new Error('HTTP '+r.status);return r.json();})
-      .then(function(d){SYNC.token=token;SYNC.gist=d.id;sv('wb_sync',SYNC);syncSetStatus('已创建并连接 · Gist '+SYNC.gist);syncRefreshUI();syncShowCode();})
-      .catch(function(e){syncSetStatus(syncErrMsg(e,'创建'),true);});
-  }else{
-    SYNC.token=token;sv('wb_sync',SYNC);syncSetStatus('已更新 Token · Gist '+SYNC.gist);syncRefreshUI();syncShowCode();
-  }
+  if(!gistInput){syncSetStatus('② 模式：请把第一台给的 Gist ID 粘到上方输入框，再点此按钮',true);return;}
+  SYNC.token=token;SYNC.gist=gistInput;sv('wb_sync',SYNC);
+  syncSetStatus('正在连接已有仓库并拉取…');syncRefreshUI();syncShowCode();syncPull();
+}
+/* 只看云端：仅读取云端计数与更新时间，不改动本机（用于排查「两台是不是同一个仓库」） */
+function syncProbe(){
+  if(!SYNC.token||!SYNC.gist){syncSetStatus('还没连接，先填 Token 并连一个 Gist',true);return;}
+  syncSetStatus('正在读取云端（只看不动本机）…');
+  syncRequest('https://api.github.com/gists/'+SYNC.gist,{headers:{'Authorization':'Bearer '+SYNC.token,'Accept':'application/vnd.github+json'}},
+    '只看云端',function(d){
+      var f=d&&d.files&&d.files[GIST_FILE];var c=f&&f.content;
+      if(!c){syncSetStatus('云端该 Gist 是空的（还没上传过）。正常：第一台建好后先点「上传」，再到这台「下载」');syncUpdateDiag(0,0,null);return;}
+      var cloud;try{cloud=JSON.parse(c);}catch(e){syncSetStatus('云端数据损坏，无法解析',true);return;}
+      var ts=cloud.__ts?new Date(cloud.__ts).toLocaleString():'未知时间';
+      syncUpdateDiag((cloud.tasks?cloud.tasks.length:0),(cloud.notes?cloud.notes.length:0),ts);
+      syncSetStatus('👁 云端：'+(cloud.tasks?cloud.tasks.length:0)+' 任务 / '+(cloud.notes?cloud.notes.length:0)+' 记事 · 更新于 '+ts+'。若与你期望的另一台不一致 = 两台填的不是同一个 Gist ID');
+    });
+}
+function syncUpdateDiag(cTasks,cNotes,cTs){
+  var d=document.getElementById('syncDiag');if(d)d.style.display='block';
+  var lc=document.getElementById('syncLocalCnt');if(lc)lc.textContent=(S.tasks?S.tasks.length:0)+' 任务 / '+(S.notes?S.notes.length:0)+' 记事';
+  var cc=document.getElementById('syncCloudCnt');if(cc)cc.textContent=cTasks+' 任务 / '+cNotes+' 记事'+(cTs?(' · '+cTs):'');
+  var gs=document.getElementById('syncGistShown');if(gs)gs.textContent=SYNC.gist||'—';
 }
 function syncRefreshUI(){
   var k=document.getElementById('syncKey');if(k&&SYNC.token)k.value=SYNC.token;
   var g=document.getElementById('syncGist');if(g&&SYNC.gist)g.value=SYNC.gist;
   var a=document.getElementById('syncAuto');if(a)a.checked=!!SYNC.auto;
-  if(SYNC.gist)syncSetStatus('已连接 · Gist '+SYNC.gist+(SYNC.auto?' · 自动同步已开':''));
+  syncUpdateDiag((S.tasks?S.tasks.length:0),(S.notes?S.notes.length:0),null);
+  if(SYNC.gist&&!SYNC.token)syncSetStatus('已连接 Gist '+SYNC.gist+(SYNC.auto?' · 自动同步已开':''));
+  else if(SYNC.gist)syncSetStatus('已连接 · Gist '+SYNC.gist+(SYNC.auto?' · 自动同步已开':''));
 }
 function syncPersistHook(){
   if(_syncFromCloud)return;   /* 刚从云端拉取，本机数据即云端数据，无需再立即回传上传 */
@@ -1289,7 +1326,9 @@ function syncCollapse(){var b=document.getElementById('syncBody'),t=document.get
 if(document.getElementById('syncKey')){
   var _head=document.getElementById('syncHead');
   if(_head)_head.onclick=function(){var b=document.getElementById('syncBody');if(!b)return;if(b.style.display==='none')syncExpand();else syncCollapse();};
-  document.getElementById('syncConnect').onclick=function(){syncExpand();syncCreate();};
+  document.getElementById('syncConnect').onclick=function(){syncExpand();syncConnect();};
+  document.getElementById('syncNew').onclick=function(){syncExpand();syncNew();};
+  document.getElementById('syncProbe').onclick=function(){syncExpand();syncProbe();};
   document.getElementById('syncPush').onclick=function(){syncExpand();syncPush();};
   document.getElementById('syncPull').onclick=function(){syncExpand();syncPull(true);};
   document.getElementById('syncCopy').onclick=function(){var t=document.getElementById('syncCodeText');if(t&&navigator.clipboard){navigator.clipboard.writeText(t.textContent).then(function(){syncSetStatus('Gist ID 已复制，去另一台设备粘到「Gist ID」框即可');});}};
@@ -3092,7 +3131,7 @@ function switchTab(name){
 document.querySelectorAll('.sidebar button.nav').forEach(function(b){if(!b.dataset.tab)return;b.onclick=function(){switchTab(b.dataset.tab);};});
 function renderAll(){rebuildCatColors();renderOverview();renderTasks();renderFit();renderFun();renderFin();renderRest();renderGoal();renderFakao();renderEng();renderFakaoCheckin();renderCalendar();renderWxDate();renderNotes();}
 /* 版本号：每次发布改动后在此 +0.1，便于核对 Chrome 是否为最新版 */
-var APP_VER='2.19';
+var APP_VER='2.20';
 var _av=document.getElementById('appVer');if(_av)_av.textContent='v'+APP_VER;
 /* 清理已弃用的习惯打卡旧数据（v1.28 起不再使用，仅清孤立 key，不影响任何功能） */
 try{localStorage.removeItem('wb_hab_habits');localStorage.removeItem('wb_hab_seeded');}catch(e){}
