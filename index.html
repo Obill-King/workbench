@@ -1247,19 +1247,21 @@ function syncPush(){
 }
 function syncPull(force){
   if(_syncBusy){syncSetStatus('同步进行中，请稍候…',true);return;}
-  if(!SYNC.token||!SYNC.gist){_syncReady=true;return;}
+  if(!SYNC.token||!SYNC.gist){syncSetStatus('⚠️ 还没连上云端，无法下载：本机请先填 GitHub Token，再点「② 粘贴 ID 连接」（第二台）/「① 新建仓库」（第一台）；两台必须填【同一个 Token + 同一个 Gist ID】',true);return;}
   _syncBusy=true;syncSetStatus(force?'强制下载中…':'下载中…');
   syncRequest('https://api.github.com/gists/'+SYNC.gist,{headers:{'Authorization':'Bearer '+SYNC.token,'Accept':'application/vnd.github+json'}},
     '下载',function(d){
       var f=d&&d.files&&d.files[GIST_FILE];var c=f&&f.content;
-      if(!c){syncSetStatus('云端暂无数据（该 Gist 是空的——检查两台设备是否填了同一个 Gist ID）',true);return;}
+      if(!c){syncSetStatus('⚠️ 云端这个 Gist 是空的（还没上传过）。先在第一台点「本机→云 上传」，再来本机下载；若你曾在本机点过「① 新建仓库」，会生成【另一个】仓库导致两台互通不了——必须用「② 粘贴 ID 连接」填第一台给的同一串 ID',true);return;}
       var cloud;
       try{cloud=JSON.parse(c);}catch(e){syncSetStatus('云端数据损坏，无法解析',true);return;}
       syncSetStatus('云端：'+(cloud.tasks?cloud.tasks.length:0)+' 任务 / '+(cloud.notes?cloud.notes.length:0)+' 记事，正在合并到本机…');
       /* 双向同步：永远以「合并」方式应用云端（不再用时间戳闸门跳过），
          配合 syncPush 的合并上传，两端数据都不会被覆盖或回滚 */
       if(syncApply(cloud)){syncTouch(cloud.__ts||Date.now());syncMarkEver();
-        syncSetStatus('已从云端同步（本机现 '+ (S.tasks?S.tasks.length:0) +' 任务 / '+(S.notes?S.notes.length:0)+' 记事） · '+new Date().toLocaleTimeString());syncProbe();}
+        var _ts=cloud.__ts?new Date(cloud.__ts).toLocaleTimeString():new Date().toLocaleTimeString();
+        syncUpdateDiag((cloud.tasks?cloud.tasks.length:0),(cloud.notes?cloud.notes.length:0),_ts);
+        syncSetStatus('✅ 已从云端下载并合并（叠加=云端与本机数据都会保留，不会删你本机已有项）：本机现 '+ (S.tasks?S.tasks.length:0) +' 任务 / '+(S.notes?S.notes.length:0)+' 记事 · '+_ts);}
     });
 }
 function syncShowCode(){
@@ -3131,7 +3133,7 @@ function switchTab(name){
 document.querySelectorAll('.sidebar button.nav').forEach(function(b){if(!b.dataset.tab)return;b.onclick=function(){switchTab(b.dataset.tab);};});
 function renderAll(){rebuildCatColors();renderOverview();renderTasks();renderFit();renderFun();renderFin();renderRest();renderGoal();renderFakao();renderEng();renderFakaoCheckin();renderCalendar();renderWxDate();renderNotes();}
 /* 版本号：每次发布改动后在此 +0.1，便于核对 Chrome 是否为最新版 */
-var APP_VER='2.20';
+var APP_VER='2.21';
 var _av=document.getElementById('appVer');if(_av)_av.textContent='v'+APP_VER;
 /* 清理已弃用的习惯打卡旧数据（v1.28 起不再使用，仅清孤立 key，不影响任何功能） */
 try{localStorage.removeItem('wb_hab_habits');localStorage.removeItem('wb_hab_seeded');}catch(e){}
