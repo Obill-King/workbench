@@ -2598,10 +2598,16 @@ function markAndSwap(item,seenTitle,avoidType){
 document.getElementById('rwAdd').onclick=function(){var n=document.getElementById('rwName').value.trim(),c=parseInt(document.getElementById('rwCost').value,10);if(!n||!(c>0)){toast('请填奖励名和积分');return;}S.fun.rewards.push({id:uid(),name:n,cost:c});persist();renderFun();document.getElementById('rwName').value='';document.getElementById('rwCost').value='';};
 
 /* ---------- 记账理财 ---------- */
-function monthTotal(m){var o=S.spend[m];if(!o)return 0;return Object.keys(o).reduce(function(s,k){return s+(+o[k]||0);},0);}
-function monthIncome(m){var o=S.income[m];if(!o)return 0;return Object.keys(o).reduce(function(s,k){return s+(+o[k]||0);},0);}
+/* 统计口径统一（v2.25）：概览/月度分类/年度一律以 S.txns 流水为准（与「记录明细」同源），
+   修复云同步合并后 txns 为并集而 spend/income 聚合存储被云端整体替换导致的口径漂移。
+   仅当该月无流水但聚合存储有数据（老版本遗留）时回退存储，避免误清历史。 */
+function _monthFromTxns(m,inc){var s=0;(S.txns||[]).forEach(function(t){if(!t||t.date.slice(0,7)!==m)return;if(inc?t.type==='inc':t.type!=='inc')s+=+t.amount||0;});return s;}
+function _storeSum(o){return o?Object.keys(o).reduce(function(s,k){return s+(+o[k]||0);},0):0;}
+function monthTotal(m){var s=_monthFromTxns(m,false);if(s>0||!(S.spend&&S.spend[m]))return s;return _storeSum(S.spend[m]);}
+function monthIncome(m){var s=_monthFromTxns(m,true);if(s>0||!(S.income&&S.income[m]))return s;return _storeSum(S.income[m]);}
+function monthCats(m){var mo={},hasTx=false;(S.txns||[]).forEach(function(t){if(!t||t.date.slice(0,7)!==m)return;hasTx=true;if(t.type==='inc')return;mo[t.cat]=(mo[t.cat]||0)+(+t.amount||0);});if(!hasTx&&S.spend&&S.spend[m]){var o=S.spend[m];Object.keys(o).forEach(function(c){mo[c]=(mo[c]||0)+(+o[c]||0);});}return mo;}
 /* 年份/月份下拉：拆分年与月，避免月份列表过长 */
-function finYears(){var ys={};Object.keys(S.spend).forEach(function(m){ys[m.slice(0,4)]=1;});Object.keys(S.income).forEach(function(m){ys[m.slice(0,4)]=1;});if(!Object.keys(ys).length)ys[new Date().getFullYear()+'']=1;return Object.keys(ys).sort().reverse();}
+function finYears(){var ys={};(S.txns||[]).forEach(function(t){if(t&&t.date)ys[t.date.slice(0,4)]=1;});Object.keys(S.spend||{}).forEach(function(m){ys[m.slice(0,4)]=1;});Object.keys(S.income||{}).forEach(function(m){ys[m.slice(0,4)]=1;});if(!Object.keys(ys).length)ys[new Date().getFullYear()+'']=1;return Object.keys(ys).sort().reverse();}
 /* 清理空月份键：删除交易后 S.spend/S.income 可能残留空对象 {} 或零值分类，导致年份下拉显示无数据的年份（如误填的 0021）。
    在每次渲染前清理，既修复历史脏数据也防止复发。 */
 function cleanEmptyMonths(){var changed=false;['spend','income'].forEach(function(k){var obj=S[k];if(!obj)return;Object.keys(obj).forEach(function(m){var o=obj[m];if(o&&typeof o==='object'){Object.keys(o).forEach(function(c){if(!(+o[c]>0)){delete o[c];changed=true;}});if(!Object.keys(o).length){delete obj[m];changed=true;}}else if(!o||+o===0){delete obj[m];changed=true;}});});if(changed)persist();return changed;}
@@ -2687,7 +2693,7 @@ document.getElementById('yearHead').addEventListener('click',function(){
 });
 function renderFinCat(month){
   document.getElementById('catMonthLabel').textContent=month;
-  var mo=S.spend[month]||{};var cats=Object.keys(mo);var box=document.getElementById('catBox');
+  var mo=monthCats(month);var cats=Object.keys(mo);var box=document.getElementById('catBox');
   if(!cats.length){box.innerHTML='<div class="empty">该月暂无记录</div>';return;}
   var total=cats.reduce(function(s,k){return s+(+mo[k]||0);},0);
   var max=Math.max.apply(null,cats.map(function(k){return +mo[k]||0;}));
@@ -2710,7 +2716,7 @@ function renderYearDetail(y){
   var mm=['01','02','03','04','05','06','07','08','09','10','11','12'];
   var data=mm.map(function(m){return monthTotal(y+'-'+m);});
   var total=data.reduce(function(s,v){return s+v;},0);
-  var inc=0;for(var mi in S.income){if(mi.slice(0,4)!==y)continue;for(var c in S.income[mi])inc+=(+S.income[mi][c]||0);}
+  var inc=0;for(var mi=0;mi<12;mi++)inc+=monthIncome(y+'-'+mm[mi]);
   var max=Math.max.apply(null,data);
   document.getElementById('yearTotalTxt').innerHTML='年度花销 <b class="out">¥'+total.toFixed(0)+'</b> · 收入 <b class="in">¥'+inc.toFixed(0)+'</b> · 结余 <b class="'+((inc-total)>=0?'in':'out')+'">¥'+(inc-total).toFixed(0)+'</b>';
   document.getElementById('yearMonthBox').innerHTML='<div style="font-size:13px;color:var(--muted);margin:2px 0 8px;">按月走势</div>'+mm.map(function(m,i){var v=data[i];var w=max?(v/max*100):0;return '<div class="catrow"><div class="catrow-top"><span>'+m+' 月</span><span class="out">¥'+v.toFixed(0)+'</span></div><div class="catbar"><i style="width:'+w.toFixed(1)+'%;background:var(--primary)"></i></div></div>';}).join('');
@@ -3135,7 +3141,7 @@ function switchTab(name){
 document.querySelectorAll('.sidebar button.nav').forEach(function(b){if(!b.dataset.tab)return;b.onclick=function(){switchTab(b.dataset.tab);};});
 function renderAll(){rebuildCatColors();renderOverview();renderTasks();renderFit();renderFun();renderFin();renderRest();renderGoal();renderFakao();renderEng();renderFakaoCheckin();renderCalendar();renderWxDate();renderNotes();}
 /* 版本号：每次发布改动后在此 +0.1，便于核对 Chrome 是否为最新版 */
-var APP_VER='2.24';
+var APP_VER='2.25';
 var _av=document.getElementById('appVer');if(_av)_av.textContent='v'+APP_VER;
 /* 清理已弃用的习惯打卡旧数据（v1.28 起不再使用，仅清孤立 key，不影响任何功能） */
 try{localStorage.removeItem('wb_hab_habits');localStorage.removeItem('wb_hab_seeded');}catch(e){}
