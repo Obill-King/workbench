@@ -367,6 +367,21 @@ svg.chart{width:100%;height:auto;display:block;}
 .modal h4{margin:0 0 8px;font-size:16px;}
 .modal p{margin:0 0 16px;font-size:14px;color:var(--muted);}
 .modal .acts{display:flex;gap:10px;justify-content:flex-end;}
+/* 冲突逐条确认面板 */
+#conflictBg .modal{max-width:520px;width:94%;max-height:86vh;display:flex;flex-direction:column;}
+#conflictList{overflow:auto;margin:10px 0;flex:1;}
+.conf-row{border:1px solid #e5e7eb;border-radius:10px;padding:10px;margin-bottom:10px;background:#fafafa;}
+.conf-head{font-size:13px;font-weight:600;margin-bottom:6px;}
+.conf-cols{display:flex;gap:10px;}
+.conf-col{flex:1;min-width:0;}
+.conf-tag{font-size:11px;color:var(--muted);margin-bottom:3px;}
+.conf-val{font-size:13px;background:#fff;border:1px solid #eee;border-radius:6px;padding:6px;min-height:34px;word-break:break-all;margin-bottom:6px;}
+.conf-col .btn.sel{outline:2px solid var(--primary);background:var(--primary);color:#fff;}
+.conf-row>.btn.ghost{margin-top:4px;}
+.sync-log{font-size:12px;color:var(--muted);max-height:140px;overflow:auto;}
+.log-row{border-top:1px dashed #eee;padding:4px 0;}
+.log-dir{font-weight:600;color:var(--text);}
+.log-note{color:var(--muted);font-size:11px;}
 /* 云同步卡片 */
 .sync-row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin:6px 0;}
 .sync-row input[type=text]{flex:1 1 200px;min-width:0;width:auto;}
@@ -603,11 +618,17 @@ svg.chart{width:100%;height:auto;display:block;}
             <button class="btn primary" id="syncNew" data-page-node-id="KFmVxjxOxfaruUTtUJLowl">① 新建仓库（第一台用）</button>
             <button class="btn" id="syncConnect" data-page-node-id="EnTRnXtap0uKkVFIA11EyH">② 粘贴 ID 连接（第二台用）</button>
           </div>
-          <div class="sync-row" data-page-node-id="MrGPz76612ZINgysoZDLEZ2">
-            <button class="btn" id="syncPush" data-page-node-id="KvMeiNyKkHBxefFNAhVxHr">本机 → 云（上传/合并）</button>
-            <button class="btn" id="syncPull" data-page-node-id="2FE6hCH9pDtpiIe4951ykA">云 → 本机（下载/合并）</button>
-            <label class="switch-line" data-page-node-id="2ya9Iy1788fzzCc3BfdE4q"><label class="switch" data-page-node-id="LLQgUTfhxWQKEzqlVutqcf"><input type="checkbox" id="syncAuto" data-page-node-id="n48GH7H9dCASYcQUF8QOfT"><span class="slider" data-page-node-id="eGqqkMwMNswGKJd8EjEN0F"></span></label>自动同步</label>
+          <div class="sync-row" data-page-node-id="MrGPz76612ZINgysoZDLEZ2" style="gap:8px;flex-wrap:wrap;">
+            <button class="btn" id="syncDownload" data-page-node-id="KvMeiNyKkHBxefFNAhVxHr">☁ 下载合并（只收）</button>
+            <button class="btn primary" id="syncUpload" data-page-node-id="2FE6hCH9pDtpiIe4951ykA">↑ 上传合并</button>
+            <button class="btn primary" id="syncBoth" data-page-node-id="syncBothN">⇄ 双向同步（推荐）</button>
           </div>
+          <div class="sync-row" data-page-node-id="autoRow" style="gap:8px;flex-wrap:wrap;align-items:center;">
+            <label class="switch-line" data-page-node-id="2ya9Iy1788fzzCc3BfdE4q"><label class="switch" data-page-node-id="LLQgUTfhxWQKEzqlVutqcf"><input type="checkbox" id="syncAuto" data-page-node-id="n48GH7H9dCASYcQUF8QOfT"><span class="slider" data-page-node-id="eGqqkMwMNswGKJd8EjEN0F"></span></label>切回前台自动拉取（仅收不发）</label>
+            <span class="muted" style="font-size:11px;">日常用同步；导入/导出仅作备份</span>
+          </div>
+          <div class="sync-status" id="syncLocalCnt" style="font-size:12px;">—</div>
+          <div class="sync-log" id="syncLog" style="margin-top:6px;"></div>
           <div class="sync-code" id="syncCodeBox" style="display:none;" data-page-node-id="D0zjKWa3eeOATkvnfK4hCE">
             <span data-page-node-id="OLs334ZVLubIIW1FWECLNn">✅ 仓库已建好！把下面这串 <b>Gist ID</b> 复制到另一台设备的「② 粘贴 ID」框（两台必须同一个）：</span><br data-page-node-id="br1">
             <code id="syncCodeText" data-page-node-id="O8Sc1wa0Kf1OitBDQbjG92"></code>
@@ -870,9 +891,11 @@ svg.chart{width:100%;height:auto;display:block;}
 <div class="modal-bg" id="recBg" data-page-node-id="4BuRnFs9dwAZTI8dTsYT0m"><div class="modal" style="max-width:420px;" data-page-node-id="YpxDtGGWTAxs1jb7Mi1IuD"><h4 data-page-node-id="6k0tda4GNgslEaWO5okvaN">管理推荐</h4><div id="recListManage" style="max-height:46vh;overflow:auto;margin-bottom:6px;" data-page-node-id="pFaJPIyk506bSqaNMMTgyc"></div><div class="rec-add" data-page-node-id="reUesqWTY9j2j17zh5Ru1b"><select id="recAddType" data-page-node-id="HFn9CKZDKfxHRPNUmbFuEP"><option value="book" data-page-node-id="PTDwxniFFIHvPWEDTtDCUF">书</option><option value="novel" data-page-node-id="kp1ryyNiQEMvM3evr9FgGj">小说</option><option value="movie" data-page-node-id="yRTAPxk1SJz97FaC0KNCZR">影</option><option value="drama" data-page-node-id="LsFWgQalYyrZaLsyqv3aaB">剧</option><option value="anime" data-page-node-id="KPmxNb7XbN3dj6wFxtjQAL">动漫</option><option value="game" data-page-node-id="2yGdBKCRZR7xcTCgsKOs32">游戏</option><option value="eng" data-page-node-id="mrLonIPRznGMmsmkkVKw5X">英语</option><option value="tip" data-page-node-id="W5dE9Q4BotdW0D4CEEr8U1">行动</option></select><input type="text" id="recAddTitle" placeholder="标题，如《活着》" data-page-node-id="1ojjns3Etn8iDsEYYy3GRC"><input type="text" id="recAddNote" placeholder="一句话推荐理由（可选）" style="flex:2 1 160px;" data-page-node-id="yiVg3TEG1mCGfiFDOXP4u7"><button class="btn primary" id="recAddBtn" data-page-node-id="hlV5uyeOKqFC9sNnJiAFbI">添加</button></div><div class="acts" style="margin-top:14px;" data-page-node-id="PRweAo6qf7D7noTlQytHOk"><button class="btn" id="recClose" data-page-node-id="XcPh6Px6vt9Lis5VYmjyjq">完成</button></div></div></div>
 <div class="modal-bg" id="settingsBg" data-page-node-id="8MDCsfOBU5Yzr89cxUQ9BS"><div class="modal" style="max-width:520px;" data-page-node-id="K5k51ECQSg9RGCIs3PF03R"><h4 data-page-node-id="YjdOmVwiGFMCo9iJBW5eD5">⚙️ 设置</h4>
   <div class="settings-section" data-page-node-id="xKuZKfog69rho5bizdjsuA"><h5 data-page-node-id="e7qdwDFwNEislmq0nZxM2B">数据管理</h5><div class="settings-btns" data-page-node-id="OKOKDw0wCQvmNUWkeDcALj">
-    <button class="btn" id="btnExport" data-page-node-id="qLs5Nojz5HGKZRda5U4VER"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-page-node-id="pedoGKeTLoe7BcUBikjd7s"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3" data-page-node-id="5wW3iwDr3VhQXXuM0ovZ7I"/></svg>导出全部</button>
-    <button class="btn" id="btnImport" data-page-node-id="L0p9ibnU94TWrNMVs3rzrh"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-page-node-id="psGqPNMdHkkVq9xQjgsRZe"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12" data-page-node-id="QhEx5lB6RNrbthzS7G5tAs"/></svg>导入</button>
+    <button class="btn" id="btnExport" data-page-node-id="qLs5Nojz5HGKZRda5U4VER"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-page-node-id="pedoGKeTLoe7BcUBikjd7s"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3" data-page-node-id="5wW3iwDr3VhQXXuM0ovZ7I"/></svg>📥 备份下载</button>
+    <button class="btn" id="btnImport" data-page-node-id="L0p9ibnU94TWrNMVs3rzrh"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-page-node-id="psGqPNMdHkkVq9xQjgsRZe"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12" data-page-node-id="QhEx5lB6RNrbthzS7G5tAs"/></svg>📤 从备份恢复</button>
     <button class="btn danger" id="btnClear" data-page-node-id="fnuFdZZwdrscZLAcEcvBdV"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-page-node-id="1LxyFV3UjK6XxZkx1HZwDY"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" data-page-node-id="dDCs9ecBA4fT0eA2IpvLp5"/></svg>清空全部</button>
+  </div>
+  <p class="sync-status" style="font-size:11px;margin-top:4px;">备份仅作本地兜底：日常跨设备请用上方「云同步」。从备份恢复后，建议再点一次「⇄ 双向同步」让云端与本机对齐。</p>
   </div></div>
   <div class="settings-section" data-page-node-id="EQ4JABaIIC5hYe2bieSYNI"><h5 data-page-node-id="anZOft4d5I2jtH3ZCEIIDu">外观</h5><div class="settings-btns" data-page-node-id="1pPdzao4aNqGYerG0VzZu7">
     <button class="btn" id="btnBg" data-page-node-id="q5SSAC4YHV4b7heCOjHwfb"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-page-node-id="31Sm6WJEOdZbJVQWNGgDb7"><path d="M4 16l4-4 4 4 4-6 4 6M4 4h16v16H4z" data-page-node-id="oDOObEhtudseYZGYpwyTw5"/></svg>设置背景</button>
@@ -1121,6 +1144,15 @@ function persist(){
 var SYNC=ls('wb_sync',{token:'',gist:'',auto:false});
 var _syncReady=false,_syncBusy=false,_syncTimer=null,_syncFromCloud=false;
 var GIST_FILE='allday-sync.json';
+/* 设备标识：每个浏览器/设备一个稳定 UUID，用于数据来源追溯 */
+var DEV=ls('wb_dev','');if(!DEV){DEV='dev_'+Math.random().toString(36).slice(2,10);sv('wb_dev',DEV);}
+function devShort(d){return (d||DEV).slice(-4);}
+/* 给记录盖章：谁、何时修改（用于冲突判定与来源展示）。所有新增/编辑记录都必须 touch */
+function touch(r){if(r&&typeof r==='object'){r.d=DEV;r.m=Date.now();}return r;}
+function recHash(x){if(!x||typeof x!=='object')return JSON.stringify(x);var c={};for(var k in x){if(k==='d'||k==='m'||k==='__ts')continue;c[k]=x[k];}return JSON.stringify(c);}
+function isIdArrSoft(v){return Array.isArray(v)&&v.every(function(x){return x==null||(typeof x==='object'&&x.id!=null);});}
+/* 冲突感知合并：base=本机, inc=传入(云端/文件)。返回合并后数组 + 冲突清单(同id内容不同) */
+function mergeConflict(base,inc){var map={},out=[];base.forEach(function(x){out.push(x);if(x&&x.id!=null)map[x.id]=x;});var conf=[],added=0;(inc||[]).forEach(function(x){if(!x||x.id==null){out.push(x);added++;return;}var b=map[x.id];if(!b){map[x.id]=x;out.push(x);added++;}else if(recHash(b)===recHash(x)){}else{conf.push({id:x.id,local:b,remote:x});}});return{arr:out,conflicts:conf,added:added};}
 /* 同步时间戳：本地数据最后修改时间。用于阻止"云端旧数据覆盖本地新数据" */
 function syncLocalTs(){return +(ls('wb_sync_ts',0));}
 function syncTouch(t){sv('wb_sync_ts',t||Date.now());}
@@ -1141,41 +1173,151 @@ var SYNC_KEYS=['tasks','fit','bar','meta','fun','seededA','spend','income','fmet
 /* 记事本删除墓碑：合并本地与云端的已删 id（取并集），移除本机对应条目。
    纯移除操作、安全幂等——即便本地数据较新、被时间戳闸门挡住整次合并，也应单独应用，
    因为删除不会"回滚"任何已完成内容（这正是 v2.17 删除传不过去的根因）。 */
-function applyNoteDeletions(cloudNoteDel){
-  if(!cloudNoteDel||!cloudNoteDel.length)return;
-  var _u={};(S.noteDel||[]).forEach(function(id){_u[id]=1;});cloudNoteDel.forEach(function(id){_u[id]=1;});
-  S.noteDel=Object.keys(_u);
+function applyNoteDeletions(cloudNoteDel,skipIds){
+  skipIds=skipIds||{};
+  if(!cloudNoteDel||!cloudNoteDel.length)return 0;
+  var _u={};(S.noteDel||[]).forEach(function(e){var id=(e&&typeof e==='object')?e.id:e;if(id!=null)_u[id]=1;});
+  (cloudNoteDel||[]).forEach(function(e){var id=(e&&typeof e==='object')?e.id:e;if(id!=null&&!skipIds[id])_u[id]=1;});
+  S.noteDel=Object.keys(_u).map(function(id){return {id:id,m:Date.now()};});
   var before=(S.notes||[]).length;
-  S.notes=(S.notes||[]).filter(function(n){return !_u[n.id];});
-  /* 无论是否真删了条目，都持久化墓碑并集（noteDel 此前漏存 localStorage，现已补上） */
+  S.notes=(S.notes||[]).filter(function(n){return !_u[n.id]||skipIds[n.id];});
+  var removed=before-(S.notes||[]).length;
   persist();
-  if((S.notes||[]).length!==before)renderNotes();
+  if(removed)renderNotes();
+  return removed;
 }
-function syncApply(o){
-  if(!o||typeof o!=='object')return false;
-  _syncFromCloud=true;
-  var _merged=false;
-  /* 修复 v2.29：去掉 v.length>0 限制。
-     原先云端某数组字段为空数组[]时，_isIdArr 返回 false → 走入 S[k]=rem 整体覆盖分支，
-     会用云端空数组把本机本地已有的数据（记事本/任务/流水等）整个清空。
-     去掉长度限制后，空数组也走 mergeById 合并分支：保留本机、合并不重复云端项，绝不删除本机已有数据。 */
-  function _isIdArr(v){return Array.isArray(v)&&v.every(function(x){return x&&typeof x==='object'&&x.id!=null;});}
+function computeSync(base,inc){
+  var proposed={},conflicts=[],added=0;
   SYNC_KEYS.forEach(function(k){
-    if(!(k in o))return;
-    var loc=S[k], rem=o[k];
-    if(Array.isArray(loc)&&Array.isArray(rem)&&_isIdArr(loc)&&_isIdArr(rem)){
-      var r=mergeById(loc,rem);
-      S[k]=r.arr;
-      r.arr.forEach(function(x){if(x&&x.id!=null&&rem.every(function(y){return !y||y.id!==x.id;}))_merged=true;});
+    if(!(k in inc))return;
+    var loc=base[k],rem=inc[k];
+    if(Array.isArray(loc)&&Array.isArray(rem)&&isIdArrSoft(loc)&&isIdArrSoft(rem)){
+      var mc=mergeConflict(Array.isArray(loc)?loc:[],rem);
+      proposed[k]=mc.arr;added+=mc.added;
+      if(mc.conflicts.length)conflicts.push({key:k,items:mc.conflicts});
     }else{
-      S[k]=rem;
+      proposed[k]=rem;
     }
   });
-  if('noteDel' in o)applyNoteDeletions(o.noteDel);
-  persist();_syncFromCloud=false;
-  renderAll();
-  if(_merged&&SYNC.auto&&SYNC.token&&SYNC.gist&&!_syncBusy)syncPush();
+  /* 记事本“删除 vs 编辑”冲突：云端墓碑删了某条，但本机该条被改过(更晚) → 保留本机，交由用户拍板 */
+  var skipNoteDel={};
+  (inc.noteDel||[]).forEach(function(e){var id=(e&&typeof e==='object')?e.id:e;var tm=(e&&typeof e==='object')?e.m:0;if(id==null)return;var ln=(base.notes||[]).find(function(n){return n.id===id;});if(ln&&ln.m&&tm&&ln.m>tm){conflicts.push({key:'notes',items:[{id:id,local:ln,remote:{deleted:true}}],_del:true});skipNoteDel[id]=1;}});
+  return {proposed:proposed,conflicts:conflicts,added:added,skipNoteDel:skipNoteDel};
+}
+/* 应用用户选择到提案：choice=local/remote/both */
+function applyChoices(proposed,conflicts,choices){
+  (conflicts||[]).forEach(function(g){
+    var ch=choices[g.key]||{};
+    (g.items||[]).forEach(function(c){
+      var pick=ch[c.id]||'local';
+      var arr=proposed[g.key];if(!Array.isArray(arr))return;
+      var idx=arr.findIndex(function(x){return x&&x.id===c.id;});
+      if(g._del){ if(pick==='remote'){if(idx>=0)arr.splice(idx,1);} return; }
+      if(pick==='remote'){if(idx>=0)arr[idx]=c.remote;else arr.push(c.remote);}
+      else if(pick==='both'){arr.push(Object.assign({},c.remote,{id:uid()}));}
+    });
+  });
+  return proposed;
+}
+/* 把提案写入 S 并落盘、渲染、记日志 */
+function commitSync(proposed,opts){
+  opts=opts||{};
+  SYNC_KEYS.forEach(function(k){if(k in proposed)S[k]=proposed[k];});
+  if('noteDel' in (opts.cloud||{}))applyNoteDeletions(opts.cloud.noteDel,opts.skipNoteDel||{});
+  syncTouch(Date.now());syncMarkEver();
+  persist();renderAll();
   return true;
+}
+/* 应用云端快照到本机：silent=静默(冲突一律保留本机，绝不自动覆盖)；否则弹冲突面板 */
+function syncApply(o,opts){
+  opts=opts||{};
+  if(!o||typeof o!=='object')return false;
+  var res=computeSync(S,o);
+  function _commit(choices){
+    var prop=applyChoices(res.proposed,res.conflicts,choices||{});
+    commitSync(prop,{cloud:o,skipNoteDel:res.skipNoteDel});
+    syncLogAdd(opts.dir||'合并',res.added,res.conflicts.length,opts.silent?'静默拉取（冲突保留本机）':'已合并');
+    syncRenderStatus();
+    if(opts.onCommitted)opts.onCommitted();
+  }
+  if(res.conflicts.length&&!opts.silent){
+    showConflictSheet(res.conflicts,function(choices){_commit(choices||{});});
+    return true;
+  }
+  var choices={};
+  if(opts.silent){res.conflicts.forEach(function(g){(choices[g.key]=choices[g.key]||{});g.items.forEach(function(c){choices[g.key][c.id]='local';});});}
+  _commit(choices);
+  return true;
+}
+/* ---------- 冲突逐条确认面板 ---------- */
+var _conflictDone=null;
+function showConflictSheet(conflicts,onDone){
+  _conflictDone=onDone;
+  if(window.__syncAutoResolve){window.__syncAutoResolve(conflicts);onDone();return;}
+  var bg=document.getElementById('conflictBg');if(!bg){onDone();return;}
+  var wrap=document.getElementById('conflictList');wrap.innerHTML='';
+  conflicts.forEach(function(g){
+    (g.items||[]).forEach(function(c){
+      var row=document.createElement('div');row.className='conf-row';row.setAttribute('data-key',g.key);row.setAttribute('data-id',c.id);
+      var label={tasks:'待办',fit:'健身',bar:'学习',txns:'记账',goals:'目标',reviews:'复盘',notes:'记事'}[g.key]||g.key;
+      var leftText,rightText;
+      if(g._del){leftText='本机(已修改)';rightText='云端(已删除)';}
+      else{leftText=(c.local.text!=null?c.local.text:(c.local.title!=null?c.local.title:JSON.stringify(c.local).slice(0,40)));rightText=(c.remote.text!=null?c.remote.text:(c.remote.title!=null?c.remote.title:JSON.stringify(c.remote).slice(0,40)));}
+      row.innerHTML='<div class="conf-head">['+label+'] 同一记录两端内容不同，请选择保留哪版：</div>'
+        +'<div class="conf-cols"><div class="conf-col"><div class="conf-tag">本机 · 设备'+devShort(c.local.d)+' · '+(c.local.m?new Date(c.local.m).toLocaleString():'')+'</div><div class="conf-val">'+esc(leftText)+'</div><button class="btn small sel" data-pick="local">留本机</button></div>'
+        +'<div class="conf-col"><div class="conf-tag">云端 · 设备'+devShort(c.remote.d)+' · '+(c.remote.m?new Date(c.remote.m).toLocaleString():'')+'</div><div class="conf-val">'+(g._del?'(将被删除)':esc(rightText))+'</div><button class="btn small" data-pick="remote">留云端</button></div></div>'
+        +'<button class="btn small ghost" data-pick="both">两份都留（复制成两条）</button>';
+      wrap.appendChild(row);
+    });
+  });
+  wrap.querySelectorAll('.conf-row').forEach(function(row){
+    var btns=row.querySelectorAll('button[data-pick]');
+    btns.forEach(function(b){b.onclick=function(){btns.forEach(function(x){x.classList.remove('sel');});b.classList.add('sel');row.dataset.pick=b.getAttribute('data-pick');};});
+  });
+  bg.classList.add('show');
+  var done=bg.querySelector('#conflictDone');
+  done.onclick=function(){
+    var choices={};
+    wrap.querySelectorAll('.conf-row').forEach(function(row){
+      var pick=row.dataset.pick||'local';
+      var key=row.getAttribute('data-key'),id=row.getAttribute('data-id');
+      (choices[key]=choices[key]||{})[id]=pick;
+    });
+    bg.classList.remove('show');
+    if(_conflictDone)_conflictDone(choices);
+  };
+}
+/* 同步日志 + 状态面板 */
+function syncLogAdd(dir,added,conflicts,note){
+  var log=ls('wb_sync_log',[]);log.unshift({t:new Date().toISOString(),dir:dir,added:added,conflicts:conflicts,note:note||''});
+  if(log.length>50)log=log.slice(0,50);
+  sv('wb_sync_log',log);syncRenderLog();
+}
+function syncRenderLog(){
+  var box=document.getElementById('syncLog');if(!box)return;
+  var log=ls('wb_sync_log',[]);
+  if(!log.length){box.innerHTML='<div class="muted" style="font-size:12px;">还没有同步记录</div>';return;}
+  box.innerHTML=log.map(function(e){return '<div class="log-row"><span class="log-dir">'+e.dir+'</span> '+new Date(e.t).toLocaleString()+' · 新增'+e.added+' · 冲突'+e.conflicts+'<div class="log-note">'+(e.note||'')+'</div></div>';}).join('');
+}
+function syncRenderStatus(){
+  var lc=document.getElementById('syncLocalCnt');
+  if(lc)lc.textContent='待办'+S.tasks.length+' / 记账'+S.txns.length+' / 记事'+S.notes.length+' / 目标'+S.goals.length;
+  var last=ls('wb_sync_log',[])[0];
+  var cc=document.getElementById('syncCloudCnt');
+  if(cc&&last)cc.textContent='上次 '+last.dir+' · '+new Date(last.t).toLocaleString();
+}
+/* 手动同步总入口：mode=download(只拉)/upload(拉+推)/both(双向) */
+function syncManual(mode){
+  if(!SYNC.token||!SYNC.gist){syncSetStatus('请先填 Token 并连接同一个 Gist',true);return;}
+  syncSetStatus('正在读取云端…');
+  syncRequest('https://api.github.com/gists/'+SYNC.gist,{headers:{'Authorization':'Bearer '+SYNC.token,'Accept':'application/vnd.github+json'}},
+    '读取云端',function(d){var f=d.files&&d.files[GIST_FILE];
+      if(!f){syncSetStatus('云端还没有该同步文件，先把本机上传上去（点一次「'+ (mode==='download'?'下载合并':'上传/双向') +'」即可）',true);if(mode!=='download'){syncPush();}return;}
+      var cloud;try{cloud=JSON.parse(f.content);}catch(e){syncSetStatus('云端文件解析失败',true);return;}
+      syncApply(cloud,{dir:(mode==='download'?'下载合并':'同步'),onCommitted:function(){
+        if(mode!=='download'){syncSetStatus('已合并本机，正在上传…');syncPush();}
+      }});
+    },function(e){syncSetStatus(syncErrMsg(e,'读取云端'),true);});
 }
 function syncSetStatus(m,err){var el=document.getElementById('syncStatus');if(el){el.textContent=m;el.style.color=err?'var(--danger)':'var(--muted)';}}
 /* 云同步错误：把笼统的报错翻成能照着做的排查建议 */
@@ -1250,24 +1392,20 @@ function syncPush(){
     .catch(function(e){syncSetStatus(syncErrMsg(e,'上传'),true);})
     .then(function(){_syncBusy=false;_syncReady=true;});
 }
-function syncPull(force){
-  if(_syncBusy){syncSetStatus('同步进行中，请稍候…',true);return;}
-  if(!SYNC.token||!SYNC.gist){syncSetStatus('⚠️ 还没连上云端，无法下载：本机请先填 GitHub Token，再点「② 粘贴 ID 连接」（第二台）/「① 新建仓库」（第一台）；两台必须填【同一个 Token + 同一个 Gist ID】',true);return;}
-  _syncBusy=true;syncSetStatus(force?'强制下载中…':'下载中…');
+/* 自动/打开时的静默拉取：只从云端拉取合并到本机，绝不自动把本机推上云。
+   冲突一律保留本机（绝不静默覆盖），需要裁决时由用户手动点同步按钮触发面板。 */
+function syncPull(){
+  if(_syncBusy)return;
+  if(!SYNC.token||!SYNC.gist)return;
+  _syncBusy=true;
   syncRequest('https://api.github.com/gists/'+SYNC.gist,{headers:{'Authorization':'Bearer '+SYNC.token,'Accept':'application/vnd.github+json'}},
-    '下载',function(d){
+    '自动拉取',function(d){
       var f=d&&d.files&&d.files[GIST_FILE];var c=f&&f.content;
-      if(!c){syncSetStatus('⚠️ 云端这个 Gist 是空的（还没上传过）。先在第一台点「本机→云 上传」，再来本机下载；若你曾在本机点过「① 新建仓库」，会生成【另一个】仓库导致两台互通不了——必须用「② 粘贴 ID 连接」填第一台给的同一串 ID',true);return;}
-      var cloud;
-      try{cloud=JSON.parse(c);}catch(e){syncSetStatus('云端数据损坏，无法解析',true);return;}
-      syncSetStatus('云端：'+(cloud.tasks?cloud.tasks.length:0)+' 任务 / '+(cloud.notes?cloud.notes.length:0)+' 记事，正在合并到本机…');
-      /* 双向同步：永远以「合并」方式应用云端（不再用时间戳闸门跳过），
-         配合 syncPush 的合并上传，两端数据都不会被覆盖或回滚 */
-      if(syncApply(cloud)){syncTouch(cloud.__ts||Date.now());syncMarkEver();
-        var _ts=cloud.__ts?new Date(cloud.__ts).toLocaleTimeString():new Date().toLocaleTimeString();
-        syncUpdateDiag((cloud.tasks?cloud.tasks.length:0),(cloud.notes?cloud.notes.length:0),_ts);
-        syncSetStatus('✅ 已从云端下载并合并（叠加=云端与本机数据都会保留，不会删你本机已有项）：本机现 '+ (S.tasks?S.tasks.length:0) +' 任务 / '+(S.notes?S.notes.length:0)+' 记事 · '+_ts);}
-    });
+      if(!c){_syncBusy=false;return;}
+      var cloud;try{cloud=JSON.parse(c);}catch(e){_syncBusy=false;return;}
+      syncApply(cloud,{silent:true,dir:'自动拉取'});
+      _syncBusy=false;
+    },function(e){_syncBusy=false;});
 }
 function syncShowCode(){
   if(!SYNC.gist)return;
@@ -1337,14 +1475,17 @@ if(document.getElementById('syncKey')){
   document.getElementById('syncConnect').onclick=function(){syncExpand();syncConnect();};
   document.getElementById('syncNew').onclick=function(){syncExpand();syncNew();};
   document.getElementById('syncProbe').onclick=function(){syncExpand();syncProbe();};
-  document.getElementById('syncPush').onclick=function(){syncExpand();syncPush();};
-  document.getElementById('syncPull').onclick=function(){syncExpand();syncPull(true);};
+  document.getElementById('syncDownload').onclick=function(){syncExpand();syncManual('download');};
+  document.getElementById('syncUpload').onclick=function(){syncExpand();syncManual('upload');};
+  document.getElementById('syncBoth').onclick=function(){syncExpand();syncManual('both');};
   document.getElementById('syncCopy').onclick=function(){var t=document.getElementById('syncCodeText');if(t&&navigator.clipboard){navigator.clipboard.writeText(t.textContent).then(function(){syncSetStatus('Gist ID 已复制，去另一台设备粘到「Gist ID」框即可');});}};
-  document.getElementById('syncAuto').onchange=function(){syncExpand();SYNC.auto=this.checked;sv('wb_sync',SYNC);if(SYNC.auto){syncPull();window._syncIv=setInterval(syncPull,300000);syncSetStatus('自动同步已开启（每5分钟+切回前台时拉取）');}else{clearInterval(window._syncIv);syncSetStatus('自动同步已关闭');}};
+  document.getElementById('syncAuto').onchange=function(){syncExpand();SYNC.auto=this.checked;sv('wb_sync',SYNC);syncSetStatus(SYNC.auto?'切回前台自动拉取已开（仅收不发）':'切回前台自动拉取已关');};
   syncRefreshUI();if(SYNC.gist)syncShowCode();
-  if(SYNC.auto&&SYNC.token&&SYNC.gist){syncPull();window._syncIv=setInterval(syncPull,300000);}
-  /* 切回前台时拉取一次，避免后台空转耗尽免费额度 */
-  document.addEventListener('visibilitychange',function(){if(document.visibilityState==='visible'&&SYNC.auto&&SYNC.token&&SYNC.gist&&_syncReady)syncPull();});
+  syncRenderStatus();syncRenderLog();
+  /* 打开页面时静默拉取一次（只收不发），让重进设备立刻有最新数据 */
+  if(SYNC.token&&SYNC.gist)syncPull();
+  /* 切回前台时拉取一次（仅当开启自动拉取，避免后台空转耗尽免费额度） */
+  document.addEventListener('visibilitychange',function(){if(document.visibilityState==='visible'&&SYNC.auto&&SYNC.token&&SYNC.gist)syncPull();});
 }
 /* ---------- 手机抽屉 ---------- */
 var _ham=document.getElementById('hamBtn'),_sb=document.querySelector('.sidebar'),_bg=document.getElementById('drawerBg');
@@ -2238,7 +2379,7 @@ document.getElementById('taskList').addEventListener('click',function(e){
 });
 document.getElementById('taskForm').addEventListener('submit',function(e){
   e.preventDefault();var title=document.getElementById('tTitle').value.trim();if(!title){toast('请输入事项');return;}
-  S.tasks.push({id:uid(),title:title,prio:document.getElementById('tPrio').value,due:document.getElementById('tDue').value||'',note:document.getElementById('tNote').value.trim(),done:false,reward:parseInt(document.getElementById('tPts').value,10)||0,awarded:false,repeat:document.getElementById('tRepeat').value||'none'});
+  S.tasks.push(touch({id:uid(),title:title,prio:document.getElementById('tPrio').value,due:document.getElementById('tDue').value||'',note:document.getElementById('tNote').value.trim(),done:false,reward:parseInt(document.getElementById('tPts').value,10)||0,awarded:false,repeat:document.getElementById('tRepeat').value||'none'}));
   persist();renderTasks();this.reset();document.getElementById('tPts').value='';toast('已添加');
 });
 /* 重复（参考苹果提醒事项）：勾选完成后按周期自动生成下一次待办；无截止日期则以今天为基准 */
@@ -2254,7 +2395,7 @@ function nextDue(d,rep){
 function fmtDate(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
 function spawnRepeat(t){
   if(!t.repeat||t.repeat==='none')return;
-  S.tasks.push({id:uid(),title:t.title,prio:t.prio,due:nextDue(t.due,t.repeat),note:t.note||'',done:false,reward:t.reward||0,awarded:false,repeat:t.repeat});
+  S.tasks.push(touch({id:uid(),title:t.title,prio:t.prio,due:nextDue(t.due,t.repeat),note:t.note||'',done:false,reward:t.reward||0,awarded:false,repeat:t.repeat}));
 }
 /* 重复任务 iPhone 式滚动：未完成的重复任务一旦逾期，自动滚到「当前该做的那一次」。
    这样就不再卡在好几天前的日期、无限期显示「逾期」。完成时仍由 spawnRepeat 往后推一个周期。 */
@@ -2354,7 +2495,7 @@ document.getElementById('fitForm').addEventListener('submit',function(e){
     if(note&&!hadNote)earn('健身内容·'+note,10,'fit:'+date);
     toast('已更新当天打卡');
   }else{
-    S.fit.push({id:uid(),date:date,weightM:wm||'',warmup:warmOn,note:note});
+    S.fit.push(touch({id:uid(),date:date,weightM:wm||'',warmup:warmOn,note:note}));
     if(warmOn)earn('健身热身',10,'fit:'+date);
     if(note)earn('健身内容·'+note,10,'fit:'+date);
     toast('已打卡');
@@ -2562,7 +2703,7 @@ if(recAddBtnEl)recAddBtnEl.onclick=function(){
   var title=document.getElementById('recAddTitle').value.trim();
   var note=document.getElementById('recAddNote').value.trim();
   if(!title){toast('请填标题');return;}
-  S.recs.push({id:uid(),type:type,title:title,note:note});
+  S.recs.push(touch({id:uid(),type:type,title:title,note:note}));
   persist();renderRecManage();renderRecs();
   document.getElementById('recAddTitle').value='';document.getElementById('recAddNote').value='';
 };
@@ -2602,7 +2743,7 @@ function markAndSwap(item,seenTitle,avoidType){
   var tag={book:'书',novel:'小说',movie:'影',drama:'剧',anime:'动漫',game:'游戏',eng:'英语',tip:'行动'}[next.type]||'行动';
   item.outerHTML='<div class="rec-item" data-title="'+esc(next.title)+'"><span class="rtag '+next.type+'">'+tag+'</span><div class="rbody"><div class="rtitle">'+esc(next.title)+'</div>'+(next.note?'<div class="rnote">'+esc(next.note)+'</div>':'')+'</div><button class="rhide" data-hide="'+esc(next.title)+'" data-type="'+next.type+'">不感兴趣</button></div>';
 }
-document.getElementById('rwAdd').onclick=function(){var n=document.getElementById('rwName').value.trim(),c=parseInt(document.getElementById('rwCost').value,10);if(!n||!(c>0)){toast('请填奖励名和积分');return;}S.fun.rewards.push({id:uid(),name:n,cost:c});persist();renderFun();document.getElementById('rwName').value='';document.getElementById('rwCost').value='';};
+document.getElementById('rwAdd').onclick=function(){var n=document.getElementById('rwName').value.trim(),c=parseInt(document.getElementById('rwCost').value,10);if(!n||!(c>0)){toast('请填奖励名和积分');return;}S.fun.rewards.push(touch({id:uid(),name:n,cost:c}));persist();renderFun();document.getElementById('rwName').value='';document.getElementById('rwCost').value='';};
 
 /* ---------- 记账理财 ---------- */
 /* 统计口径统一（v2.25）：概览/月度分类/年度一律以 S.txns 流水为准（与「记录明细」同源），
@@ -2745,7 +2886,7 @@ function addDaily(){
   if(!/^\d+(\.\d+)?$/.test(amtStr)){toast('请输入有效金额');return;}
   var amt=parseFloat(amtStr);
   var note=document.getElementById('dailyNote').value.trim();
-  S.txns.push({id:uid(),date:date,cat:cat,amount:amt,note:note,type:type});
+  S.txns.push(touch({id:uid(),date:date,cat:cat,amount:amt,note:note,type:type}));
   var m=date.slice(0,7);var store=type==='inc'?S.income:S.spend;store[m]=store[m]||{};store[m][cat]=(store[m][cat]||0)+amt;
   persist();renderFin();toast('已记录 '+(type==='inc'?'收入':'支出')+' · '+date+' · '+cat+' ¥'+amt.toFixed(0));
   document.getElementById('dailyAmt').value='';document.getElementById('dailyNote').value='';
@@ -2766,7 +2907,7 @@ function renderTxns(){
   if(!list.length){box.innerHTML='<div class="empty">该月暂无记录，去左侧「记每日花销」添加</div>';return;}
   box.innerHTML='<div class="txn-list">'+list.map(function(t){
     var isInc=t.type==='inc';
-    return '<div class="txn"><div class="txn-main"><span class="txn-date">'+t.date.slice(5)+'</span><span class="txn-cat" style="color:'+catColor(t.cat)+';background:'+catTint(t.cat)+';">'+t.cat+'</span>'+(isInc?'<span class="txn-type inc">收入</span>':'<span class="txn-type exp">支出</span>')+'<span class="txn-note">'+(t.note||'')+'</span></div><div class="txn-right"><span class="'+(isInc?'in':'out')+'">¥'+(+t.amount).toFixed(2)+'</span><button class="del" data-deltxn="'+t.id+'"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18M6 6l12 12"/></svg></button></div></div>';
+    return '<div class="txn"><div class="txn-main"><span class="txn-date">'+t.date.slice(5)+'</span><span class="txn-cat" style="color:'+catColor(t.cat)+';background:'+catTint(t.cat)+';">'+t.cat+'</span>'+(isInc?'<span class="txn-type inc">收入</span>':'<span class="txn-type exp">支出</span>')+'<span class="txn-note">'+(t.note||'')+'</span>'+(t.d?'<span class="txn-note">· 设备'+devShort(t.d)+'</span>':'')+'</div><div class="txn-right"><span class="'+(isInc?'in':'out')+'">¥'+(+t.amount).toFixed(2)+'</span><button class="del" data-deltxn="'+t.id+'"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18M6 6l12 12"/></svg></button></div></div>';
   }).join('')+'</div>';
 }
 document.getElementById('spendYear').addEventListener('change',function(){spendState.y=this.value;renderFinCat(spendVal());});
@@ -2990,14 +3131,14 @@ document.getElementById('goals').addEventListener('click',function(e){
   var b=e.target.closest('button');if(!b)return;
   if(b.dataset.delg){var id=b.dataset.delg;showModal('删除目标','将删除该目标及全部关键结果（不可恢复），确定吗？',function(){S.goals=S.goals.filter(function(x){return x.id!==id;});persist();renderGoal();toast('已删除');});return;}
   if(b.dataset.delk){var kid=b.dataset.delk,gid=e.target.closest('.kr').dataset.g;var g=S.goals.find(function(x){return x.id===gid;});g.krs=g.krs.filter(function(k){return k.id!==kid;});persist();renderGoal();return;}
-  if(b.dataset.addkrb){var gid2=b.dataset.addkrb;var inp=document.querySelector('input[data-addkr="'+gid2+'"]');var txt=inp.value.trim();if(!txt){toast('请输入关键结果');return;}var g2=S.goals.find(function(x){return x.id===gid2;});g2.krs.push({id:uid(),text:txt,progress:0});persist();renderGoal();return;}
+  if(b.dataset.addkrb){var gid2=b.dataset.addkrb;var inp=document.querySelector('input[data-addkr="'+gid2+'"]');var txt=inp.value.trim();if(!txt){toast('请输入关键结果');return;}var g2=S.goals.find(function(x){return x.id===gid2;});g2.krs.push(touch({id:uid(),text:txt,progress:0}));persist();renderGoal();return;}
 });
 document.getElementById('goals').addEventListener('change',function(e){var r=e.target.closest('input[type=range]');if(!r)return;var gid=e.target.closest('.goal').dataset.g,kid=r.dataset.k;var g=S.goals.find(function(x){return x.id===gid;});var k=g.krs.find(function(x){return x.id===kid;});k.progress=+r.value;if(k.progress>=100&&!k.awarded){earn('目标达成·'+k.text,10,'goal:'+gid+':'+kid);k.awarded=true;}persist();renderGoal();});
 document.getElementById('goals').addEventListener('input',function(e){var r=e.target.closest('input[type=range]');if(!r)return;var goalEl=e.target.closest('.goal'),krEl=e.target.closest('.kr');var g=S.goals.find(function(x){return x.id===goalEl.dataset.g;});var k=g.krs.find(function(x){return x.id===r.dataset.k;});k.progress=+r.value;krEl.querySelector('.kp').textContent=k.progress+'%';var kb=krEl.querySelector('.kr-bar i');if(kb){kb.style.width=k.progress+'%';kb.classList.toggle('done',k.progress>=100);}var p=goalProgress(g);var bar=goalEl.querySelector('.pbar i');bar.style.width=p+'%';bar.classList.toggle('done',p>=100);goalEl.querySelector('.ptxt').textContent=(p>=100?'总进度 100% · 已完成':'总进度 '+p+'%（'+g.krs.length+' 个关键结果）');});
 document.getElementById('revs').addEventListener('click',function(e){var b=e.target.closest('.del');if(!b)return;var id=b.dataset.delr;S.reviews=S.reviews.filter(function(x){return x.id!==id;});persist();renderGoal();});
-document.getElementById('goalForm').addEventListener('submit',function(e){e.preventDefault();var t=document.getElementById('gTitle').value.trim();if(!t){toast('请输入标题');return;}S.goals.push({id:uid(),title:t,krs:[]});persist();renderGoal();this.reset();toast('已添加');});
+document.getElementById('goalForm').addEventListener('submit',function(e){e.preventDefault();var t=document.getElementById('gTitle').value.trim();if(!t){toast('请输入标题');return;}S.goals.push(touch({id:uid(),title:t,krs:[]}));persist();renderGoal();this.reset();toast('已添加');});
 document.getElementById('rDate').value=todayStr();
-document.getElementById('revForm').addEventListener('submit',function(e){e.preventDefault();var txt=document.getElementById('rText').value.trim();if(!txt){toast('请输入内容');return;}S.reviews.push({id:uid(),period:document.getElementById('rPeriod').value,date:document.getElementById('rDate').value||todayStr(),text:txt});persist();renderGoal();this.reset();document.getElementById('rDate').value=todayStr();toast('已保存');});
+document.getElementById('revForm').addEventListener('submit',function(e){e.preventDefault();var txt=document.getElementById('rText').value.trim();if(!txt){toast('请输入内容');return;}S.reviews.push(touch({id:uid(),period:document.getElementById('rPeriod').value,date:document.getElementById('rDate').value||todayStr(),text:txt}));persist();renderGoal();this.reset();document.getElementById('rDate').value=todayStr();toast('已保存');});
 
 /* ---------- 英语学习 ---------- */
 var pomoTimer=null,pomoRemain=25*60,pomoMode='focus',pomoRunning=false;
@@ -3076,7 +3217,7 @@ document.getElementById('fileInput').addEventListener('change',function(e){var f
     if(d.fakaoLink!==undefined)S.fakaoLink=d.fakaoLink;
     if(d.fakaoChecked!==undefined)S.fakaoChecked=d.fakaoChecked;
     if(d.eng&&d.eng.logs){Object.keys(d.eng.logs).forEach(function(dt){S.eng.logs[dt]=Object.assign({},S.eng.logs[dt],d.eng.logs[dt]);});tags.push('英语');}
-    persist();renderAll();applyBg();toast('已合并导入：'+tags.join('、'));}catch(err){toast('文件格式有误');}};
+    persist();renderAll();applyBg();toast('已合并导入：'+tags.join('、')+'（恢复后建议点一次「⇄ 双向同步」对齐云端）');}catch(err){toast('文件格式有误');}};
   rd.readAsText(f);e.target.value='';
 });
 document.getElementById('btnClear').onclick=function(){showModal('清空全部数据','将删除所有模块数据（不可恢复），确定吗？',function(){S.tasks=[];S.fit=[];S.bar=[];S.fun={points:0,rewards:[],log:[]};S.spend={};S.income={};S.txns=[];S.goals=[];S.reviews=[];S.eng={logs:{}};S.notes=[];S.noteDel=[];S.fmeta={};S.recs=[];S.recSeen={};S.recAvoid=[];S.weather={};S.fakaoChecked=null;S.seededA=S.seededF=S.seededG=false;persist();renderAll();toast('已清空');});};
@@ -3102,7 +3243,7 @@ function renderNotes(){
     var t=d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate())+' '+p(d.getHours())+':'+p(d.getMinutes());
     return '<div class="note-item" data-id="'+n.id+'">'
       +'<div class="note-body"><div class="note-text" data-id="'+n.id+'">'+esc(n.text)+'</div>'
-      +'<div class="note-time">'+t+'</div></div>'
+      +'<div class="note-time">'+t+(n.d?' · 设备'+devShort(n.d):'')+'</div></div>'
       +'<div class="note-btns"><button class="btn small" data-edit="'+n.id+'">编辑</button><button class="btn small danger" data-del="'+n.id+'">删除</button></div>'
       +'</div>';
   }).join('');
@@ -3113,12 +3254,12 @@ function addNote(){
   var v=ta.value.trim();
   if(!v){toast('写点什么再记吧');return;}
   S.notes=S.notes||[];
-  S.notes.push({id:uid(),text:v,ts:Date.now()});
+  S.notes.push(touch({id:uid(),text:v,ts:Date.now()}));
   ta.value='';persist();renderNotes();ta.focus();
 }
 function saveNote(id,text){
   var n=S.notes.find(function(x){return x.id===id;});
-  if(n){n.text=(text||'').trim();persist();}
+  if(n){n.text=(text||'').trim();touch(n);persist();}
   renderNotes();
 }
 function editNote(id){
@@ -3155,7 +3296,7 @@ function switchTab(name){
 document.querySelectorAll('.sidebar button.nav').forEach(function(b){if(!b.dataset.tab)return;b.onclick=function(){switchTab(b.dataset.tab);};});
 function renderAll(){rebuildCatColors();renderOverview();renderTasks();renderFit();renderFun();renderFin();renderRest();renderGoal();renderFakao();renderEng();renderFakaoCheckin();renderCalendar();renderWxDate();renderNotes();}
 /* 版本号：每次发布改动后在此 +0.1，便于核对 Chrome 是否为最新版 */
-var APP_VER='2.29';
+var APP_VER='2.30';
 var _av=document.getElementById('appVer');if(_av)_av.textContent='v'+APP_VER;
 /* 清理已弃用的习惯打卡旧数据（v1.28 起不再使用，仅清孤立 key，不影响任何功能） */
 try{localStorage.removeItem('wb_hab_habits');localStorage.removeItem('wb_hab_seeded');}catch(e){}
@@ -3194,5 +3335,13 @@ try{
   }
 }catch(e){}
 </script>
+<div class="modal-bg" id="conflictBg">
+  <div class="modal">
+    <h4>同步冲突 · 请逐条选择保留哪版</h4>
+    <p style="font-size:13px;color:var(--muted);margin:0 0 8px;">同一条记录在两台设备被改成不同内容。默认「留本机」，你也可「留云端」或「两份都留」。被放弃的版本不会真删，可在同步日志中追溯。</p>
+    <div id="conflictList"></div>
+    <div class="acts"><button class="btn primary" id="conflictDone">确认并应用</button></div>
+  </div>
+</div>
 </body>
 </html>
