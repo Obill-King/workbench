@@ -403,6 +403,8 @@ svg.chart{width:100%;height:auto;display:block;}
 .settings-btns{display:flex;gap:10px;flex-wrap:wrap;}
 .settings-btns .btn{flex:1 1 auto;min-width:120px;justify-content:center;}
 #settingsBg .modal h4{margin:0 0 6px;}
+#settingsBg .modal{max-height:90vh;overflow-y:auto;-webkit-overflow-scrolling:touch;}
+#settingsBg .modal .acts{position:sticky;bottom:0;background:#fff;padding-top:14px;margin-top:6px;}
 /* 手机顶栏 + 抽屉（窄屏） */
 .mbar{display:none;}
 .drawer-bg{display:none;}
@@ -532,6 +534,7 @@ svg.chart{width:100%;height:auto;display:block;}
     <button class="nav" data-tab="fun" data-page-node-id="ADAyhhVBdobXZLG4dmobkv"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-page-node-id="9m7QWXYMEmHNs1TEDnCCSR"><path d="M12 2l2.4 7.4H22l-6 4.4 2.3 7.2L12 16.8 5.7 21l2.3-7.2-6-4.4h7.6z" data-page-node-id="C8fJBuyGrZgHYrfG9QPN2A"/></svg>娱乐激励</button>
     <button class="nav" data-tab="goal" data-page-node-id="a2YNvBziX1skh6Z86nbgML"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-page-node-id="LxGX259lceSriEzwX2RL1A"><path d="M3 3h18v18H3zM3 9h18M3 15h18M9 3v18M15 3v18" data-page-node-id="95QLpx2MJwh2PrWus1g7Gf"/></svg>目标复盘</button>
     <button class="nav" data-tab="notes" data-page-node-id="C1mn5d4C29Mdnnsd0RwVP6"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-page-node-id="PRSCK0FElOjKktWWwHo8qR"><path d="M4 4h16v16H4z" data-page-node-id="8ZmYVz4rWMWfUROREJXYbg"/><path d="M8 9h8M8 13h8M8 17h5" data-page-node-id="EzI9wev6HWvWBNpHhzxgEQ"/></svg>记事本</button>
+    <button class="nav" data-tab="sync" data-page-node-id="syncNavN"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"/></svg>云同步</button>
     <div class="sp" data-page-node-id="vzEqlhQFqBBGMxnRmGF25b"></div>
     <button class="nav" id="btnSettings" data-page-node-id="AsNTjk17gsSwRtPqmMqlQg"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-page-node-id="uCE5iDVAAf68VQFbiw7HGb"><circle cx="12" cy="12" r="3" data-page-node-id="A1CBYF5HbCKx1PZFLbC5Pf"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" data-page-node-id="OfG9zyUCxMrXFF2PHfWjG5"/></svg>设置</button>
     <div class="mini" data-page-node-id="C1ThN6MQSOol24YmwL0kH6">数据存本地浏览器<br data-page-node-id="5tKaBnAO31S2A8gfJQ9cU8">可开「云同步」多设备互通<br data-page-node-id="jFAf5GiLbvRQX3p8JSPTQn"><span id="appVer" style="display:inline-block;margin-top:6px;padding:2px 9px;border:1px solid var(--line);border-radius:20px;font-size:11px;opacity:.85" data-page-node-id="vWiTgd5FqMDygkt1EaCU3G">v1.0</span></div>
@@ -591,7 +594,11 @@ svg.chart{width:100%;height:auto;display:block;}
         <div id="recList" data-page-node-id="pSxcAeew0LRiAv26BOH2Gk"></div>
       </div>
 
-      <!-- 云同步：默认收起，放在总览最下方 -->
+      <!-- 云同步已移至独立 tab：见下方 section#panel-sync（左侧导航「云同步」） -->
+    </section>
+
+    <!-- 云同步：独立 tab（左侧导航） -->
+    <section class="panel" id="panel-sync" data-page-node-id="panelSyncN">
       <div class="card collapsible" id="syncCard" data-page-node-id="RjADmqnHrIu38YaqA0vtvd">
         <div class="coll-head" id="syncHead" style="display:flex;align-items:center;justify-content:space-between;cursor:pointer;" data-page-node-id="Klc9BLMzwN1e32HFGeHMHA">
           <h3 style="margin:0;" data-page-node-id="5To6vodOZnHsgFaFnxqtey">☁️ 云同步（多设备互通 · GitHub）</h3>
@@ -763,24 +770,26 @@ svg.chart{width:100%;height:auto;display:block;}
         <div class="fun-stats" id="finStats" data-page-node-id="vEnAaPZdqc9Swk28UxciuD"></div>
         <div class="ring-wrap" data-page-node-id="HFpev4tcSOqdqCDjCaivPf"><div id="ringBox" data-page-node-id="o7JUfUFsqnzdfp5aZyflqA"></div><div data-page-node-id="mRqL7QNZdapRDZ8cwDi2z2"><div style="font-size:13px;color:var(--muted);" data-page-node-id="YHwliFHTvfApHJhOnNh9Hn">月度预算</div><div style="font-size:19px;font-weight:700;" id="budgetTxt" data-page-node-id="GNdsLmFpvC8R9gzkOz3tD6"></div><div class="field" style="margin-top:8px;margin-bottom:0;" data-page-node-id="taFE6HOeUw98n2UPUFoXLN"><label data-page-node-id="TqHcZJ6rAkFWAShSVLr4VW">设置预算 ¥</label><input type="number" id="budgetInput" min="0" step="100" data-page-node-id="Va4Oozu0CulFDXHtglV4QI"></div></div></div>
       </div>
-      <div class="card full" data-page-node-id="f5ctjaZs3FwGUk2gRYIBV8">
-        <h3 data-page-node-id="1HkBWZWu7V3HeTmwqXv6WA"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-page-node-id="pT9Uy3rzNMCLjqrS1IUJWe"><path d="M21.21 15.89A10 10 0 1 1 8 2.83M22 12A10 10 0 0 0 12 2v10z" data-page-node-id="4o0JVAG0GYHXOoeKkLKgUC"/></svg>月度分类（<span id="catMonthLabel" data-page-node-id="CdHV3v36doaHAXCh5GVSCC"></span>）</h3>
-        <div class="row" style="margin-bottom:12px;" data-page-node-id="grS0AKlEl6GHBJvQTZZLXL"><div class="field" style="flex:0 0 110px;" data-page-node-id="hgSdPj6zilmfGXXKwLKtWl"><label data-page-node-id="OIjDzfJNr3TFDlPyHnBvqx">年份</label><select id="spendYear" data-page-node-id="O92k0p5AfIqTvFp2mySw1k"></select></div><div class="field" style="flex:0 0 100px;" data-page-node-id="9rMlLmFGs3HoeqHdGbmAMa"><label data-page-node-id="pUZ1J30232YFynEcL5BdsO">月份</label><select id="spendMonth" data-page-node-id="2ZSGDbGWXcaVfADZagIAQd"></select></div></div>
-        <div id="catBox" data-page-node-id="XW9kBc1MTt3DYr8DYtk6zG"></div>
-      </div>
       <div class="card full" data-page-node-id="2Hgjut1A9wL6ethFAR8cDD">
         <h3 data-page-node-id="PFhbCOMl00c9FiBDMnjBEk"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-page-node-id="RIab65TiMwTO4BuPuJ2yVH"><path d="M4 6h16M4 12h16M4 18h10" data-page-node-id="6VBXIaik7IahCphqX54g30"/></svg>记录明细（<span id="txnMonthLabel" data-page-node-id="EAwIzXTKrjb4QQQcEnDRHU"></span>）</h3>
         <div class="row" style="margin-bottom:12px;" data-page-node-id="jmErhOdPYcMo6Bxrbn55iF"><div class="field" style="flex:0 0 90px;" data-page-node-id="TtnoaXjXHZszWFK5fAaCuk"><label data-page-node-id="Uac7YEZIfN8AioPETsDDOE">年份</label><select id="txnYear" data-page-node-id="fPilVFUjvoa9EtnUhGXCOV"></select></div><div class="field" style="flex:0 0 90px;" data-page-node-id="NUOU6MwYFxAdQGGpkRimc5"><label data-page-node-id="qNtpOsCaXIrOEboi2HMTZF">月份</label><select id="txnMonth" data-page-node-id="1glVZp1jbuAyamm6TVS9JJ"></select></div><span id="txnSum" style="margin-left:auto;align-self:center;font-size:13px;color:var(--muted);flex:0 0 auto;" data-page-node-id="OyK3JqPVqrWXb84iHkNDta"></span></div>
         <div id="txnBox" data-page-node-id="VYG37WHaeQoThSCMBVKjGh"></div>
       </div>
+      <div class="card full" data-page-node-id="f5ctjaZs3FwGUk2gRYIBV8">
+        <h3 data-page-node-id="1HkBWZWu7V3HeTmwqXv6WA"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-page-node-id="pT9Uy3rzNMCLjqrS1IUJWe"><path d="M21.21 15.89A10 10 0 1 1 8 2.83M22 12A10 10 0 0 0 12 2v10z" data-page-node-id="4o0JVAG0GYHXOoeKkLKgUC"/></svg>月度分类（<span id="catMonthLabel" data-page-node-id="CdHV3v36doaHAXCh5GVSCC"></span>）</h3>
+        <div class="row" style="margin-bottom:12px;" data-page-node-id="grS0AKlEl6GHBJvQTZZLXL"><div class="field" style="flex:0 0 110px;" data-page-node-id="hgSdPj6zilmfGXXKwLKtWl"><label data-page-node-id="OIjDzfJNr3TFDlPyHnBvqx">年份</label><select id="spendYear" data-page-node-id="O92k0p5AfIqTvFp2mySw1k"></select></div><div class="field" style="flex:0 0 100px;" data-page-node-id="9rMlLmFGs3HoeqHdGbmAMa"><label data-page-node-id="pUZ1J30232YFynEcL5BdsO">月份</label><select id="spendMonth" data-page-node-id="2ZSGDbGWXcaVfADZagIAQd"></select></div></div>
+        <div id="catBox" data-page-node-id="XW9kBc1MTt3DYr8DYtk6zG"></div>
+      </div>
       <div class="card full" data-page-node-id="RWegVDO2R0jBmvmsfcOPu1">
-        <h3 data-page-node-id="gnN1F5LOpKu3xnfaSGFuJd"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-page-node-id="M7wQLepif78tKeYKIehl82"><path d="M3 3h18v18H3zM3 9h18M9 21V9" data-page-node-id="SbKGApa7CgHpAqIs03Vj78"/></svg>按分类查看</h3>
-        <div class="row" style="margin-bottom:12px;" data-page-node-id="BH7cO3J7ki2BG1OotPcxXU">
-          <div class="field" style="flex:0 0 110px;" data-page-node-id="v2qXiC8o5HiUF3AcIUq4YN"><label data-page-node-id="6t7dlP3m9pAW3u5jN6owp3">年份</label><select id="bcYear" data-page-node-id="saHgOUy5XmdJ7jQ55FCJ1U"></select></div><div class="field" style="flex:0 0 100px;" data-page-node-id="6fH8OPA10JQhbI0ynDgEAq"><label data-page-node-id="ufpF4UPP1ypaewZXu1ZHzi">月份</label><select id="bcMonth" data-page-node-id="KTUtHwtCeMoaupJ2Ggg0Pw"></select></div>
-          <div class="field" style="flex:0 0 200px;min-width:0;" data-page-node-id="bGBXNVQXJQMP6Cf482PBWx"><label data-page-node-id="S2pVbp7mqnAdMytHHJAZkr">分类</label><select id="bcCat" data-page-node-id="TpTjF5E2WEDCaUqxiyhALE"></select></div>
-          <span id="bcSum" style="margin-left:auto;align-self:center;font-size:13px;color:var(--muted);" data-page-node-id="t2DkIv1QZDRH5voZMTswOU"></span>
+        <h3 id="bcHead" style="cursor:pointer;display:flex;justify-content:space-between;align-items:center;" data-page-node-id="gnN1F5LOpKu3xnfaSGFuJd"><span data-page-node-id="bcSpanN"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-page-node-id="M7wQLepif78tKeYKIehl82"><path d="M3 3h18v18H3zM3 9h18M9 21V9" data-page-node-id="SbKGApa7CgHpAqIs03Vj78"/></svg>按分类查看</span><span id="bcToggleTxt" style="font-size:13px;font-weight:400;color:var(--muted);" data-page-node-id="bcTogN">点击展开 ▾</span></h3>
+        <div id="bcPanel" style="display:none;" data-page-node-id="bcPanelN">
+          <div class="row" style="margin-bottom:12px;" data-page-node-id="BH7cO3J7ki2BG1OotPcxXU">
+            <div class="field" style="flex:0 0 110px;" data-page-node-id="v2qXiC8o5HiUF3AcIUq4YN"><label data-page-node-id="6t7dlP3m9pAW3u5jN6owp3">年份</label><select id="bcYear" data-page-node-id="saHgOUy5XmdJ7jQ55FCJ1U"></select></div><div class="field" style="flex:0 0 100px;" data-page-node-id="6fH8OPA10JQhbI0ynDgEAq"><label data-page-node-id="ufpF4UPP1ypaewZXu1ZHzi">月份</label><select id="bcMonth" data-page-node-id="KTUtHwtCeMoaupJ2Ggg0Pw"></select></div>
+            <div class="field" style="flex:0 0 200px;min-width:0;" data-page-node-id="bGBXNVQXJQMP6Cf482PBWx"><label data-page-node-id="S2pVbp7mqnAdMytHHJAZkr">分类</label><select id="bcCat" data-page-node-id="TpTjF5E2WEDCaUqxiyhALE"></select></div>
+            <span id="bcSum" style="margin-left:auto;align-self:center;font-size:13px;color:var(--muted);" data-page-node-id="t2DkIv1QZDRH5voZMTswOU"></span>
+          </div>
+          <div id="bcBox" data-page-node-id="AKjEfBXigy0qsE5jGyc7jn"></div>
         </div>
-        <div id="bcBox" data-page-node-id="AKjEfBXigy0qsE5jGyc7jn"></div>
       </div>
       <div class="card full" data-page-node-id="ViEfzGLmIHhjlRYDhqq2CG">
         <h3 id="yearHead" style="cursor:pointer;display:flex;justify-content:space-between;align-items:center;" data-page-node-id="EjXlPHG4837oYHHshhxZpK"><span data-page-node-id="PdZYvVoSceF4FaFF8GVUQK"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-page-node-id="L0zbMjk394AefhocC2TsLP"><path d="M4 20V10M9 20V4M14 20v-7M19 20V13" data-page-node-id="F8Dsvs7wLv1jok908LF3TY"/></svg>按年统计</span><span id="yearToggleTxt" style="font-size:13px;font-weight:400;color:var(--muted);" data-page-node-id="A0lzMLLSlQPyuewf6R45Na">点击展开 ▾</span></h3>
@@ -895,7 +904,7 @@ svg.chart{width:100%;height:auto;display:block;}
     <button class="btn" id="btnImport" data-page-node-id="L0p9ibnU94TWrNMVs3rzrh"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-page-node-id="psGqPNMdHkkVq9xQjgsRZe"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12" data-page-node-id="QhEx5lB6RNrbthzS7G5tAs"/></svg>从备份恢复</button>
     <button class="btn danger" id="btnClear" data-page-node-id="fnuFdZZwdrscZLAcEcvBdV"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-page-node-id="1LxyFV3UjK6XxZkx1HZwDY"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" data-page-node-id="dDCs9ecBA4fT0eA2IpvLp5"/></svg>清空全部</button>
   </div>
-  <p class="sync-status" style="font-size:11px;margin-top:4px;">备份仅作本地兜底：日常跨设备请用总览页底部的「云同步」卡片。从备份恢复后，建议再点一次「⇄ 双向同步」让云端与本机对齐。</p>
+  <p class="sync-status" style="font-size:11px;margin-top:4px;">备份仅作本地兜底：日常跨设备请用左侧导航栏的「云同步」。从备份恢复后，建议再点一次「⇄ 双向同步」让云端与本机对齐。</p>
   </div></div>
   <div class="settings-section" data-page-node-id="EQ4JABaIIC5hYe2bieSYNI"><h5 data-page-node-id="anZOft4d5I2jtH3ZCEIIDu">外观</h5><div class="settings-btns" data-page-node-id="1pPdzao4aNqGYerG0VzZu7">
     <button class="btn" id="btnBg" data-page-node-id="q5SSAC4YHV4b7heCOjHwfb"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-page-node-id="31Sm6WJEOdZbJVQWNGgDb7"><path d="M4 16l4-4 4 4 4-6 4 6M4 4h16v16H4z" data-page-node-id="oDOObEhtudseYZGYpwyTw5"/></svg>设置背景</button>
@@ -2832,6 +2841,13 @@ function renderByCat(){
   }).join('');
 }
 document.getElementById('bcCat').addEventListener('change',renderByCat);
+var bcOpen=false;
+document.getElementById('bcHead').addEventListener('click',function(){
+  bcOpen=!bcOpen;
+  document.getElementById('bcPanel').style.display=bcOpen?'block':'none';
+  document.getElementById('bcToggleTxt').textContent=bcOpen?'点击收起 ▴':'点击展开 ▾';
+  if(bcOpen)renderByCat();
+});
 var yearOpen=false;
 document.getElementById('yearHead').addEventListener('click',function(){
   yearOpen=!yearOpen;
@@ -3296,7 +3312,7 @@ function switchTab(name){
 document.querySelectorAll('.sidebar button.nav').forEach(function(b){if(!b.dataset.tab)return;b.onclick=function(){switchTab(b.dataset.tab);};});
 function renderAll(){rebuildCatColors();renderOverview();renderTasks();renderFit();renderFun();renderFin();renderRest();renderGoal();renderFakao();renderEng();renderFakaoCheckin();renderCalendar();renderWxDate();renderNotes();}
 /* 版本号：每次发布改动后在此 +0.1，便于核对 Chrome 是否为最新版 */
-var APP_VER='2.31';
+var APP_VER='2.32';
 var _av=document.getElementById('appVer');if(_av)_av.textContent='v'+APP_VER;
 /* 清理已弃用的习惯打卡旧数据（v1.28 起不再使用，仅清孤立 key，不影响任何功能） */
 try{localStorage.removeItem('wb_hab_habits');localStorage.removeItem('wb_hab_seeded');}catch(e){}
