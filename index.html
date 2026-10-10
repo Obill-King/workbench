@@ -1155,7 +1155,11 @@ function syncApply(o){
   if(!o||typeof o!=='object')return false;
   _syncFromCloud=true;
   var _merged=false;
-  function _isIdArr(v){return Array.isArray(v)&&v.length>0&&v.every(function(x){return x&&typeof x==='object'&&x.id!=null;});}
+  /* 修复 v2.29：去掉 v.length>0 限制。
+     原先云端某数组字段为空数组[]时，_isIdArr 返回 false → 走入 S[k]=rem 整体覆盖分支，
+     会用云端空数组把本机本地已有的数据（记事本/任务/流水等）整个清空。
+     去掉长度限制后，空数组也走 mergeById 合并分支：保留本机、合并不重复云端项，绝不删除本机已有数据。 */
+  function _isIdArr(v){return Array.isArray(v)&&v.every(function(x){return x&&typeof x==='object'&&x.id!=null;});}
   SYNC_KEYS.forEach(function(k){
     if(!(k in o))return;
     var loc=S[k], rem=o[k];
@@ -3151,7 +3155,7 @@ function switchTab(name){
 document.querySelectorAll('.sidebar button.nav').forEach(function(b){if(!b.dataset.tab)return;b.onclick=function(){switchTab(b.dataset.tab);};});
 function renderAll(){rebuildCatColors();renderOverview();renderTasks();renderFit();renderFun();renderFin();renderRest();renderGoal();renderFakao();renderEng();renderFakaoCheckin();renderCalendar();renderWxDate();renderNotes();}
 /* 版本号：每次发布改动后在此 +0.1，便于核对 Chrome 是否为最新版 */
-var APP_VER='2.28';
+var APP_VER='2.29';
 var _av=document.getElementById('appVer');if(_av)_av.textContent='v'+APP_VER;
 /* 清理已弃用的习惯打卡旧数据（v1.28 起不再使用，仅清孤立 key，不影响任何功能） */
 try{localStorage.removeItem('wb_hab_habits');localStorage.removeItem('wb_hab_seeded');}catch(e){}
