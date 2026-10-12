@@ -612,6 +612,8 @@ svg.chart{width:100%;height:auto;display:block;}
           </div>
           <button class="btn ghost" id="syncProbe" style="margin:2px 0 10px;font-size:12px;">👁 只看云端（不动本机，验证连的是不是同一个仓库）</button>
           <button class="btn ghost" id="syncSelfTest" style="margin:0 0 10px;font-size:12px;">🔧 同步自检（读→写标记→回读，确认写入是否真生效）</button>
+          <button class="btn ghost" id="syncRecon" style="margin:0 0 10px;font-size:12px;">🔍 对账（本机 vs 云端：某条到底在哪）</button>
+          <div class="sync-log" id="syncReconBox" style="margin-bottom:10px;font-size:12px;display:none;"></div>
 
           <div class="sync-row" data-page-node-id="KIqqaWmnji2GlUMReqzHjG">
             <input type="text" id="syncKey" placeholder="GitHub Token（ghp_… 或 github_pat_…，仅勾 gist 权限，两台填同一个）" data-page-node-id="roqFbYnucXxE9flCaaFbDC">
@@ -1193,16 +1195,25 @@ function applyNoteDeletions(cloudNoteDel,skipIds){
   if(removed)renderNotes();
   return removed;
 }
+/* 这些键是「带 id 的对象数组」，合并时必须按 id 合并且绝不整段丢弃本机独有项。
+   历史上若数组里混进一条「没 id / 非对象」的坏记录，isIdArrSoft 会判定整段非数组合并、
+   退化为 proposed[txns]=云端（整段覆盖）——本机独有记录会因此静默丢失。
+   这里显式按「id 数组」处理，坏记录只单独保留、不再毒化整段合并（v2.37 修复）。 */
+var ID_ARRAY_KEYS={'tasks':1,'fit':1,'bar':1,'txns':1,'goals':1,'reviews':1,'notes':1};
 function computeSync(base,inc){
   var proposed={},conflicts=[],added=0,addedBy={};
   SYNC_KEYS.forEach(function(k){
     if(!(k in inc))return;
     var loc=base[k],rem=inc[k];
-    if(Array.isArray(loc)&&Array.isArray(rem)&&isIdArrSoft(loc)&&isIdArrSoft(rem)){
-      var mc=mergeConflict(Array.isArray(loc)?loc:[],rem);
+    if(ID_ARRAY_KEYS[k]&&Array.isArray(loc)&&Array.isArray(rem)){
+      /* 按 id 合并：本机优先、云端补缺（冲突由用户裁决）；坏记录（无 id）单独保留不毒化 */
+      var mc=mergeConflict(loc,rem);
       proposed[k]=mc.arr;added+=mc.added;
       if(mc.added>0)addedBy[k]=mc.added;
       if(mc.conflicts.length)conflicts.push({key:k,items:mc.conflicts});
+    }else if(ID_ARRAY_KEYS[k]){
+      /* 一侧非数组：保留本机，绝不整段用云端覆盖（防毒化丢数据） */
+      proposed[k]=loc;
     }else{
       proposed[k]=rem;
     }
@@ -1373,9 +1384,13 @@ function mergeSnapshots(base,inc){
   SYNC_KEYS.forEach(function(k){
     if(!(k in inc)){ if(k in base)m[k]=base[k]; return; }
     var b=base[k], c=inc[k];
-    if(Array.isArray(b)&&Array.isArray(c)&&isIdArrSoft(b)&&isIdArrSoft(c)){
+    if(ID_ARRAY_KEYS[k]&&Array.isArray(b)&&Array.isArray(c)){
+      /* 上传合并：以云端为底，并入本机；本机优先（同 id 本机赢），坏记录单独保留 */
       var r=mergeById(b,c);m[k]=r.arr;
       if(r.added>0)_lastMergeAdded[k]=r.added;
+    }else if(ID_ARRAY_KEYS[k]){
+      /* 一侧非数组：保留本机（inc），绝不整段用云端覆盖 */
+      m[k]=c;
     }else if(k in base){
       m[k]=(c!==undefined)?c:base[k];
     }else{ m[k]=c; }
@@ -1494,6 +1509,41 @@ function syncProbe(){
       syncSetStatus('👁 云端：'+(cloud.tasks?cloud.tasks.length:0)+' 任务 / '+(cloud.notes?cloud.notes.length:0)+' 记事 · 更新于 '+ts+'。若与你期望的另一台不一致 = 两台填的不是同一个 Gist ID');
     });
 }
+/* 对账：直接对比「本机 S」与「云端存档」的各项计数，并针对若干关键词搜索两端命中情况。
+   用途：排查「某条记录到底在本机还是云端、为什么没过去」。例如手机记了 4 条账，
+   若这里显示「本机命中 4 / 云端命中 0」，说明数据在本机但没传上去（上传/合并环节问题）；
+   若「本机命中 0」，说明本机 S 里根本没有这条（多半是别的设备/旧版本把它覆盖丢了）。 */
+function syncRecon(){
+  var box=document.getElementById('syncReconBox');if(!box)return;
+  if(!SYNC.token||!SYNC.gist){box.style.display='block';box.innerHTML='<span style="color:var(--danger)">先填 Token + Gist 再对账</span>';return;}
+  box.style.display='block';box.innerHTML='对账中…';
+  var H={'Authorization':'Bearer '+SYNC.token,'Accept':'application/vnd.github+json'};
+  var _gistUrl='https://api.github.com/gists/'+SYNC.gist;
+  fetch(_gistUrl,{headers:H})
+    .then(function(r){if(!r.ok)throw new Error('HTTP '+r.status);return r.json();})
+    .then(function(d){
+      if(d&&d.message&&!d.files)throw new Error('GitHub: '+(d.message));
+      var f=d.files&&d.files[GIST_FILE];var cloud=f&&f.content?JSON.parse(f.content):{};
+      var local=S;
+      var keys=[['tasks','待办'],['txns','记账'],['notes','记事'],['fit','健身'],['bar','学习'],['goals','目标'],['reviews','复盘']];
+      var lines=[];
+      lines.push('本机 ｜ 云端（按数据量）');
+      keys.forEach(function(p){var lk=p[0],ln=p[1];var lc=Array.isArray(local[lk])?local[lk].length:0;var cc=Array.isArray(cloud[lk])?cloud[lk].length:0;lines.push('  '+ln+'：本机 '+lc+' ｜ 云端 '+cc+(cc<lc?' ⚠️云端少'+(lc-cc):(lc<cc?' （云端多'+(cc-lc)+'）':'')));});
+      // 关键词对账（针对记账备注）
+      var kws=(local.txns||[]).map(function(t){return (t&&t.note)||'';}).filter(Boolean).slice(0,40);
+      var uniq={};kws.forEach(function(n){uniq[n]=1;});var allKw=Object.keys(uniq);
+      lines.push('— 记账备注 本机 vs 云端 命中 —');
+      allKw.forEach(function(n){
+        var lh=(local.txns||[]).filter(function(t){return (t&&t.note||'')===n}).length;
+        var ch=(cloud.txns||[]).filter(function(t){return (t&&t.note||'')===n}).length;
+        if(lh!==ch)lines.push('  「'+n+'」本机 '+lh+' ｜ 云端 '+ch+(ch===0&&lh>0?' ❌云端没有':(lh===0&&ch>0?'（仅云端有)':'')));
+      });
+      var onlyLocal=(local.txns||[]).filter(function(t){var n=(t&&t.note||'');return n&&!(cloud.txns||[]).some(function(c){return (c&&c.note||'')===n;});});
+      if(onlyLocal.length)lines.push('本机独有记账（云端没有）共 '+onlyLocal.length+' 条，例如：'+onlyLocal.slice(0,6).map(function(t){return (t.note||'')+'('+(t.date||'')+')';}).join('、'));
+      box.innerHTML=lines.join('<br>');
+    })
+    .catch(function(e){box.innerHTML='对账失败：'+syncErrMsg(e,'对账');});
+}
 /* 同步自检：在真实 Token/Gist 下做「读→写测试标记→回读」往返，用事实判断写入是否真生效。
    这是排查「提示已上传但云端没有」的最直接手段——它跑在你的浏览器里、用你真实的凭据。 */
 function syncSelfTest(){
@@ -1566,6 +1616,7 @@ if(document.getElementById('syncKey')){
   document.getElementById('syncNew').onclick=function(){syncExpand();syncNew();};
   document.getElementById('syncProbe').onclick=function(){syncExpand();syncProbe();};
   document.getElementById('syncSelfTest').onclick=function(){syncExpand();syncSelfTest();};
+  document.getElementById('syncRecon').onclick=function(){syncExpand();syncRecon();};
   document.getElementById('syncDownload').onclick=function(){syncExpand();syncManual('download');};
   document.getElementById('syncUpload').onclick=function(){syncExpand();syncManual('upload');};
   document.getElementById('syncBoth').onclick=function(){syncExpand();syncManual('both');};
@@ -3394,7 +3445,7 @@ function switchTab(name){
 document.querySelectorAll('.sidebar button.nav').forEach(function(b){if(!b.dataset.tab)return;b.onclick=function(){switchTab(b.dataset.tab);};});
 function renderAll(){rebuildCatColors();renderOverview();renderTasks();renderFit();renderFun();renderFin();renderRest();renderGoal();renderFakao();renderEng();renderFakaoCheckin();renderCalendar();renderWxDate();renderNotes();}
 /* 版本号：每次发布改动后在此 +0.1，便于核对 Chrome 是否为最新版 */
-var APP_VER='2.36';
+var APP_VER='2.37';
 var _av=document.getElementById('appVer');if(_av)_av.textContent='v'+APP_VER;
 /* 清理已弃用的习惯打卡旧数据（v1.28 起不再使用，仅清孤立 key，不影响任何功能） */
 try{localStorage.removeItem('wb_hab_habits');localStorage.removeItem('wb_hab_seeded');}catch(e){}
