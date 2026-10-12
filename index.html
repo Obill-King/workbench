@@ -611,6 +611,7 @@ svg.chart{width:100%;height:auto;display:block;}
             <div class="sync-diag-row gist"><span class="k">Gist</span><span class="v" id="syncGistShown">—</span><button class="btn ghost" id="syncCopy" style="padding:1px 8px;font-size:11px;">复制</button></div>
           </div>
           <button class="btn ghost" id="syncProbe" style="margin:2px 0 10px;font-size:12px;">👁 只看云端（不动本机，验证连的是不是同一个仓库）</button>
+          <button class="btn ghost" id="syncSelfTest" style="margin:0 0 10px;font-size:12px;">🔧 同步自检（读→写标记→回读，确认写入是否真生效）</button>
 
           <div class="sync-row" data-page-node-id="KIqqaWmnji2GlUMReqzHjG">
             <input type="text" id="syncKey" placeholder="GitHub Token（ghp_… 或 github_pat_…，仅勾 gist 权限，两台填同一个）" data-page-node-id="roqFbYnucXxE9flCaaFbDC">
@@ -1385,19 +1386,49 @@ function syncPush(){
   if(!SYNC.token||!SYNC.gist){syncSetStatus('请先填 Token 并点「连接 / 创建」',true);return;}
   _syncBusy=true;syncSetStatus('上传中（先合并云端再上传）…');
   var H={'Authorization':'Bearer '+SYNC.token,'Accept':'application/vnd.github+json','Content-Type':'application/json'};
-  fetch('https://api.github.com/gists/'+SYNC.gist,{headers:H})
+  var _gistUrl='https://api.github.com/gists/'+SYNC.gist;
+  fetch(_gistUrl,{headers:H})
     .then(function(r){if(!r.ok)throw new Error('HTTP '+r.status);return r.json();})
     .then(function(d){
+      if(d&&d.message&&!d.files)throw new Error('GitHub: '+(d.message)); // 200 响应体里也可能嵌错误
       var f=d&&d.files&&d.files[GIST_FILE];var c=f&&f.content;
       var base=(c?JSON.parse(c):{});
       var merged=mergeSnapshots(base,syncSnapshot());
       var payload=JSON.stringify(merged);
-      return fetch('https://api.github.com/gists/'+SYNC.gist,{method:'PATCH',headers:H,
+      return fetch(_gistUrl,{method:'PATCH',headers:H,
         body:JSON.stringify({description:'全能生活台云同步',public:false,files:{[GIST_FILE]:{content:payload}}})})
-        .then(function(r){if(!r.ok)throw new Error('HTTP '+r.status);return r.json();})
-        .then(function(){syncMarkEver();syncTouch(merged.__ts);
-          syncLogAdd('上传',0,0,'已上传到云端（与云端合并，本机 '+ (S.tasks?S.tasks.length:0) +' 任务 / '+(S.notes?S.notes.length:0)+' 记事）');
-          syncSetStatus('已上传到云端（已合并两端数据，本机 '+ (S.tasks?S.tasks.length:0) +' 任务 / '+(S.notes?S.notes.length:0)+' 记事） · '+new Date().toLocaleTimeString());syncProbe();});
+        .then(function(r){if(!r.ok)throw new Error('HTTP '+r.status);
+          return r.json().then(function(rj){
+            if(rj&&rj.message&&!rj.files)throw new Error('GitHub: '+(rj.message)); // 偶发 200 但带错误对象
+            return rj;
+          });})
+        .then(function(){
+          syncMarkEver();syncTouch(merged.__ts);
+          /* —— 关键：上传后立刻回读云端，校验是否真的写进去了，不再盲信 200 —— */
+          return fetch(_gistUrl,{headers:H})
+            .then(function(r){if(!r.ok)throw new Error('HTTP '+r.status);return r.json();})
+            .then(function(vd){
+              var vf=vd&&vd.files&&vd.files[GIST_FILE];var vc=vf&&vf.content;
+              var cloud=vc?JSON.parse(vc):{};
+              var lc=(S.tasks?S.tasks.length:0)+(S.notes?S.notes.length:0)+(S.txns?S.txns.length:0);
+              var cc=(cloud.tasks?cloud.tasks.length:0)+(cloud.notes?cloud.notes.length:0)+(cloud.txns?cloud.txns.length:0);
+              var okTasks=(cloud.tasks?cloud.tasks.length:0)>=(S.tasks?S.tasks.length:0);
+              var okNotes=(cloud.notes?cloud.notes.length:0)>=(S.notes?S.notes.length:0);
+              var okTxns=(cloud.txns?cloud.txns.length:0)>=(S.txns?S.txns.length:0);
+              syncLogAdd('上传',0,0,'已上传并回读校验：云端 任务'+(cloud.tasks?cloud.tasks.length:0)+'/记事'+(cloud.notes?cloud.notes.length:0)+'/记账'+(cloud.txns?cloud.txns.length:0)+' · 本机总'+lc+'/云端总'+cc);
+              if(okTasks&&okNotes&&okTxns){
+                syncSetStatus('✅ 上传成功并已回读校验：云端与本机一致（共 '+cc+' 条） · '+new Date().toLocaleTimeString());
+              }else{
+                syncSetStatus('⚠️ 上传后云端校验不一致：云端 '+cc+' 条 / 本机 '+lc+' 条。可能被其他设备刚覆盖，或 Token 无 gist 写权限——点「同步自检」排查。',true);
+              }
+              syncProbe();
+            });
+        })
+        .catch(function(ve){ // 回读本身失败（网络抖动），PATCH 多半已成功，但明确告知未确认
+          syncLogAdd('上传',0,0,'已上传（回读校验网络异常：'+(ve&&ve.message||ve)+'，数据应已写入，建议点「同步自检」确认）');
+          syncSetStatus('已上传到云端（回读校验网络异常，数据应已写入） · '+new Date().toLocaleTimeString());
+          syncProbe();
+        });
     })
     .catch(function(e){syncSetStatus(syncErrMsg(e,'上传'),true);})
     .then(function(){_syncBusy=false;_syncReady=true;});
@@ -1457,6 +1488,50 @@ function syncProbe(){
       syncSetStatus('👁 云端：'+(cloud.tasks?cloud.tasks.length:0)+' 任务 / '+(cloud.notes?cloud.notes.length:0)+' 记事 · 更新于 '+ts+'。若与你期望的另一台不一致 = 两台填的不是同一个 Gist ID');
     });
 }
+/* 同步自检：在真实 Token/Gist 下做「读→写测试标记→回读」往返，用事实判断写入是否真生效。
+   这是排查「提示已上传但云端没有」的最直接手段——它跑在你的浏览器里、用你真实的凭据。 */
+function syncSelfTest(){
+  if(!SYNC.token||!SYNC.gist){syncSetStatus('先填 Token + Gist 再自检',true);return;}
+  syncSetStatus('同步自检中：① 读云端 → ② 写测试标记 → ③ 回读校验 → ④ 清理…');
+  var H={'Authorization':'Bearer '+SYNC.token,'Accept':'application/vnd.github+json','Content-Type':'application/json'};
+  var _gistUrl='https://api.github.com/gists/'+SYNC.gist;
+  var steps=[];
+  fetch(_gistUrl,{headers:H})
+    .then(function(r){if(!r.ok)throw new Error('HTTP '+r.status);return r.json();})
+    .then(function(d){
+      if(d&&d.message&&!d.files)throw new Error('GitHub: '+(d.message));
+      var f=d.files&&d.files[GIST_FILE];
+      steps.push('① 读云端：HTTP 200，文件「'+GIST_FILE+'」存在='+!!f);
+      var base=f&&f.content?JSON.parse(f.content):{};
+      var marker='selftest_'+Date.now();
+      var merged=mergeSnapshots(base,syncSnapshot());
+      merged.__selftest=marker;
+      return fetch(_gistUrl,{method:'PATCH',headers:H,
+        body:JSON.stringify({description:'全能生活台云同步',public:false,files:{[GIST_FILE]:{content:JSON.stringify(merged)}}})})
+        .then(function(r){if(!r.ok)throw new Error('HTTP '+r.status);return r.json();})
+        .then(function(pj){if(pj&&pj.message&&!pj.files)throw new Error('GitHub: '+(pj.message));
+          steps.push('② 写测试标记：PATCH 返回 200');
+          return fetch(_gistUrl,{headers:H})
+            .then(function(r){if(!r.ok)throw new Error('HTTP '+r.status);return r.json();})
+            .then(function(vd){
+              var vf=vd.files&&vd.files[GIST_FILE];var vc=vf&&vf.content;
+              var cloud=vc?JSON.parse(vc):{};
+              var ok=cloud.__selftest===marker;
+              steps.push('③ 回读云端：测试标记匹配='+ok+(ok?'（写入成功 ✅）':'（写入未生效 ❌）'));
+              delete merged.__selftest; // 清理测试标记，恢复原内容
+              return fetch(_gistUrl,{method:'PATCH',headers:H,
+                body:JSON.stringify({description:'全能生活台云同步',public:false,files:{[GIST_FILE]:{content:JSON.stringify(merged)}}})})
+                .then(function(r){if(!r.ok)throw new Error('HTTP '+r.status);return r.json();})
+                .then(function(){steps.push('④ 已清理测试标记，文件恢复如初');});
+            });
+        });
+    })
+    .then(function(){
+      syncSetStatus(steps.join(' ｜ '));
+      syncLogAdd('自检',0,0,steps.join(' ｜ '));
+    })
+    .catch(function(e){syncSetStatus('自检失败：'+syncErrMsg(e,'自检'),true);});
+}
 function syncUpdateDiag(cTasks,cNotes,cTs){
   var d=document.getElementById('syncDiag');if(d)d.style.display='block';
   var lc=document.getElementById('syncLocalCnt');if(lc)lc.textContent=(S.tasks?S.tasks.length:0)+' 任务 / '+(S.notes?S.notes.length:0)+' 记事';
@@ -1484,6 +1559,7 @@ if(document.getElementById('syncKey')){
   document.getElementById('syncConnect').onclick=function(){syncExpand();syncConnect();};
   document.getElementById('syncNew').onclick=function(){syncExpand();syncNew();};
   document.getElementById('syncProbe').onclick=function(){syncExpand();syncProbe();};
+  document.getElementById('syncSelfTest').onclick=function(){syncExpand();syncSelfTest();};
   document.getElementById('syncDownload').onclick=function(){syncExpand();syncManual('download');};
   document.getElementById('syncUpload').onclick=function(){syncExpand();syncManual('upload');};
   document.getElementById('syncBoth').onclick=function(){syncExpand();syncManual('both');};
@@ -3312,7 +3388,7 @@ function switchTab(name){
 document.querySelectorAll('.sidebar button.nav').forEach(function(b){if(!b.dataset.tab)return;b.onclick=function(){switchTab(b.dataset.tab);};});
 function renderAll(){rebuildCatColors();renderOverview();renderTasks();renderFit();renderFun();renderFin();renderRest();renderGoal();renderFakao();renderEng();renderFakaoCheckin();renderCalendar();renderWxDate();renderNotes();}
 /* 版本号：每次发布改动后在此 +0.1，便于核对 Chrome 是否为最新版 */
-var APP_VER='2.34';
+var APP_VER='2.35';
 var _av=document.getElementById('appVer');if(_av)_av.textContent='v'+APP_VER;
 /* 清理已弃用的习惯打卡旧数据（v1.28 起不再使用，仅清孤立 key，不影响任何功能） */
 try{localStorage.removeItem('wb_hab_habits');localStorage.removeItem('wb_hab_seeded');}catch(e){}
