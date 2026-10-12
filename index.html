@@ -1194,13 +1194,14 @@ function applyNoteDeletions(cloudNoteDel,skipIds){
   return removed;
 }
 function computeSync(base,inc){
-  var proposed={},conflicts=[],added=0;
+  var proposed={},conflicts=[],added=0,addedBy={};
   SYNC_KEYS.forEach(function(k){
     if(!(k in inc))return;
     var loc=base[k],rem=inc[k];
     if(Array.isArray(loc)&&Array.isArray(rem)&&isIdArrSoft(loc)&&isIdArrSoft(rem)){
       var mc=mergeConflict(Array.isArray(loc)?loc:[],rem);
       proposed[k]=mc.arr;added+=mc.added;
+      if(mc.added>0)addedBy[k]=mc.added;
       if(mc.conflicts.length)conflicts.push({key:k,items:mc.conflicts});
     }else{
       proposed[k]=rem;
@@ -1209,7 +1210,7 @@ function computeSync(base,inc){
   /* 记事本“删除 vs 编辑”冲突：云端墓碑删了某条，但本机该条被改过(更晚) → 保留本机，交由用户拍板 */
   var skipNoteDel={};
   (inc.noteDel||[]).forEach(function(e){var id=(e&&typeof e==='object')?e.id:e;var tm=(e&&typeof e==='object')?e.m:0;if(id==null)return;var ln=(base.notes||[]).find(function(n){return n.id===id;});if(ln&&ln.m&&tm&&ln.m>tm){conflicts.push({key:'notes',items:[{id:id,local:ln,remote:{deleted:true}}],_del:true});skipNoteDel[id]=1;}});
-  return {proposed:proposed,conflicts:conflicts,added:added,skipNoteDel:skipNoteDel};
+  return {proposed:proposed,conflicts:conflicts,added:added,addedBy:addedBy,skipNoteDel:skipNoteDel};
 }
 /* 应用用户选择到提案：choice=local/remote/both */
 function applyChoices(proposed,conflicts,choices){
@@ -1246,7 +1247,8 @@ function syncApply(o,opts){
   function _commit(choices){
     var prop=applyChoices(res.proposed,res.conflicts,choices||{});
     commitSync(prop,{cloud:o,skipNoteDel:res.skipNoteDel});
-    syncLogAdd(opts.dir||'合并',res.added,res.conflicts.length,opts.silent?'静默拉取（冲突保留本机）':'已合并');
+    var abStr=Object.keys(res.addedBy||{}).map(function(k){return ({tasks:'待办',notes:'记事',txns:'明细',fit:'健身',bar:'学习',goals:'目标',reviews:'复盘'}[k]||k)+'+'+res.addedBy[k];}).join('/');
+    syncLogAdd(opts.dir||'合并',res.added,res.conflicts.length,(opts.silent?'静默拉取（冲突保留本机）':'已合并')+(abStr?' · 新增['+abStr+']':''));
     syncRenderStatus();
     if(opts.onCommitted)opts.onCommitted();
   }
@@ -1363,14 +1365,17 @@ function syncRequest(url,opts,act,onOk,retry){
 /* 判断某数组是否为「带 id 的对象数组」（合并的判定条件，提到模块作用域供多处复用） */
 function _isIdArr(v){return Array.isArray(v)&&v.length>0&&v.every(function(x){return x&&typeof x==='object'&&x.id!=null;});}
 /* 合并两个快照：以 base 为底，把 inc 的数据并入（按 id 合并数组，标量覆盖）。
-   用于上传时「先拉云端、合并本机再上传」，避免覆盖另一台设备的独有数据。 */
+   用于上传时「先拉云端、合并本机再上传」，避免覆盖另一台设备的独有数据。
+   v2.36：合并后把每个数组键的新增条数写入全局 _lastMergeAdded（分项计数，供日志展示）。 */
+var _lastMergeAdded={};
 function mergeSnapshots(base,inc){
-  var m={};
+  var m={};_lastMergeAdded={};
   SYNC_KEYS.forEach(function(k){
     if(!(k in inc)){ if(k in base)m[k]=base[k]; return; }
     var b=base[k], c=inc[k];
     if(Array.isArray(b)&&Array.isArray(c)&&isIdArrSoft(b)&&isIdArrSoft(c)){
-      m[k]=mergeById(b,c).arr;
+      var r=mergeById(b,c);m[k]=r.arr;
+      if(r.added>0)_lastMergeAdded[k]=r.added;
     }else if(k in base){
       m[k]=(c!==undefined)?c:base[k];
     }else{ m[k]=c; }
@@ -1415,7 +1420,8 @@ function syncPush(){
               var okTasks=(cloud.tasks?cloud.tasks.length:0)>=(S.tasks?S.tasks.length:0);
               var okNotes=(cloud.notes?cloud.notes.length:0)>=(S.notes?S.notes.length:0);
               var okTxns=(cloud.txns?cloud.txns.length:0)>=(S.txns?S.txns.length:0);
-              syncLogAdd('上传',0,0,'已上传并回读校验：云端 任务'+(cloud.tasks?cloud.tasks.length:0)+'/记事'+(cloud.notes?cloud.notes.length:0)+'/记账'+(cloud.txns?cloud.txns.length:0)+' · 本机总'+lc+'/云端总'+cc);
+              var addedStr=Object.keys(_lastMergeAdded).map(function(k){return ({tasks:'待办',notes:'记事',txns:'明细',fit:'健身',bar:'学习',goals:'目标',reviews:'复盘'}[k]||k)+'+'+_lastMergeAdded[k];}).join('/')||'无新增';
+              syncLogAdd('上传',Object.keys(_lastMergeAdded).reduce(function(s,k){return s+_lastMergeAdded[k];},0),0,'已上传并回读校验：云端 任务'+(cloud.tasks?cloud.tasks.length:0)+'/记事'+(cloud.notes?cloud.notes.length:0)+'/记账'+(cloud.txns?cloud.txns.length:0)+' · 本次合并新增['+addedStr+']');
               if(okTasks&&okNotes&&okTxns){
                 syncSetStatus('✅ 上传成功并已回读校验：云端与本机一致（共 '+cc+' 条） · '+new Date().toLocaleTimeString());
               }else{
@@ -2999,7 +3005,7 @@ function renderTxns(){
   if(!list.length){box.innerHTML='<div class="empty">该月暂无记录，去左侧「记每日花销」添加</div>';return;}
   box.innerHTML='<div class="txn-list">'+list.map(function(t){
     var isInc=t.type==='inc';
-    return '<div class="txn"><div class="txn-main"><span class="txn-date">'+t.date.slice(5)+'</span><span class="txn-cat" style="color:'+catColor(t.cat)+';background:'+catTint(t.cat)+';">'+t.cat+'</span>'+(isInc?'<span class="txn-type inc">收入</span>':'<span class="txn-type exp">支出</span>')+'<span class="txn-note">'+(t.note||'')+'</span>'+(t.d?'<span class="txn-note">· 设备'+devShort(t.d)+'</span>':'')+'</div><div class="txn-right"><span class="'+(isInc?'in':'out')+'">¥'+(+t.amount).toFixed(2)+'</span><button class="del" data-deltxn="'+t.id+'"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18M6 6l12 12"/></svg></button></div></div>';
+    return '<div class="txn" title="'+esc(t.note||'')+(t.d?'（来自设备'+devShort(t.d)+'）':'')+'"><div class="txn-main"><span class="txn-date">'+t.date.slice(5)+'</span><span class="txn-cat" style="color:'+catColor(t.cat)+';background:'+catTint(t.cat)+';">'+t.cat+'</span>'+(isInc?'<span class="txn-type inc">收入</span>':'<span class="txn-type exp">支出</span>')+'<span class="txn-note">'+esc(t.note||'')+'</span></div><div class="txn-right"><span class="'+(isInc?'in':'out')+'">¥'+(+t.amount).toFixed(2)+'</span><button class="del" data-deltxn="'+t.id+'"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18M6 6l12 12"/></svg></button></div></div>';
   }).join('')+'</div>';
 }
 document.getElementById('spendYear').addEventListener('change',function(){spendState.y=this.value;renderFinCat(spendVal());});
@@ -3388,7 +3394,7 @@ function switchTab(name){
 document.querySelectorAll('.sidebar button.nav').forEach(function(b){if(!b.dataset.tab)return;b.onclick=function(){switchTab(b.dataset.tab);};});
 function renderAll(){rebuildCatColors();renderOverview();renderTasks();renderFit();renderFun();renderFin();renderRest();renderGoal();renderFakao();renderEng();renderFakaoCheckin();renderCalendar();renderWxDate();renderNotes();}
 /* 版本号：每次发布改动后在此 +0.1，便于核对 Chrome 是否为最新版 */
-var APP_VER='2.35';
+var APP_VER='2.36';
 var _av=document.getElementById('appVer');if(_av)_av.textContent='v'+APP_VER;
 /* 清理已弃用的习惯打卡旧数据（v1.28 起不再使用，仅清孤立 key，不影响任何功能） */
 try{localStorage.removeItem('wb_hab_habits');localStorage.removeItem('wb_hab_seeded');}catch(e){}
