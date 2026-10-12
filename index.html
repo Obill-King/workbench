@@ -950,7 +950,8 @@ var S={
   recSeen:ls('wb_rec_seen',ls('wb_rec_hide',[])),   /* 看过了的条目：仅屏蔽这条具体的，同类照常推（旧 wb_rec_hide 迁移而来） */
   recAvoid:ls('wb_rec_avoid',[]),                    /* 不喜欢的类型：屏蔽该类型，同类不再推（记住偏好） */
   notes:ls('wb_notes',null),                         /* 记事本：随手记的突发想法 */
-  noteDel:ls('wb_note_del',[])                       /* 记事本删除墓碑：记录已删 note 的 id，用于多设备删除同步 */
+  noteDel:ls('wb_note_del',[]),                      /* 记事本删除墓碑：记录已删 note 的 id，用于多设备删除同步 */
+  del:ls('wb_del',{})                                 /* v2.41 统一删除墓碑：{cat:{id:ts}}，tasks/fit/bar/txns/goals/reviews/notes 删除同步 */
 };
 // 明细记录（逐笔每日花销/收入）为输入源，月度 spend/income 由明细汇总而来
 if(!Array.isArray(S.txns))S.txns=[];
@@ -958,6 +959,8 @@ if(!S.spend)S.spend={};
 if(!S.income)S.income={};
 if(!Array.isArray(S.notes))S.notes=[];
 if(!Array.isArray(S.noteDel))S.noteDel=[];
+if(!S.del||typeof S.del!=='object')S.del={};
+['tasks','fit','bar','txns','goals','reviews','notes'].forEach(function(c){if(!S.del[c]||typeof S.del[c]!=='object')S.del[c]={};});
 if(!S.body)S.body={};
 if(S.body.height===undefined)S.body.height='';
 if(S.body.age===undefined)S.body.age='';
@@ -1144,7 +1147,7 @@ function persist(){
   sv('wb_allday_tasks',S.tasks);sv('wb_allday_fit',S.fit);sv('wb_allday_bar',S.bar);sv('wb_allday_meta',S.meta);sv('wb_allday_fun',S.fun);sv('wb_allday_seeded',S.seededA);sv('wb_allday_body',S.body);
   sv('wb_fin_spend',S.spend);sv('wb_fin_income',S.income);sv('wb_fin_meta',S.fmeta);sv('wb_fin_seeded',S.seededF);sv('wb_fin_txns',S.txns);
   sv('wb_goal_goals',S.goals);sv('wb_goal_reviews',S.reviews);sv('wb_goal_seeded',S.seededG);
-  sv('wb_bg',S.bg);sv('wb_fakao_link',S.fakaoLink);sv('wb_fakao_checked',S.fakaoChecked);sv('wb_eng_data',S.eng);sv('wb_weather',S.weather);sv('wb_recs',S.recs);sv('wb_rec_seen',S.recSeen);sv('wb_rec_avoid',S.recAvoid);sv('wb_notes',S.notes);sv('wb_note_del',S.noteDel);
+  sv('wb_bg',S.bg);sv('wb_fakao_link',S.fakaoLink);sv('wb_fakao_checked',S.fakaoChecked);sv('wb_eng_data',S.eng);sv('wb_weather',S.weather);sv('wb_recs',S.recs);sv('wb_rec_seen',S.recSeen);sv('wb_rec_avoid',S.recAvoid);  sv('wb_notes',S.notes);sv('wb_note_del',S.noteDel);sv('wb_del',S.del);
   syncTouch();
   syncPersistHook();
 }
@@ -1162,6 +1165,18 @@ function recHash(x){if(!x||typeof x!=='object')return JSON.stringify(x);var c={}
 function isIdArrSoft(v){return Array.isArray(v)&&v.every(function(x){return x==null||(typeof x==='object'&&x.id!=null);});}
 /* 冲突感知合并：base=本机, inc=传入(云端/文件)。返回合并后数组 + 冲突清单(同id内容不同) */
 function mergeConflict(base,inc){var map={},out=[];base.forEach(function(x){out.push(x);if(x&&x.id!=null)map[x.id]=x;});var conf=[],added=0;(inc||[]).forEach(function(x){if(!x||x.id==null){out.push(x);added++;return;}var b=map[x.id];if(!b){map[x.id]=x;out.push(x);added++;}else if(recHash(b)===recHash(x)){}else{conf.push({id:x.id,local:b,remote:x});}});return{arr:out,conflicts:conf,added:added};}
+/* v2.41 删除墓碑：删除某条记录时记下它的 id（按分类），合并时任一端删过的 id 都要从结果剔除。
+   解决「本地删了、云端还在 → 刷新/同步后又回来」这一核心痛点（此前只有 notes 有墓碑）。
+   del 结构：{cat:{id:删除时间戳}}，幂等、可跨设备传播。 */
+function delMark(cat,id){if(!S.del)S.del={};if(!S.del[cat])S.del[cat]={};if(id!=null)S.del[cat][id]=Date.now();}
+function filterTomb(key,arr,delA,delB){
+  if(!Array.isArray(arr))return arr;
+  var set={};var a=(delA&&delA[key])||{},b=(delB&&delB[key])||{};
+  Object.keys(a).forEach(function(id){set[id]=1;});
+  Object.keys(b).forEach(function(id){set[id]=1;});
+  if(!Object.keys(set).length)return arr;
+  return arr.filter(function(x){return !(x&&x.id!=null&&set[x.id]);});
+}
 /* 同步时间戳：本地数据最后修改时间。用于阻止"云端旧数据覆盖本地新数据" */
 function syncLocalTs(){return +(ls('wb_sync_ts',0));}
 function syncTouch(t){sv('wb_sync_ts',t||Date.now());}
@@ -1174,7 +1189,7 @@ function syncSnapshot(){
     spend:S.spend,income:S.income,fmeta:S.fmeta,seededF:S.seededF,txns:S.txns,
     goals:S.goals,reviews:S.reviews,seededG:S.seededG,
     fakaoLink:S.fakaoLink,fakaoChecked:S.fakaoChecked,eng:S.eng,weather:S.weather,
-    recs:S.recs,recSeen:S.recSeen,recAvoid:S.recAvoid,notes:S.notes,noteDel:S.noteDel,body:S.body};
+    recs:S.recs,recSeen:S.recSeen,recAvoid:S.recAvoid,notes:S.notes,noteDel:S.noteDel,del:S.del,body:S.body};
   o.__ts=syncLocalTs()||Date.now();
   return o;
 }
@@ -1209,6 +1224,8 @@ function computeSync(base,inc){
       /* 按 id 合并：本机优先、云端补缺（冲突由用户裁决）；坏记录（无 id）单独保留不毒化 */
       var mc=mergeConflict(loc,rem);
       proposed[k]=mc.arr;added+=mc.added;
+      /* v2.41：任一端删过的 id 都要剔除（本地删=base.del，云端删=inc.del） */
+      proposed[k]=filterTomb(k,proposed[k],base.del,inc.del);
       if(mc.added>0)addedBy[k]=mc.added;
       if(mc.conflicts.length)conflicts.push({key:k,items:mc.conflicts});
     }else if(ID_ARRAY_KEYS[k]){
@@ -1254,10 +1271,14 @@ function commitSync(proposed,opts){
 function syncApply(o,opts){
   opts=opts||{};
   if(!o||typeof o!=='object')return false;
+  /* v2.41：本次写入来自云端合并，期间任何 persist 都不应再触发「自动上传」钩子
+     （否则「下载合并（只收）」结束后会自动弹一次上传，违背"只收"语义）。 */
+  _syncFromCloud=true;
   var res=computeSync(S,o);
   function _commit(choices){
     var prop=applyChoices(res.proposed,res.conflicts,choices||{});
     commitSync(prop,{cloud:o,skipNoteDel:res.skipNoteDel});
+    _syncFromCloud=false;
     var abStr=Object.keys(res.addedBy||{}).map(function(k){return ({tasks:'待办',notes:'记事',txns:'明细',fit:'健身',bar:'学习',goals:'目标',reviews:'复盘'}[k]||k)+'+'+res.addedBy[k];}).join('/');
     syncLogAdd(opts.dir||'合并',res.added,res.conflicts.length,(opts.silent?'静默拉取（冲突保留本机）':'已合并')+(abStr?' · 新增['+abStr+']':''));
     syncRenderStatus();
@@ -1398,6 +1419,8 @@ function mergeSnapshots(base,inc){
     if(ID_ARRAY_KEYS[k]&&Array.isArray(b)&&Array.isArray(c)){
       /* 上传合并：以云端为底，并入本机；本机优先（同 id 本机赢），坏记录单独保留 */
       var r=mergeById(b,c);m[k]=r.arr;
+      /* v2.41：剔除两端删过的 id，让删除也能上传到云端 */
+      m[k]=filterTomb(k,m[k],base.del,inc.del);
       if(r.added>0)_lastMergeAdded[k]=r.added;
     }else if(ID_ARRAY_KEYS[k]){
       /* 一侧非数组：保留本机（inc），绝不整段用云端覆盖 */
@@ -2552,7 +2575,7 @@ function renderTasks(){
 }
 document.getElementById('taskList').addEventListener('click',function(e){
   var k=e.target.closest('.ck');if(k){var id=k.dataset.id;var t=S.tasks.find(function(x){return x.id===id;});if(t){var was=t.done;t.done=!t.done;if(!was&&t.done){t.doneAt=Date.now();if(!t.awarded){var rw=+t.reward||0;if(rw>0){earn(t.title,rw,'task:'+t.id);t.awarded=true;}}spawnRepeat(t);}persist();renderTasks();return;}}
-  var b=e.target.closest('.del');if(b){var id2=b.dataset.del;var t2=S.tasks.find(function(x){return x.id===id2;});if(t2&&t2.awarded)refundPrefix('task:'+id2);S.tasks=S.tasks.filter(function(x){return x.id!==id2;});persist();renderTasks();}
+  var b=e.target.closest('.del');if(b){var id2=b.dataset.del;var t2=S.tasks.find(function(x){return x.id===id2;});if(t2&&t2.awarded)refundPrefix('task:'+id2);delMark('tasks',id2);S.tasks=S.tasks.filter(function(x){return x.id!==id2;});persist();renderTasks();}
 });
 document.getElementById('taskForm').addEventListener('submit',function(e){
   e.preventDefault();var title=document.getElementById('tTitle').value.trim();if(!title){toast('请输入事项');return;}
@@ -2699,7 +2722,7 @@ function calcBmr(date){
     sv('wb_allday_body',S.body);
   }
 })();
-document.getElementById('fitList').addEventListener('click',function(e){var b=e.target.closest('.del');if(!b)return;var id=b.dataset.delf;var rec=S.fit.find(function(x){return x.id===id;});if(rec)refundPrefix('fit:'+rec.date);S.fit=S.fit.filter(function(x){return x.id!==id;});persist();renderFit();renderOverview();});
+document.getElementById('fitList').addEventListener('click',function(e){var b=e.target.closest('.del');if(!b)return;var id=b.dataset.delf;var rec=S.fit.find(function(x){return x.id===id;});if(rec)refundPrefix('fit:'+rec.date);delMark('fit',id);S.fit=S.fit.filter(function(x){return x.id!==id;});persist();renderFit();renderOverview();});
 
 /* ---------- 法考学习（链接到外部表格） ---------- */
 function effFakaoHref(raw){
@@ -3079,7 +3102,7 @@ function deleteTxn(id){
   var i=S.txns.findIndex(function(t){return t.id===id;});if(i<0)return;
   var t=S.txns[i];var m=t.date.slice(0,7);var store=t.type==='inc'?S.income:S.spend;
   if(store[m]){store[m][t.cat]=(+store[m][t.cat]||0)-(+t.amount);if((+store[m][t.cat]||0)<=0)delete store[m][t.cat];}
-  S.txns.splice(i,1);persist();renderFin();
+  delMark('txns',t.id);S.txns.splice(i,1);persist();renderFin();
 }
 function renderTxns(){
   var month=txnVal();if(!month)return;
@@ -3330,13 +3353,13 @@ function renderGoal(){
 }
 document.getElementById('goals').addEventListener('click',function(e){
   var b=e.target.closest('button');if(!b)return;
-  if(b.dataset.delg){var id=b.dataset.delg;showModal('删除目标','将删除该目标及全部关键结果（不可恢复），确定吗？',function(){S.goals=S.goals.filter(function(x){return x.id!==id;});persist();renderGoal();toast('已删除');});return;}
+  if(b.dataset.delg){var id=b.dataset.delg;showModal('删除目标','将删除该目标及全部关键结果（不可恢复），确定吗？',function(){delMark('goals',id);S.goals=S.goals.filter(function(x){return x.id!==id;});persist();renderGoal();toast('已删除');});return;}
   if(b.dataset.delk){var kid=b.dataset.delk,gid=e.target.closest('.kr').dataset.g;var g=S.goals.find(function(x){return x.id===gid;});g.krs=g.krs.filter(function(k){return k.id!==kid;});persist();renderGoal();return;}
   if(b.dataset.addkrb){var gid2=b.dataset.addkrb;var inp=document.querySelector('input[data-addkr="'+gid2+'"]');var txt=inp.value.trim();if(!txt){toast('请输入关键结果');return;}var g2=S.goals.find(function(x){return x.id===gid2;});g2.krs.push(touch({id:uid(),text:txt,progress:0}));persist();renderGoal();return;}
 });
 document.getElementById('goals').addEventListener('change',function(e){var r=e.target.closest('input[type=range]');if(!r)return;var gid=e.target.closest('.goal').dataset.g,kid=r.dataset.k;var g=S.goals.find(function(x){return x.id===gid;});var k=g.krs.find(function(x){return x.id===kid;});k.progress=+r.value;if(k.progress>=100&&!k.awarded){earn('目标达成·'+k.text,10,'goal:'+gid+':'+kid);k.awarded=true;}persist();renderGoal();});
 document.getElementById('goals').addEventListener('input',function(e){var r=e.target.closest('input[type=range]');if(!r)return;var goalEl=e.target.closest('.goal'),krEl=e.target.closest('.kr');var g=S.goals.find(function(x){return x.id===goalEl.dataset.g;});var k=g.krs.find(function(x){return x.id===r.dataset.k;});k.progress=+r.value;krEl.querySelector('.kp').textContent=k.progress+'%';var kb=krEl.querySelector('.kr-bar i');if(kb){kb.style.width=k.progress+'%';kb.classList.toggle('done',k.progress>=100);}var p=goalProgress(g);var bar=goalEl.querySelector('.pbar i');bar.style.width=p+'%';bar.classList.toggle('done',p>=100);goalEl.querySelector('.ptxt').textContent=(p>=100?'总进度 100% · 已完成':'总进度 '+p+'%（'+g.krs.length+' 个关键结果）');});
-document.getElementById('revs').addEventListener('click',function(e){var b=e.target.closest('.del');if(!b)return;var id=b.dataset.delr;S.reviews=S.reviews.filter(function(x){return x.id!==id;});persist();renderGoal();});
+document.getElementById('revs').addEventListener('click',function(e){var b=e.target.closest('.del');if(!b)return;var id=b.dataset.delr;delMark('reviews',id);S.reviews=S.reviews.filter(function(x){return x.id!==id;});persist();renderGoal();});
 document.getElementById('goalForm').addEventListener('submit',function(e){e.preventDefault();var t=document.getElementById('gTitle').value.trim();if(!t){toast('请输入标题');return;}S.goals.push(touch({id:uid(),title:t,krs:[]}));persist();renderGoal();this.reset();toast('已添加');});
 document.getElementById('rDate').value=todayStr();
 document.getElementById('revForm').addEventListener('submit',function(e){e.preventDefault();var txt=document.getElementById('rText').value.trim();if(!txt){toast('请输入内容');return;}S.reviews.push(touch({id:uid(),period:document.getElementById('rPeriod').value,date:document.getElementById('rDate').value||todayStr(),text:txt}));persist();renderGoal();this.reset();document.getElementById('rDate').value=todayStr();toast('已保存');});
@@ -3403,14 +3426,14 @@ document.getElementById('fileInput').addEventListener('change',function(e){var f
     if(d.meta)S.meta=Object.assign({},S.meta,d.meta);
     if(d.fmeta)S.fmeta=Object.assign({},S.fmeta,d.fmeta);
     if(d.fun){if(!S.fun)S.fun=d.fun;else{var rmap={};S.fun.rewards.forEach(function(r){rmap[r.id]=1;});(d.fun.rewards||[]).forEach(function(r){if(!rmap[r.id])S.fun.rewards.push(r);});var lset={};S.fun.log.forEach(function(l){lset[l.date+'|'+l.reason+'|'+l.delta]=1;});(d.fun.log||[]).forEach(function(l){var k=l.date+'|'+l.reason+'|'+l.delta;if(!lset[k])S.fun.log.push(l);});S.fun.points=Math.max(S.fun.points,d.fun.points||0);}tags.push('积分(合并)');}
-    if(d.tasks){var r1=mergeById(S.tasks,d.tasks);S.tasks=r1.arr;tags.push('待办 +'+r1.added);}
-    if(d.fit){var r2=mergeById(S.fit,d.fit);S.fit=r2.arr;tags.push('健身 +'+r2.added);}
+    if(d.tasks){var r1=mergeById(S.tasks,d.tasks);S.tasks=filterTomb('tasks',r1.arr,S.del,d.del);tags.push('待办 +'+r1.added);}
+    if(d.fit){var r2=mergeById(S.fit,d.fit);S.fit=filterTomb('fit',r2.arr,S.del,d.del);tags.push('健身 +'+r2.added);}
     if(d.body){S.body=Object.assign({height:'',age:'',sex:'m'},S.body,d.body);tags.push('身体参数');}
-    if(d.bar){var r3=mergeById(S.bar,d.bar);S.bar=r3.arr;tags.push('学习 +'+r3.added);}
-    if(d.goals){var r5=mergeById(S.goals,d.goals);S.goals=r5.arr;tags.push('目标 +'+r5.added);}
-    if(d.reviews){var r6=mergeById(S.reviews,d.reviews);S.reviews=r6.arr;tags.push('复盘 +'+r6.added);}
-    if(d.txns){var r7=mergeById(S.txns,d.txns);S.txns=r7.arr;tags.push('明细 +'+r7.added);}
-    if(d.notes){var rN=mergeById(S.notes,d.notes);S.notes=rN.arr;tags.push('记事 +'+rN.added);}
+    if(d.bar){var r3=mergeById(S.bar,d.bar);S.bar=filterTomb('bar',r3.arr,S.del,d.del);tags.push('学习 +'+r3.added);}
+    if(d.goals){var r5=mergeById(S.goals,d.goals);S.goals=filterTomb('goals',r5.arr,S.del,d.del);tags.push('目标 +'+r5.added);}
+    if(d.reviews){var r6=mergeById(S.reviews,d.reviews);S.reviews=filterTomb('reviews',r6.arr,S.del,d.del);tags.push('复盘 +'+r6.added);}
+    if(d.txns){var r7=mergeById(S.txns,d.txns);S.txns=filterTomb('txns',r7.arr,S.del,d.del);tags.push('明细 +'+r7.added);}
+    if(d.notes){var rN=mergeById(S.notes,d.notes);S.notes=filterTomb('notes',rN.arr,S.del,d.del);tags.push('记事 +'+rN.added);}
     if(d.noteDel){applyNoteDeletions(d.noteDel);tags.push('记事删除标记');}
     if(S.txns.length){recomputeSpend();var mc=Object.keys(S.spend).length;tags.push('记账 '+mc+'个月');}
     else if(d.spend){mergeSpend(S.spend,d.spend);var mc2=Object.keys(S.spend).length;tags.push('记账 '+mc2+'个月');}
@@ -3421,7 +3444,7 @@ document.getElementById('fileInput').addEventListener('change',function(e){var f
     persist();renderAll();applyBg();toast('已合并导入：'+tags.join('、')+'（恢复后建议点一次「⇄ 双向同步」对齐云端）');}catch(err){toast('文件格式有误');}};
   rd.readAsText(f);e.target.value='';
 });
-document.getElementById('btnClear').onclick=function(){showModal('清空全部数据','将删除所有模块数据（不可恢复），确定吗？',function(){S.tasks=[];S.fit=[];S.bar=[];S.fun={points:0,rewards:[],log:[]};S.spend={};S.income={};S.txns=[];S.goals=[];S.reviews=[];S.eng={logs:{}};S.notes=[];S.noteDel=[];S.fmeta={};S.recs=[];S.recSeen={};S.recAvoid=[];S.weather={};S.fakaoChecked=null;S.seededA=S.seededF=S.seededG=false;persist();renderAll();toast('已清空');});};
+document.getElementById('btnClear').onclick=function(){showModal('清空全部数据','将删除所有模块数据（不可恢复），确定吗？',function(){S.tasks=[];S.fit=[];S.bar=[];S.fun={points:0,rewards:[],log:[]};S.spend={};S.income={};S.txns=[];S.goals=[];S.reviews=[];S.eng={logs:{}};S.notes=[];S.noteDel=[];S.del={};S.fmeta={};S.recs=[];S.recSeen={};S.recAvoid=[];S.weather={};S.fakaoChecked=null;S.seededA=S.seededF=S.seededG=false;persist();renderAll();toast('已清空');});};
 /* 背景图：上传单张照片作为整页背景，存本地、可清除、随导出带走 */
 function applyBg(){var b=document.getElementById('btnBgClear');if(S.bg){document.body.style.backgroundImage='url("'+S.bg+'")';document.body.style.backgroundSize='cover';document.body.style.backgroundPosition='center';document.body.style.backgroundAttachment='fixed';if(b)b.style.display='';}else{document.body.style.backgroundImage='';if(b)b.style.display='none';}}
 document.getElementById('btnBg').onclick=function(){document.getElementById('bgInput').click();};
@@ -3476,7 +3499,7 @@ function editNote(id){
 document.getElementById('noteAdd').addEventListener('click',addNote);
 document.getElementById('noteInput').addEventListener('keydown',function(e){if((e.ctrlKey||e.metaKey)&&e.key==='Enter'){e.preventDefault();addNote();}});
 document.getElementById('noteList').addEventListener('click',function(e){
-  var del=e.target.closest('[data-del]');if(del){var _did=del.dataset.del;if(S.noteDel.indexOf(_did)<0)S.noteDel.push(_did);S.notes=S.notes.filter(function(x){return x.id!==_did;});persist();renderNotes();return;}
+  var del=e.target.closest('[data-del]');if(del){var _did=del.dataset.del;if(S.noteDel.indexOf(_did)<0)S.noteDel.push(_did);delMark('notes',_did);S.notes=S.notes.filter(function(x){return x.id!==_did;});persist();renderNotes();return;}
   var ed=e.target.closest('[data-edit]');if(ed){editNote(ed.dataset.edit);}
 });
 function switchTab(name){
@@ -3497,7 +3520,7 @@ function switchTab(name){
 document.querySelectorAll('.sidebar button.nav').forEach(function(b){if(!b.dataset.tab)return;b.onclick=function(){switchTab(b.dataset.tab);};});
 function renderAll(){rebuildCatColors();renderOverview();renderTasks();renderFit();renderFun();renderFin();renderRest();renderGoal();renderFakao();renderEng();renderFakaoCheckin();renderCalendar();renderWxDate();renderNotes();}
 /* 版本号：每次发布改动后在此 +0.1，便于核对 Chrome 是否为最新版 */
-var APP_VER='2.40';
+var APP_VER='2.41';
 var _av=document.getElementById('appVer');if(_av)_av.textContent='v'+APP_VER;
 /* 清理已弃用的习惯打卡旧数据（v1.28 起不再使用，仅清孤立 key，不影响任何功能） */
 try{localStorage.removeItem('wb_hab_habits');localStorage.removeItem('wb_hab_seeded');}catch(e){}
