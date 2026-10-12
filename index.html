@@ -1225,13 +1225,16 @@ function applyChoices(proposed,conflicts,choices){
   });
   return proposed;
 }
-/* 把提案写入 S 并落盘、渲染、记日志 */
+/* 把提案写入 S 并落盘、渲染、记日志
+   关键修复：persist/记日志/触发上传(onCommitted) 属于“数据正确性”关键步骤，绝不能被渲染异常中断；
+   渲染放在最后且包 try/catch，任何模块的渲染 bug 都只影响界面、不影响“已写入/已记录/已上传”。 */
 function commitSync(proposed,opts){
   opts=opts||{};
   SYNC_KEYS.forEach(function(k){if(k in proposed)S[k]=proposed[k];});
   if('noteDel' in (opts.cloud||{}))applyNoteDeletions(opts.cloud.noteDel,opts.skipNoteDel||{});
   syncTouch(Date.now());syncMarkEver();
-  persist();renderAll();
+  persist();
+  try{renderAll();}catch(e){if(window.console)console.error('同步后渲染异常(已忽略，不影响数据写入):',e);}
   return true;
 }
 /* 应用云端快照到本机：silent=静默(冲突一律保留本机，绝不自动覆盖)；否则弹冲突面板 */
@@ -1365,7 +1368,7 @@ function mergeSnapshots(base,inc){
   SYNC_KEYS.forEach(function(k){
     if(!(k in inc)){ if(k in base)m[k]=base[k]; return; }
     var b=base[k], c=inc[k];
-    if(Array.isArray(b)&&Array.isArray(c)&&_isIdArr(b)&&_isIdArr(c)){
+    if(Array.isArray(b)&&Array.isArray(c)&&isIdArrSoft(b)&&isIdArrSoft(c)){
       m[k]=mergeById(b,c).arr;
     }else if(k in base){
       m[k]=(c!==undefined)?c:base[k];
@@ -1393,6 +1396,7 @@ function syncPush(){
         body:JSON.stringify({description:'全能生活台云同步',public:false,files:{[GIST_FILE]:{content:payload}}})})
         .then(function(r){if(!r.ok)throw new Error('HTTP '+r.status);return r.json();})
         .then(function(){syncMarkEver();syncTouch(merged.__ts);
+          syncLogAdd('上传',0,0,'已上传到云端（与云端合并，本机 '+ (S.tasks?S.tasks.length:0) +' 任务 / '+(S.notes?S.notes.length:0)+' 记事）');
           syncSetStatus('已上传到云端（已合并两端数据，本机 '+ (S.tasks?S.tasks.length:0) +' 任务 / '+(S.notes?S.notes.length:0)+' 记事） · '+new Date().toLocaleTimeString());syncProbe();});
     })
     .catch(function(e){syncSetStatus(syncErrMsg(e,'上传'),true);})
@@ -1530,7 +1534,7 @@ function renderOverview(){
   var points=S.fun?S.fun.points:0;
   var finSpend=monthTotal(curMonth());
   var goalsActive=S.goals.length;
-  var engLogT=S.eng.logs[todayStr()];var engFocus=engLogT?engLogT.focus:0;
+  var engLogT=(S.eng&&S.eng.logs)?S.eng.logs[todayStr()]:null;var engFocus=engLogT?engLogT.focus:0;
   var cards=[
     {tab:'tasks',name:'日程待办',v:remaining,s:(overdue?('逾期 '+overdue+' 条'):'无逾期'),cls:overdue?'danger':''},
     {tab:'fit',name:'健康身体',v:hasFit?'已打卡':'未打卡',s:'体重趋势 · 热身打卡',cls:hasFit?'ok':''},
@@ -3308,7 +3312,7 @@ function switchTab(name){
 document.querySelectorAll('.sidebar button.nav').forEach(function(b){if(!b.dataset.tab)return;b.onclick=function(){switchTab(b.dataset.tab);};});
 function renderAll(){rebuildCatColors();renderOverview();renderTasks();renderFit();renderFun();renderFin();renderRest();renderGoal();renderFakao();renderEng();renderFakaoCheckin();renderCalendar();renderWxDate();renderNotes();}
 /* 版本号：每次发布改动后在此 +0.1，便于核对 Chrome 是否为最新版 */
-var APP_VER='2.33';
+var APP_VER='2.34';
 var _av=document.getElementById('appVer');if(_av)_av.textContent='v'+APP_VER;
 /* 清理已弃用的习惯打卡旧数据（v1.28 起不再使用，仅清孤立 key，不影响任何功能） */
 try{localStorage.removeItem('wb_hab_habits');localStorage.removeItem('wb_hab_seeded');}catch(e){}
