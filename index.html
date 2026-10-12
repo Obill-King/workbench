@@ -1356,6 +1356,8 @@ function syncErrMsg(e,act){
 /* 云同步请求：网络失败自动重试 2 次（GitHub API 在国内/手机网络常抖） */
 function syncRequest(url,opts,act,onOk,retry){
   retry=(retry===undefined)?2:retry;
+  opts=opts||{};opts.cache='no-store';
+  if(!opts.method||opts.method==='GET'){url+=(url.indexOf('?')<0?'?':'&')+'_t='+Date.now();}
   fetch(url,opts).then(function(r){
     if(!r.ok)throw new Error('HTTP '+r.status);
     return r.json();
@@ -1372,6 +1374,15 @@ function syncRequest(url,opts,act,onOk,retry){
     syncSetStatus(syncErrMsg(e,act),true);
     _syncBusy=false;_syncReady=true;
   });
+}
+/* 云同步专用 fetch（v2.38）：① cache:'no-store' + GET 加时间戳参数——GitHub API 响应带
+   max-age=60 的缓存头，iOS Safari 会把「上传后立刻回读」变成读 1 分钟内的旧缓存，
+   造成"写入未生效"的假阴性/同步看到旧数据；② 其余行为与原生 fetch 一致。 */
+function syncFetch(url,opts){
+  opts=opts||{};
+  opts.cache='no-store';
+  if(!opts.method||opts.method==='GET'){url+=(url.indexOf('?')<0?'?':'&')+'_t='+Date.now();}
+  return fetch(url,opts);
 }
 /* 判断某数组是否为「带 id 的对象数组」（合并的判定条件，提到模块作用域供多处复用） */
 function _isIdArr(v){return Array.isArray(v)&&v.length>0&&v.every(function(x){return x&&typeof x==='object'&&x.id!=null;});}
@@ -1407,7 +1418,7 @@ function syncPush(){
   _syncBusy=true;syncSetStatus('上传中（先合并云端再上传）…');
   var H={'Authorization':'Bearer '+SYNC.token,'Accept':'application/vnd.github+json','Content-Type':'application/json'};
   var _gistUrl='https://api.github.com/gists/'+SYNC.gist;
-  fetch(_gistUrl,{headers:H})
+  syncFetch(_gistUrl,{headers:H})
     .then(function(r){if(!r.ok)throw new Error('HTTP '+r.status);return r.json();})
     .then(function(d){
       if(d&&d.message&&!d.files)throw new Error('GitHub: '+(d.message)); // 200 响应体里也可能嵌错误
@@ -1415,7 +1426,7 @@ function syncPush(){
       var base=(c?JSON.parse(c):{});
       var merged=mergeSnapshots(base,syncSnapshot());
       var payload=JSON.stringify(merged);
-      return fetch(_gistUrl,{method:'PATCH',headers:H,
+      return syncFetch(_gistUrl,{method:'PATCH',headers:H,
         body:JSON.stringify({description:'全能生活台云同步',public:false,files:{[GIST_FILE]:{content:payload}}})})
         .then(function(r){if(!r.ok)throw new Error('HTTP '+r.status);
           return r.json().then(function(rj){
@@ -1425,7 +1436,7 @@ function syncPush(){
         .then(function(){
           syncMarkEver();syncTouch(merged.__ts);
           /* —— 关键：上传后立刻回读云端，校验是否真的写进去了，不再盲信 200 —— */
-          return fetch(_gistUrl,{headers:H})
+          return syncFetch(_gistUrl,{headers:H})
             .then(function(r){if(!r.ok)throw new Error('HTTP '+r.status);return r.json();})
             .then(function(vd){
               var vf=vd&&vd.files&&vd.files[GIST_FILE];var vc=vf&&vf.content;
@@ -1519,7 +1530,7 @@ function syncRecon(){
   box.style.display='block';box.innerHTML='对账中…';
   var H={'Authorization':'Bearer '+SYNC.token,'Accept':'application/vnd.github+json'};
   var _gistUrl='https://api.github.com/gists/'+SYNC.gist;
-  fetch(_gistUrl,{headers:H})
+  syncFetch(_gistUrl,{headers:H})
     .then(function(r){if(!r.ok)throw new Error('HTTP '+r.status);return r.json();})
     .then(function(d){
       if(d&&d.message&&!d.files)throw new Error('GitHub: '+(d.message));
@@ -1552,41 +1563,44 @@ function syncSelfTest(){
   var H={'Authorization':'Bearer '+SYNC.token,'Accept':'application/vnd.github+json','Content-Type':'application/json'};
   var _gistUrl='https://api.github.com/gists/'+SYNC.gist;
   var steps=[];
-  fetch(_gistUrl,{headers:H})
-    .then(function(r){if(!r.ok)throw new Error('HTTP '+r.status);return r.json();})
+  syncFetch(_gistUrl,{headers:H})
+    .then(function(r){var st=r.status;if(!r.ok)throw new Error('HTTP '+st);
+      return r.json().then(function(d){steps.push('① 读云端 HTTP '+st+'，文件存在='+!!(d.files&&d.files[GIST_FILE]));return d;});})
     .then(function(d){
       if(d&&d.message&&!d.files)throw new Error('GitHub: '+(d.message));
       var f=d.files&&d.files[GIST_FILE];
-      steps.push('① 读云端：HTTP 200，文件「'+GIST_FILE+'」存在='+!!f);
       var base=f&&f.content?JSON.parse(f.content):{};
       var marker='selftest_'+Date.now();
       var merged=mergeSnapshots(base,syncSnapshot());
       merged.__selftest=marker;
-      return fetch(_gistUrl,{method:'PATCH',headers:H,
+      return syncFetch(_gistUrl,{method:'PATCH',headers:H,
         body:JSON.stringify({description:'全能生活台云同步',public:false,files:{[GIST_FILE]:{content:JSON.stringify(merged)}}})})
-        .then(function(r){if(!r.ok)throw new Error('HTTP '+r.status);return r.json();})
-        .then(function(pj){if(pj&&pj.message&&!pj.files)throw new Error('GitHub: '+(pj.message));
-          steps.push('② 写测试标记：PATCH 返回 200');
-          return fetch(_gistUrl,{headers:H})
-            .then(function(r){if(!r.ok)throw new Error('HTTP '+r.status);return r.json();})
-            .then(function(vd){
-              var vf=vd.files&&vd.files[GIST_FILE];var vc=vf&&vf.content;
-              var cloud=vc?JSON.parse(vc):{};
-              var ok=cloud.__selftest===marker;
-              steps.push('③ 回读云端：测试标记匹配='+ok+(ok?'（写入成功 ✅）':'（写入未生效 ❌）'));
-              delete merged.__selftest; // 清理测试标记，恢复原内容
-              return fetch(_gistUrl,{method:'PATCH',headers:H,
-                body:JSON.stringify({description:'全能生活台云同步',public:false,files:{[GIST_FILE]:{content:JSON.stringify(merged)}}})})
-                .then(function(r){if(!r.ok)throw new Error('HTTP '+r.status);return r.json();})
-                .then(function(){steps.push('④ 已清理测试标记，文件恢复如初');});
-            });
-        });
+        .then(function(r){var st=r.status;if(!r.ok)throw new Error('HTTP '+st);
+          return r.json().then(function(pj){
+            if(pj&&pj.message&&!pj.files)throw new Error('GitHub: '+(pj.message));
+            /* PATCH 的 200 响应体本身就应包含写入后的新内容——这是「GitHub 真收下了」的第一重证据 */
+            var vf=pj.files&&pj.files[GIST_FILE];var vc=vf&&vf.content;
+            var inResp=!!(vc&&vc.indexOf(marker)>=0);
+            steps.push('② 写标记 PATCH HTTP '+st+'，响应体含标记='+inResp);
+            return syncFetch(_gistUrl,{headers:H})
+              .then(function(r2){var st2=r2.status;if(!r2.ok)throw new Error('HTTP '+st2);
+                return r2.json().then(function(vd){
+                  var vf2=vd.files&&vd.files[GIST_FILE];var vc2=vf2&&vf2.content;
+                  var cloud=vc2?JSON.parse(vc2):{};
+                  var ok=cloud.__selftest===marker;
+                  steps.push('③ 回读 HTTP '+st2+'，标记匹配='+ok+(ok?'（写入真生效 ✅）':'（PATCH 收了但回读不到 → 缓存/落盘问题 ❌）'));
+                  delete merged.__selftest; // 清理测试标记，恢复原内容
+                  return syncFetch(_gistUrl,{method:'PATCH',headers:H,
+                    body:JSON.stringify({description:'全能生活台云同步',public:false,files:{[GIST_FILE]:{content:JSON.stringify(merged)}}})})
+                    .then(function(r3){steps.push('④ 清理 HTTP '+r3.status);});
+                });});
+          });});
     })
     .then(function(){
       syncSetStatus(steps.join(' ｜ '));
       syncLogAdd('自检',0,0,steps.join(' ｜ '));
     })
-    .catch(function(e){syncSetStatus('自检失败：'+syncErrMsg(e,'自检'),true);});
+    .catch(function(e){syncSetStatus('自检失败：'+syncErrMsg(e,'自检')+' ｜ 已完成步骤: '+steps.join(' ｜ '),true);});
 }
 function syncUpdateDiag(cTasks,cNotes,cTs){
   var d=document.getElementById('syncDiag');if(d)d.style.display='block';
@@ -3445,7 +3459,7 @@ function switchTab(name){
 document.querySelectorAll('.sidebar button.nav').forEach(function(b){if(!b.dataset.tab)return;b.onclick=function(){switchTab(b.dataset.tab);};});
 function renderAll(){rebuildCatColors();renderOverview();renderTasks();renderFit();renderFun();renderFin();renderRest();renderGoal();renderFakao();renderEng();renderFakaoCheckin();renderCalendar();renderWxDate();renderNotes();}
 /* 版本号：每次发布改动后在此 +0.1，便于核对 Chrome 是否为最新版 */
-var APP_VER='2.37';
+var APP_VER='2.38';
 var _av=document.getElementById('appVer');if(_av)_av.textContent='v'+APP_VER;
 /* 清理已弃用的习惯打卡旧数据（v1.28 起不再使用，仅清孤立 key，不影响任何功能） */
 try{localStorage.removeItem('wb_hab_habits');localStorage.removeItem('wb_hab_seeded');}catch(e){}
