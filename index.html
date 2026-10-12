@@ -1374,21 +1374,30 @@ function syncErrMsg(e,act){
   if(/^HTTP 404/.test(m))return act+'失败：Gist 不存在，检查 Gist ID 有没有填错';
   return act+'失败：'+m;
 }
-/* 云同步请求：网络失败自动重试 2 次（GitHub API 在国内/手机网络常抖） */
+/* 云同步请求：网络失败自动重试 2 次（GitHub API 在国内/手机网络常抖）。
+   v2.42：给 fetch 加 AbortController 超时（默认 20s，可用 window.__SYNC_TIMEOUT 覆盖用于测试）。
+   手机端 iOS Safari 在弱网下 fetch 会永远 pending（既不 resolve 也不 reject），导致"下载合并"
+   等一直卡在"读取云端…"；加超时后 abort 会 reject，进入重试/报错逻辑，不再无限卡住。 */
 function syncRequest(url,opts,act,onOk,retry){
   retry=(retry===undefined)?2:retry;
   opts=opts||{};opts.cache='no-store';
   if(!opts.method||opts.method==='GET'){url+=(url.indexOf('?')<0?'?':'&')+'_t='+Date.now();}
+  var TO=(typeof window!=='undefined'&&window.__SYNC_TIMEOUT)||20000;
+  var ctrl=new AbortController();opts.signal=ctrl.signal;
+  var timer=setTimeout(function(){try{ctrl.abort();}catch(e){}},TO);
   fetch(url,opts).then(function(r){
+    clearTimeout(timer);
     if(!r.ok)throw new Error('HTTP '+r.status);
     return r.json();
   }).then(function(d){
     onOk(d);_syncBusy=false;_syncReady=true;
   }).catch(function(e){
+    clearTimeout(timer);
     var m=(e&&e.message)||String(e||'');
-    var isNet=/network request failed|failed to fetch|load failed|networkerror|超时|timeout/i.test(m);
+    var aborted=/abort|user aborted|the user aborted|request failed/i.test(m);
+    var isNet=/network request failed|failed to fetch|load failed|networkerror|超时|timeout/i.test(m)||aborted;
     if(isNet&&retry>0){
-      syncSetStatus(act+'连不上 GitHub，1.5 秒后重试（还剩 '+retry+' 次）…',true);
+      syncSetStatus(act+'连不上 GitHub（或超时），1.5 秒后重试（还剩 '+retry+' 次）…',true);
       setTimeout(function(){syncRequest(url,opts,act,onOk,retry-1);},1500);
       return;
     }
@@ -1398,12 +1407,17 @@ function syncRequest(url,opts,act,onOk,retry){
 }
 /* 云同步专用 fetch（v2.38）：① cache:'no-store' + GET 加时间戳参数——GitHub API 响应带
    max-age=60 的缓存头，iOS Safari 会把「上传后立刻回读」变成读 1 分钟内的旧缓存，
-   造成"写入未生效"的假阴性/同步看到旧数据；② 其余行为与原生 fetch 一致。 */
+   造成"写入未生效"的假阴性/同步看到旧数据；② v2.42 起同样加 AbortController 超时
+   （默认 25s，window.__SYNC_TIMEOUT 可覆盖），覆盖 PATCH 上传与回读，避免手机端 fetch
+   挂起导致"上传中"永远转圈（超时后进入 patchWithRetry 的重试/失败分支）。 */
 function syncFetch(url,opts){
   opts=opts||{};
   opts.cache='no-store';
   if(!opts.method||opts.method==='GET'){url+=(url.indexOf('?')<0?'?':'&')+'_t='+Date.now();}
-  return fetch(url,opts);
+  var TO=(typeof window!=='undefined'&&window.__SYNC_TIMEOUT)||25000;
+  var ctrl=new AbortController();opts.signal=ctrl.signal;
+  var timer=setTimeout(function(){try{ctrl.abort();}catch(e){}},TO);
+  return fetch(url,opts).then(function(r){clearTimeout(timer);return r;},function(e){clearTimeout(timer);throw e;});
 }
 /* 判断某数组是否为「带 id 的对象数组」（合并的判定条件，提到模块作用域供多处复用） */
 function _isIdArr(v){return Array.isArray(v)&&v.length>0&&v.every(function(x){return x&&typeof x==='object'&&x.id!=null;});}
@@ -3131,8 +3145,11 @@ document.getElementById('budgetInput').addEventListener('change',function(){S.fm
 function autoSettle(){
   if(!S.fmeta)S.fmeta={};
   if(!S.fmeta.settled)S.fmeta.settled={};
-  if(!S.fmeta.settleStart)S.fmeta.settleStart=curMonth(); // 功能启用当月，不回溯更早月份
-  // 1) 净化历史：启用前月份误发 + 同月重复结算 → 只保留一条，并一次性回退多余/误发的积分（不再反复）
+  if(!S.fmeta.settleStart)S.fmeta.settleStart=curMonth();
+  /* v2.42：自动月度结算 +20 奖励与提示已按用户要求停用——用户消费常超预算，
+     该"结余奖励"机制无意义且造成"超预算还+20"的困惑。不再自动加分、不再弹提示。
+     仅保留：回退此前因 bug（v2.40 及更早）产生的同月重复/启用前误发的多余积分，避免旧错越积越多。
+     如需彻底清掉历史月度结算积分，请告知。 */
   if(S.fun&&Array.isArray(S.fun.log)){
     var seen={},keep=[],removedPts=0;
     S.fun.log.forEach(function(e){
@@ -3148,24 +3165,6 @@ function autoSettle(){
     if(removedPts>0){S.fun.points=Math.max(0,S.fun.points-removedPts);S.fun.log=keep;persist();}
     else if(keep.length!==S.fun.log.length){S.fun.log=keep;persist();}
   }
-  var cm=curMonth(),got=0;
-  Object.keys(S.spend).forEach(function(m){
-    if(m<S.fmeta.settleStart)return; // 不回溯功能启用前的月份
-    if(m>=cm)return;                 // 当月不结算，等月末
-    // 幂等：已结算依据 = settled 标记 或 日志中已有该月结算记录（后者更可靠，避免标记丢失导致的重复结算）
-    var awarded=S.fmeta.settled[m]||((S.fun&&S.fun.log||[]).some(function(e){return e.reason==='月度结算·结余('+m+')';}));
-    if(awarded)return;
-    if(monthTotal(m)<=0)return;
-    var rem=(+S.fmeta.budget||0)-monthTotal(m);
-    if(rem>=1000){
-      if(!S.fun)S.fun={points:0,rewards:[],log:[]};
-      S.fun.points+=20;
-      S.fun.log.push({id:uid(),date:todayStr(),reason:'月度结算·结余('+m+')',delta:20});
-      S.fmeta.settled[m]=true;
-      got++;
-    }
-  });
-  if(got>0){persist();renderFun();toast('自动结算完成：'+got+' 个月结余≥1000，各 +20');}
 }
 
 /* ---------- 休息放松 ---------- */
@@ -3520,7 +3519,7 @@ function switchTab(name){
 document.querySelectorAll('.sidebar button.nav').forEach(function(b){if(!b.dataset.tab)return;b.onclick=function(){switchTab(b.dataset.tab);};});
 function renderAll(){rebuildCatColors();renderOverview();renderTasks();renderFit();renderFun();renderFin();renderRest();renderGoal();renderFakao();renderEng();renderFakaoCheckin();renderCalendar();renderWxDate();renderNotes();}
 /* 版本号：每次发布改动后在此 +0.1，便于核对 Chrome 是否为最新版 */
-var APP_VER='2.41';
+var APP_VER='2.42';
 var _av=document.getElementById('appVer');if(_av)_av.textContent='v'+APP_VER;
 /* 清理已弃用的习惯打卡旧数据（v1.28 起不再使用，仅清孤立 key，不影响任何功能） */
 try{localStorage.removeItem('wb_hab_habits');localStorage.removeItem('wb_hab_seeded');}catch(e){}
