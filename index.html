@@ -1352,6 +1352,9 @@ function syncApply(o,opts){
     if(opts.onCommitted)opts.onCommitted();
   }
   if(res.conflicts.length&&!opts.silent){
+    /* v2.44：冲突等待期间状态栏给明确提示，不再停留在"正在读取云端…" */
+    var _cn=0;res.conflicts.forEach(function(g){_cn+=(g.items||[]).length;});
+    syncSetStatus('⚠️ 发现 '+_cn+' 条同 id 不同内容的冲突，请在面板中逐条选择后点「确认」');
     showConflictSheet(res.conflicts,function(choices){_commit(choices||{});});
     return true;
   }
@@ -1417,16 +1420,19 @@ function syncRenderStatus(){
   var cc=document.getElementById('syncCloudCnt');
   if(cc&&last)cc.textContent='上次 '+last.dir+' · '+new Date(last.t).toLocaleString();
 }
-/* 手动同步总入口：mode=download(只拉)/upload(拉+推)/both(双向) */
+/* 手动同步总入口：mode=download(只拉)/upload(拉+推)/both(双向)
+   v2.44：成功后必须更新状态栏——此前"下载合并"成功只写日志，状态栏永远停在
+   "正在读取云端…"，用户误以为卡死（实际日志里已是"已合并"）。 */
 function syncManual(mode){
   if(!SYNC.token||!SYNC.gist){syncSetStatus('请先填 Token 并连接同一个 Gist',true);return;}
-  syncSetStatus('正在读取云端…(v'+APP_VER+' · 最多等 12 秒，超时会明确报错)');
+  syncSetStatus('正在读取云端…(v'+APP_VER+')');
   syncRequest('https://api.github.com/gists/'+SYNC.gist,{headers:{'Authorization':'Bearer '+SYNC.token,'Accept':'application/vnd.github+json'}},
     '读取云端',function(d){var f=d.files&&d.files[GIST_FILE];
       if(!f){syncSetStatus('云端还没有该同步文件，先把本机上传上去（点一次「'+ (mode==='download'?'下载合并':'上传/双向') +'」即可）',true);if(mode!=='download'){syncPush();}return;}
       var cloud;try{cloud=JSON.parse(f.content);}catch(e){syncSetStatus('云端文件解析失败',true);return;}
       syncApply(cloud,{dir:(mode==='download'?'下载合并':'同步'),onCommitted:function(){
         if(mode!=='download'){syncSetStatus('已合并本机，正在上传…');syncPush();}
+        else{syncSetStatus('✅ 下载合并完成 · '+new Date().toLocaleTimeString()+'（详情见下方日志）');}
       }});
     },function(e){syncSetStatus(syncErrMsg(e,'读取云端'),true);});
 }
@@ -1443,34 +1449,42 @@ function syncErrMsg(e,act){
 }
 /* 云同步请求：网络失败自动重试 2 次（GitHub API 在国内/手机网络常抖）。
    v2.42：给 fetch 加 AbortController 超时（可用 window.__SYNC_TIMEOUT 覆盖用于测试）。
-   v2.43：GET 超时从 20s 收紧到 12s——弱网下 3 次尝试约 40 秒内出明确结论，
-   不再让用户以为"卡死"。
-   手机端 iOS Safari 在弱网下 fetch 会永远 pending（既不 resolve 也不 reject），导致"下载合并"
-   等一直卡在"读取云端…"；加超时后 abort 会 reject，进入重试/报错逻辑，不再无限卡住。 */
-function syncRequest(url,opts,act,onOk,retry){
-  retry=(retry===undefined)?2:retry;
+   v2.43：GET 超时从 20s 收紧到 12s。
+   v2.44 三处修正：
+   ① 签名改为 (url,opts,act,onOk,onErr)——此前调用方把错误回调传进 retry 参数（数字位），
+     函数当数字比较导致手动同步的重试逻辑整体失效；
+   ② 等待期间每秒刷新「已等 N 秒」，用户能看到时间在走，不再误判为卡死；
+   ③ 重试等待与最终报错都带已等待时长；报错优先走 onErr 回调（调用方可自定义处理）。 */
+function syncRequest(url,opts,act,onOk,onErr){
+  _syncReq(url,opts,act,onOk,onErr,2);
+}
+function _syncReq(url,opts,act,onOk,onErr,retry){
   opts=opts||{};opts.cache='no-store';
   if(!opts.method||opts.method==='GET'){url+=(url.indexOf('?')<0?'?':'&')+'_t='+Date.now();}
   var TO=(typeof window!=='undefined'&&window.__SYNC_TIMEOUT)||12000;
   var ctrl=new AbortController();opts.signal=ctrl.signal;
+  var t0=Date.now();
+  var elapsed=function(){return Math.round((Date.now()-t0)/1000);};
+  var iv=setInterval(function(){syncSetStatus(act+'…已等 '+elapsed()+' 秒（上限 '+Math.round(TO/1000)+' 秒，超时会自动重试或明确报错）');},1000);
   var timer=setTimeout(function(){try{ctrl.abort();}catch(e){}},TO);
   fetch(url,opts).then(function(r){
-    clearTimeout(timer);
+    clearTimeout(timer);clearInterval(iv);
     if(!r.ok)throw new Error('HTTP '+r.status);
     return r.json();
   }).then(function(d){
+    clearInterval(iv);
     onOk(d);_syncBusy=false;_syncReady=true;
   }).catch(function(e){
-    clearTimeout(timer);
+    clearTimeout(timer);clearInterval(iv);
     var m=(e&&e.message)||String(e||'');
     var aborted=/abort|user aborted|the user aborted|request failed/i.test(m);
     var isNet=/network request failed|failed to fetch|load failed|networkerror|超时|timeout/i.test(m)||aborted;
     if(isNet&&retry>0){
-      syncSetStatus(act+'连不上 GitHub（或超时），1.5 秒后重试（还剩 '+retry+' 次）…',true);
-      setTimeout(function(){syncRequest(url,opts,act,onOk,retry-1);},1500);
+      syncSetStatus(act+'连不上 GitHub（或超时，已等 '+elapsed()+' 秒），1.5 秒后自动重试（还剩 '+retry+' 次）…',true);
+      setTimeout(function(){_syncReq(url,opts,act,onOk,onErr,retry-1);},1500);
       return;
     }
-    syncSetStatus(syncErrMsg(e,act),true);
+    if(typeof onErr==='function'){onErr(e);}else{syncSetStatus(syncErrMsg(e,act),true);}
     _syncBusy=false;_syncReady=true;
   });
 }
@@ -3611,7 +3625,7 @@ function switchTab(name){
 document.querySelectorAll('.sidebar button.nav').forEach(function(b){if(!b.dataset.tab)return;b.onclick=function(){switchTab(b.dataset.tab);};});
 function renderAll(){rebuildCatColors();renderOverview();renderTasks();renderFit();renderFun();renderFin();renderRest();renderGoal();renderFakao();renderEng();renderFakaoCheckin();renderCalendar();renderWxDate();renderNotes();}
 /* 版本号：每次发布改动后在此 +0.1，便于核对 Chrome 是否为最新版 */
-var APP_VER='2.43';
+var APP_VER='2.44';
 var _av=document.getElementById('appVer');if(_av)_av.textContent='v'+APP_VER;
 /* 清理已弃用的习惯打卡旧数据（v1.28 起不再使用，仅清孤立 key，不影响任何功能） */
 try{localStorage.removeItem('wb_hab_habits');localStorage.removeItem('wb_hab_seeded');}catch(e){}
