@@ -1066,6 +1066,17 @@ function rebuildCatColors(){
 function catColor(c){if(CAT_COLOR[c])return CAT_COLOR[c];var i=CAT_IDX[c]||0;return 'hsl('+Math.round((i*137.50776)%360)+',62%,50%)';}
 function catTint(c){if(CAT_COLOR[c])return CAT_COLOR[c]+'22';var i=CAT_IDX[c]||0;return 'hsla('+Math.round((i*137.50776)%360)+',62%,50%,0.16)';}
 var REP_LABEL={daily:'每天',weekly:'每周',monthly:'每月',yearly:'每年'};
+/* v2.46：重复任务实例的到期展示（今天/明天/月-日）。
+   重复任务每次完成会 spawn 出下期实例（不同 due），列表原本对重复任务隐藏日期，
+   导致「今天已完成的」和「明天待办的」看起来一模一样、像重复条目。 */
+function repDueLabel(due){
+  if(!due)return '';
+  if(due===todayStr())return '今天';
+  var t=new Date();t.setDate(t.getDate()+1);
+  var tm=t.getFullYear()+'-'+String(t.getMonth()+1).padStart(2,'0')+'-'+String(t.getDate()).padStart(2,'0');
+  if(due===tm)return '明天';
+  return due.slice(5);
+}
 var PRIO_IDX={p0:0,p1:1,p2:2};   // 排序用：P0 最前
 function prioIdx(p){var v=PRIO_IDX[p];return (v==null)?9:v;}   // 注意 P0=0，不能用 ||9 兜底
 /* 离线拼音表：仅覆盖常用生活/记账类汉字；未收录的字回退为中文子串匹配，不影响搜索 */
@@ -1248,14 +1259,22 @@ function taskDedupeKey(x){
 }
 function dedupeTasksArr(arr){
   if(!Array.isArray(arr))return{keep:arr,removedIds:[]};
-  var byKey={},order=[],head=[];
+  var keep=[],removedIds=[],byKey={},order=[];
+  /* v2.46：重复任务 due==='' 的记录是旧 bug 的历史脏数据（正常实例都有日期）。
+     同 title+repeat 组里存在任何带日期的记录时，空日期那条直接墓碑清掉；
+     组里全是空日期则原样保留（绝不销毁仅存数据）。 */
+  var hasDated={};
+  arr.forEach(function(x){if(x&&typeof x==='object'&&x.title!=null&&x.repeat&&x.repeat!=='none'&&x.due)hasDated[String(x.title)+'|'+String(x.repeat)]=1;});
   arr.forEach(function(x){
-    if(!x||typeof x!=='object'||x.title==null){head.push(x);return;}
+    if(!x||typeof x!=='object'||x.title==null){keep.push(x);return;}
+    if(x.repeat&&x.repeat!=='none'&&!x.due&&hasDated[String(x.title)+'|'+String(x.repeat)]){
+      if(x.id!=null)removedIds.push(x.id);
+      return;
+    }
     var k=taskDedupeKey(x);
     if(!byKey[k]){byKey[k]=[];order.push(k);}
     byKey[k].push(x);
   });
-  var keep=head.slice(),removedIds=[];
   order.forEach(function(k){
     var g=byKey[k];
     if(g.length===1){keep.push(g[0]);return;}
@@ -1922,7 +1941,7 @@ function renderOverview(){
       var ov=x.due&&x.due<t&&!(x.repeat&&x.repeat!=='none');
       var pill=ov?'<span class="pill over">逾期</span>':'<span class="pill '+x.prio+(x.done?' done-pill':'')+'">'+(x.prio==='p0'?'P0':x.prio==='p1'?'P1':'P2')+'</span>';
       var doneTag=x.done?'<span class="done-tag">已完成</span>':'';
-      var dateShow=(x.repeat&&x.repeat!=='none')?'':(x.due||'');
+      var dateShow=(x.repeat&&x.repeat!=='none')?repDueLabel(x.due):(x.due||'');
       return '<div class="todo'+(x.done?' done':'')+'" data-id="'+x.id+'"><div class="ck'+(x.done?' done':'')+'\" data-id="'+x.id+'"></div><div class="ttl"><span class="t">'+esc(x.title)+'</span>'+(x.note&&x.note.trim()?'<span class="tnote">'+esc(x.note)+'</span>':'')+(x.repeat&&x.repeat!=='none'?'<span class="rep-tag">↻ '+REP_LABEL[x.repeat]+'</span>':'')+'</div>'+pill+'<span class="tm">'+dateShow+'</span><span class="tm">'+(x.reward>0?'+'+x.reward+'分':'')+'</span>'+doneTag+'</div>';
     }).join('');
   }
@@ -2738,7 +2757,7 @@ function renderTasks(){
       '<div class="ck '+(x.done?'done':'')+'" data-id="'+x.id+'">'+(x.done?'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5 9-11"/></svg>':'')+'</div>'+
       '<div class="ttl"><span class="t">'+esc(x.title)+'</span>'+noteHtml+(x.repeat&&x.repeat!=='none'?'<span class="rep-tag">↻ '+REP_LABEL[x.repeat]+'</span>':'')+'</div>'+
       prio+
-      '<span class="tm">'+((x.repeat&&x.repeat!=='none')?'':(x.due||''))+'</span>'+
+      '<span class="tm">'+((x.repeat&&x.repeat!=='none')?repDueLabel(x.due):(x.due||''))+'</span>'+
       '<span class="tm">'+(x.reward>0?'+'+x.reward+'分':'')+'</span>'+
       doneTag+
       '<button class="del" data-del="'+x.id+'"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></button>'+
@@ -3688,7 +3707,7 @@ function switchTab(name){
 document.querySelectorAll('.sidebar button.nav').forEach(function(b){if(!b.dataset.tab)return;b.onclick=function(){switchTab(b.dataset.tab);};});
 function renderAll(){rebuildCatColors();renderOverview();renderTasks();renderFit();renderFun();renderFin();renderRest();renderGoal();renderFakao();renderEng();renderFakaoCheckin();renderCalendar();renderWxDate();renderNotes();}
 /* 版本号：每次发布改动后在此 +0.1，便于核对 Chrome 是否为最新版 */
-var APP_VER='2.45';
+var APP_VER='2.46';
 var _av=document.getElementById('appVer');if(_av)_av.textContent='v'+APP_VER;
 /* 清理已弃用的习惯打卡旧数据（v1.28 起不再使用，仅清孤立 key，不影响任何功能） */
 try{localStorage.removeItem('wb_hab_habits');localStorage.removeItem('wb_hab_seeded');}catch(e){}
