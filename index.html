@@ -975,6 +975,7 @@ if(!Array.isArray(S.noteDel))S.noteDel=[];
 if(!S.del||typeof S.del!=='object')S.del={};
 ['tasks','fit','bar','txns','goals','reviews','notes'].forEach(function(c){if(!S.del[c]||typeof S.del[c]!=='object')S.del[c]={};});
 try{dedupeFit();}catch(_e){}  /* v2.43：启动时按日期去重健身记录（同日多 id 的历史脏数据） */
+try{dedupeTasks();}catch(_e){}  /* v2.45：启动时按 标题+日期+重复规则 去重任务（重复任务跨设备重复完成会产生同日多条） */
 if(!S.body)S.body={};
 if(S.body.height===undefined)S.body.height='';
 if(S.body.age===undefined)S.body.age='';
@@ -1229,6 +1230,58 @@ function dedupeFit(){
   S.fit=r.keep;persist();
   return r.removedIds.length;
 }
+/* v2.45：任务去重——重复任务(每天/每周…)每次完成都会 spawn 一条「新 id」的下期实例，
+   同一次完成在两台设备各做一遍（或历史脏数据）就会同名同日期两条并存；
+   未完成的那条还会被 rollToCurrent 滚到今天 → 总览出现「一条已完成+一条未完成」。
+   按 标题+到期日+重复规则 分组，同组只留一条：已完成优先（代表"这一天这次已完成"），
+   并列取较新；字段互补合并（备注/积分/awarded 不丢），被去掉的 id 记删除墓碑随同步清理。 */
+function taskScore(x){
+  if(!x||typeof x!=='object')return -1;
+  var n=0;
+  if(x.done)n+=10;
+  if(x.awarded)n+=2;
+  if(x.note&&String(x.note).trim())n++;
+  return n*1e13+ +((x.m||0));  /* done/awarded 优先级远高于时间戳 */
+}
+function taskDedupeKey(x){
+  return String(x.title||'')+'|'+String(x.due||'')+'|'+String(x.repeat||'none');
+}
+function dedupeTasksArr(arr){
+  if(!Array.isArray(arr))return{keep:arr,removedIds:[]};
+  var byKey={},order=[],head=[];
+  arr.forEach(function(x){
+    if(!x||typeof x!=='object'||x.title==null){head.push(x);return;}
+    var k=taskDedupeKey(x);
+    if(!byKey[k]){byKey[k]=[];order.push(k);}
+    byKey[k].push(x);
+  });
+  var keep=head.slice(),removedIds=[];
+  order.forEach(function(k){
+    var g=byKey[k];
+    if(g.length===1){keep.push(g[0]);return;}
+    var ks=g.slice().sort(function(a,b){return taskScore(b)-taskScore(a);});
+    var d=ks[0];
+    for(var i=1;i<ks.length;i++){
+      var x=ks[i];
+      if(!(d.note&&String(d.note).trim())&&x.note)d.note=x.note;
+      if(!d.reward&&x.reward)d.reward=x.reward;
+      if(x.awarded)d.awarded=true;
+      if(x.done&&!d.done){d.done=true;d.awarded=d.awarded||x.awarded;}
+      if(x.id!=null)removedIds.push(x.id);
+    }
+    touch(d);
+    keep.push(d);
+  });
+  return{keep:keep,removedIds:removedIds};
+}
+function dedupeTasks(){
+  if(!Array.isArray(S.tasks))return 0;
+  var r=dedupeTasksArr(S.tasks);
+  if(!r.removedIds.length)return 0;
+  r.removedIds.forEach(function(id){delMark('tasks',id);});
+  S.tasks=r.keep;persist();
+  return r.removedIds.length;
+}
 function mergeDelObj(a,b){
   var o={};[a,b].forEach(function(d){
     if(!d||typeof d!=='object')return;
@@ -1328,6 +1381,7 @@ function commitSync(proposed,opts){
   SYNC_KEYS.forEach(function(k){if(k in proposed)S[k]=proposed[k];});
   if('del' in proposed)S.del=proposed.del;   /* v2.43：墓碑随合并更新 */
   try{dedupeFit();}catch(_e){}               /* v2.43：合并进来的云端数据同样按日期去重 */
+  try{dedupeTasks();}catch(_e){}             /* v2.45：合并进来的云端任务同样去重 */
   if('noteDel' in (opts.cloud||{}))applyNoteDeletions(opts.cloud.noteDel,opts.skipNoteDel||{});
   syncTouch(Date.now());syncMarkEver();
   persist();
@@ -1539,6 +1593,15 @@ function mergeSnapshots(base,inc){
       m.fit=_df.keep;
       m.del=m.del||{};m.del.fit=m.del.fit||{};
       _df.removedIds.forEach(function(id){if(m.del.fit[id]==null)m.del.fit[id]=Date.now();});
+    }
+  }
+  /* v2.45：任务按 标题+日期+重复规则 去重（重复任务跨设备各自 spawn 新 id 的同日实例） */
+  if(Array.isArray(m.tasks)){
+    var _dt=dedupeTasksArr(m.tasks);
+    if(_dt.removedIds.length){
+      m.tasks=_dt.keep;
+      m.del=m.del||{};m.del.tasks=m.del.tasks||{};
+      _dt.removedIds.forEach(function(id){if(m.del.tasks[id]==null)m.del.tasks[id]=Date.now();});
     }
   }
   m.__ts=Math.max(+(base&&base.__ts||0),+(inc&&inc.__ts||0))||Date.now();
@@ -3625,7 +3688,7 @@ function switchTab(name){
 document.querySelectorAll('.sidebar button.nav').forEach(function(b){if(!b.dataset.tab)return;b.onclick=function(){switchTab(b.dataset.tab);};});
 function renderAll(){rebuildCatColors();renderOverview();renderTasks();renderFit();renderFun();renderFin();renderRest();renderGoal();renderFakao();renderEng();renderFakaoCheckin();renderCalendar();renderWxDate();renderNotes();}
 /* 版本号：每次发布改动后在此 +0.1，便于核对 Chrome 是否为最新版 */
-var APP_VER='2.44';
+var APP_VER='2.45';
 var _av=document.getElementById('appVer');if(_av)_av.textContent='v'+APP_VER;
 /* 清理已弃用的习惯打卡旧数据（v1.28 起不再使用，仅清孤立 key，不影响任何功能） */
 try{localStorage.removeItem('wb_hab_habits');localStorage.removeItem('wb_hab_seeded');}catch(e){}
