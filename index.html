@@ -342,10 +342,11 @@ svg.chart{width:100%;height:auto;display:block;}
 .txn-type{font-size:12px;padding:1px 7px;border-radius:99px;flex-shrink:0;}
 .txn-type.inc{background:var(--ok-soft);color:var(--ok);}
 .txn-type.exp{background:var(--danger-soft);color:var(--danger);}
-.txn-note{font-size:14px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.txn-right{display:flex;align-items:center;gap:6px;flex-shrink:0;}
-.txn-right .out{font-size:15px;font-weight:700;font-variant-numeric:tabular-nums;}
-.txn-right .in{font-size:15px;font-weight:700;font-variant-numeric:tabular-nums;}
+.txn-note{font-size:14px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:46%;}
+.txn-right{display:flex;align-items:center;gap:6px;flex-shrink:0;margin-left:auto;}
+.txn-amt{font-size:15px;font-weight:700;font-variant-numeric:tabular-nums;margin-left:6px;flex-shrink:0;}
+.txn-amt.out{color:var(--danger);}
+.txn-amt.in{color:var(--ok);}
 .bc-group{border:1px solid var(--line);border-radius:11px;overflow:hidden;margin-bottom:10px;}
 .bc-group-top{display:flex;justify-content:space-between;align-items:center;padding:10px 12px;}
 .bc-note{font-size:14px;font-weight:600;}
@@ -3316,7 +3317,7 @@ function renderTxns(){
   if(!list.length){box.innerHTML='<div class="empty">该月暂无记录，去左侧「记每日花销」添加</div>';return;}
   box.innerHTML='<div class="txn-list">'+list.map(function(t){
     var isInc=t.type==='inc';
-    return '<div class="txn" title="'+esc(t.note||'')+(t.d?'（来自设备'+devShort(t.d)+'）':'')+'"><div class="txn-main"><span class="txn-date">'+t.date.slice(5)+'</span><span class="txn-cat" style="color:'+catColor(t.cat)+';background:'+catTint(t.cat)+';">'+t.cat+'</span>'+(isInc?'<span class="txn-type inc">收入</span>':'<span class="txn-type exp">支出</span>')+'<span class="txn-note">'+esc(t.note||'')+'</span></div><div class="txn-right"><span class="'+(isInc?'in':'out')+'">¥'+(+t.amount).toFixed(2)+'</span><button class="del" data-deltxn="'+t.id+'"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18M6 6l12 12"/></svg></button></div></div>';
+    return '<div class="txn" title="'+esc(t.note||'')+(t.d?'（来自设备'+devShort(t.d)+'）':'')+'"><div class="txn-main"><span class="txn-date">'+t.date.slice(5)+'</span><span class="txn-cat" style="color:'+catColor(t.cat)+';background:'+catTint(t.cat)+';">'+t.cat+'</span>'+(isInc?'<span class="txn-type inc">收入</span>':'<span class="txn-type exp">支出</span>')+'<span class="txn-note">'+esc(t.note||'')+'</span><span class="txn-amt '+(isInc?'in':'out')+'">¥'+(+t.amount).toFixed(2)+'</span></div><div class="txn-right"><button class="del" data-deltxn="'+t.id+'"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18M6 6l12 12"/></svg></button></div></div>';
   }).join('')+'</div>';
 }
 document.getElementById('spendYear').addEventListener('change',function(){spendState.y=this.value;renderFinCat(spendVal());});
@@ -3707,7 +3708,7 @@ function switchTab(name){
 document.querySelectorAll('.sidebar button.nav').forEach(function(b){if(!b.dataset.tab)return;b.onclick=function(){switchTab(b.dataset.tab);};});
 function renderAll(){rebuildCatColors();renderOverview();renderTasks();renderFit();renderFun();renderFin();renderRest();renderGoal();renderFakao();renderEng();renderFakaoCheckin();renderCalendar();renderWxDate();renderNotes();}
 /* 版本号：每次发布改动后在此 +0.1，便于核对 Chrome 是否为最新版 */
-var APP_VER='2.46';
+var APP_VER='2.47';
 var _av=document.getElementById('appVer');if(_av)_av.textContent='v'+APP_VER;
 /* 清理已弃用的习惯打卡旧数据（v1.28 起不再使用，仅清孤立 key，不影响任何功能） */
 try{localStorage.removeItem('wb_hab_habits');localStorage.removeItem('wb_hab_seeded');}catch(e){}
