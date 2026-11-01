@@ -334,7 +334,7 @@ svg.chart{width:100%;height:auto;display:block;}
 .catbar{height:8px;background:var(--bg);border-radius:6px;overflow:hidden;}
 .catbar i{display:block;height:100%;border-radius:6px;}
 .txn-list{border:1px solid var(--line);border-radius:11px;overflow:hidden;}
-.txn{display:grid;grid-template-columns:70px 92px 66px minmax(0,1fr) 108px 30px;align-items:center;gap:10px;padding:9px 12px;border-bottom:1px solid var(--line);}
+.txn{display:grid;grid-template-columns:70px 92px 66px minmax(0,1fr) 108px 58px;align-items:center;gap:10px;padding:9px 12px;border-bottom:1px solid var(--line);}
 .txn:last-child{border-bottom:none;}
 .txn-main{display:contents;}
 .txn-date{font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums;justify-self:start;}
@@ -343,11 +343,20 @@ svg.chart{width:100%;height:auto;display:block;}
 .txn-type.inc{background:var(--ok-soft);color:var(--ok);}
 .txn-type.exp{background:var(--danger-soft);color:var(--danger);}
 .txn-note{font-size:14px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;}
-.txn-right{display:flex;align-items:center;justify-content:center;}
+.txn-right{display:flex;align-items:center;justify-content:center;gap:2px;}
 .txn-amt{font-size:15px;font-weight:700;font-variant-numeric:tabular-nums;text-align:left;}
 .txn-amt.out{color:var(--danger);}
 .txn-amt.in{color:var(--ok);}
-@media (max-width:560px){.txn{grid-template-columns:58px 78px 54px minmax(0,1fr) 92px 28px;gap:6px;}.txn-note{font-size:12px;}}
+.edit{background:none;border:none;color:var(--muted);cursor:pointer;padding:4px;display:flex;align-items:center;justify-content:center;}
+.edit svg{width:16px;height:16px;}
+.edit:hover{background:var(--primary-soft);color:var(--primary);}
+.txn-edit{padding:12px;border-bottom:1px solid var(--line);background:var(--primary-soft);display:flex;flex-direction:column;gap:10px;}
+.txn-edit-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(118px,1fr));gap:10px;align-items:end;}
+.txn-edit-grid label{display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--muted);}
+.txn-edit-grid input,.txn-edit-grid select{font-family:inherit;font-size:14px;padding:7px 9px;border:1px solid var(--line);border-radius:8px;background:var(--card);color:var(--text);width:100%;}
+.txn-edit-actions{display:flex;gap:8px;}
+.txn-edit-actions .btn{height:38px;flex:0 0 auto;}
+@media (max-width:560px){.txn{grid-template-columns:56px 74px 50px minmax(0,1fr) 84px 54px;gap:5px;}.txn-note{font-size:12px;}.txn-edit-grid{grid-template-columns:1fr 1fr;}}
 .bc-group{border:1px solid var(--line);border-radius:11px;overflow:hidden;margin-bottom:10px;}
 .bc-group-top{display:flex;justify-content:space-between;align-items:center;padding:10px 12px;}
 .bc-note{font-size:14px;font-weight:600;}
@@ -3317,15 +3326,55 @@ function renderTxns(){
   var box=document.getElementById('txnBox');
   if(!list.length){box.innerHTML='<div class="empty">该月暂无记录，去左侧「记每日花销」添加</div>';return;}
   box.innerHTML='<div class="txn-list">'+list.map(function(t){
+    if(t.id===editingTxnId)return editRowHtml(t);
     var isInc=t.type==='inc';
-    return '<div class="txn" title="'+esc(t.note||'')+(t.d?'（来自设备'+devShort(t.d)+'）':'')+'"><div class="txn-main"><span class="txn-date">'+t.date.slice(5)+'</span><span class="txn-cat" style="color:'+catColor(t.cat)+';background:'+catTint(t.cat)+';">'+t.cat+'</span>'+(isInc?'<span class="txn-type inc">收入</span>':'<span class="txn-type exp">支出</span>')+'<span class="txn-note">'+esc(t.note||'')+'</span><span class="txn-amt '+(isInc?'in':'out')+'">¥'+(+t.amount).toFixed(2)+'</span></div><div class="txn-right"><button class="del" data-deltxn="'+t.id+'"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18M6 6l12 12"/></svg></button></div></div>';
+    return '<div class="txn" title="'+esc(t.note||'')+(t.d?'（来自设备'+devShort(t.d)+'）':'')+'"><div class="txn-main"><span class="txn-date">'+t.date.slice(5)+'</span><span class="txn-cat" style="color:'+catColor(t.cat)+';background:'+catTint(t.cat)+';">'+t.cat+'</span>'+(isInc?'<span class="txn-type inc">收入</span>':'<span class="txn-type exp">支出</span>')+'<span class="txn-note">'+esc(t.note||'')+'</span><span class="txn-amt '+(isInc?'in':'out')+'">¥'+(+t.amount).toFixed(2)+'</span></div><div class="txn-right"><button class="edit" data-edtxn="'+t.id+'" title="编辑"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.12 2.12 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button><button class="del" data-deltxn="'+t.id+'"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18M6 6l12 12"/></svg></button></div></div>';
   }).join('')+'</div>';
+}
+var editingTxnId=null;
+function uniqCats(){var seen={},out=[];S.txns.forEach(function(t){if(t.cat&&!seen[t.cat]){seen[t.cat]=1;out.push(t.cat);}});return out;}
+function editRowHtml(t){
+  var cats=uniqCats().map(function(c){return '<option value="'+esc(c)+'">'+esc(c)+'</option>';}).join('');
+  var typeOpts='<option value="exp"'+(t.type!=='inc'?' selected':'')+'>支出</option><option value="inc"'+(t.type==='inc'?' selected':'')+'>收入</option>';
+  return '<div class="txn-edit" data-editrow="'+t.id+'">'
+    +'<div class="txn-edit-grid">'
+    +'<label>日期<input type="date" id="edDate" value="'+t.date+'"></label>'
+    +'<label>类型<select id="edType">'+typeOpts+'</select></label>'
+    +'<label>分类<input type="text" id="edCat" list="edCatList" value="'+esc(t.cat)+'" placeholder="如：餐饮"></label>'
+    +'<label>金额<input type="text" id="edAmt" inputmode="decimal" value="'+(+t.amount).toFixed(2)+'"></label>'
+    +'<label>备注<input type="text" id="edNote" value="'+esc(t.note||'')+'"></label>'
+    +'</div>'
+    +'<datalist id="edCatList">'+cats+'</datalist>'
+    +'<div class="txn-edit-actions">'
+    +'<button class="btn primary" data-savetxn="'+t.id+'">保存</button>'
+    +'<button class="btn" data-canceltxn="'+t.id+'">取消</button>'
+    +'</div></div>';
+}
+function saveEdit(id){
+  var t=S.txns.find(function(x){return x.id===id;});if(!t)return;
+  var date=document.getElementById('edDate').value||todayStr();
+  var cat=(document.getElementById('edCat').value||'').trim();if(!cat)cat='其他';
+  var type=document.getElementById('edType').value;
+  var amtStr=(document.getElementById('edAmt').value||'').trim();
+  if(!/^\d+(\.\d+)?$/.test(amtStr)){toast('请输入有效金额');return;}
+  var amt=parseFloat(amtStr);
+  var note=(document.getElementById('edNote').value||'').trim();
+  var om=t.date.slice(0,7);var ostore=t.type==='inc'?S.income:S.spend;
+  if(ostore[om]){ostore[om][t.cat]=(+ostore[om][t.cat]||0)-(+t.amount);if((+ostore[om][t.cat]||0)<=0)delete ostore[om][t.cat];}
+  t.date=date;t.cat=cat;t.amount=amt;t.note=note;t.type=type;touch(t);
+  var nm=date.slice(0,7);var nstore=type==='inc'?S.income:S.spend;nstore[nm]=nstore[nm]||{};nstore[nm][cat]=(nstore[nm][cat]||0)+amt;
+  editingTxnId=null;persist();renderFin();toast('已修改 · '+date+' · '+cat+' ¥'+amt.toFixed(0));
 }
 document.getElementById('spendYear').addEventListener('change',function(){spendState.y=this.value;renderFinCat(spendVal());});
 document.getElementById('spendMonth').addEventListener('change',function(){spendState.m=this.value;renderFinCat(spendVal());});
 document.getElementById('txnYear').addEventListener('change',function(){txnState.y=this.value;renderTxns();});
 document.getElementById('txnMonth').addEventListener('change',function(){txnState.m=this.value;renderTxns();});
-document.getElementById('txnBox').addEventListener('click',function(e){var b=e.target.closest('[data-deltxn]');if(b)deleteTxn(b.dataset.deltxn);});
+document.getElementById('txnBox').addEventListener('click',function(e){
+  var b=e.target.closest('[data-deltxn]');if(b){deleteTxn(b.dataset.deltxn);return;}
+  var ed=e.target.closest('[data-edtxn]');if(ed){editingTxnId=ed.dataset.edtxn;renderTxns();return;}
+  var sv=e.target.closest('[data-savetxn]');if(sv){saveEdit(sv.dataset.savetxn);return;}
+  var cx=e.target.closest('[data-canceltxn]');if(cx){editingTxnId=null;renderTxns();return;}
+});
 document.getElementById('dailyType').addEventListener('change',renderCatField);
 document.getElementById('dailyForm').addEventListener('submit',function(e){e.preventDefault();addDaily();});
 document.getElementById('budgetInput').addEventListener('change',function(){S.fmeta.budget=parseFloat(this.value)||0;persist();renderFin();toast('预算已更新');});
@@ -3709,7 +3758,7 @@ function switchTab(name){
 document.querySelectorAll('.sidebar button.nav').forEach(function(b){if(!b.dataset.tab)return;b.onclick=function(){switchTab(b.dataset.tab);};});
 function renderAll(){rebuildCatColors();renderOverview();renderTasks();renderFit();renderFun();renderFin();renderRest();renderGoal();renderFakao();renderEng();renderFakaoCheckin();renderCalendar();renderWxDate();renderNotes();}
 /* 版本号：每次发布改动后在此 +0.1，便于核对 Chrome 是否为最新版 */
-var APP_VER='2.49';
+var APP_VER='2.50';
 var _av=document.getElementById('appVer');if(_av)_av.textContent='v'+APP_VER;
 /* 清理已弃用的习惯打卡旧数据（v1.28 起不再使用，仅清孤立 key，不影响任何功能） */
 try{localStorage.removeItem('wb_hab_habits');localStorage.removeItem('wb_hab_seeded');}catch(e){}
