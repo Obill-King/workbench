@@ -721,7 +721,7 @@ svg.chart{width:100%;height:auto;display:block;}
     <!-- 法考学习（跳转腾讯文档在线表） -->
     <section class="panel" id="panel-bar" data-page-node-id="iBcWgIOdnXITSEIHHqv3NG">
       <div class="card full" style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:340px;" data-page-node-id="zJdTvCzdbbqUW67ww3mMzU">
-        <a id="fakaoOpen" href="https://docs.qq.com/sheet/DZkdpWmNpSHZJbVJr?tab=000001" target="_blank" rel="noopener" class="btn primary big-cta" data-page-node-id="S5WMorBWJXemhe1hO7BiJ1">进入学习 ↗</a>
+        <a id="fakaoOpen" href="https://docs.qq.com/sheet/DZnFRamhxc2pOT3JU?tab=000001" target="_blank" rel="noopener" class="btn primary big-cta" data-page-node-id="S5WMorBWJXemhe1hO7BiJ1">进入学习 ↗</a>
         <p class="cta-sub" data-page-node-id="E4Ftuc5NVz7TvEyrb505yC">法考每日跟踪表 · 腾讯文档在线表</p>
         <button id="fakaoCheckin" class="btn" style="margin-top:18px;display:inline-flex;width:auto;align-items:center;gap:6px;" data-page-node-id="FDeH8X7WnPJXAuKGGf5hbE">签到 +50 积分</button>
       </div>
@@ -967,7 +967,7 @@ var S={
   seededF:ls('wb_fin_seeded',undefined),
   seededG:ls('wb_goal_seeded',undefined),
   bg:ls('wb_bg',null),
-  fakaoLink:ls('wb_fakao_link','https://docs.qq.com/sheet/DZkdpWmNpSHZJbVJr?tab=000001'),
+  fakaoLink:ls('wb_fakao_link','https://docs.qq.com/sheet/DZnFRamhxc2pOT3JU?tab=000001'),
   fakaoChecked:ls('wb_fakao_checked',''),
   eng:ls('wb_eng_data',{logs:{}}),
   weather:ls('wb_weather',{city:'大连',temp:null,code:null,hum:null,wind:null,updated:0}),
@@ -2949,7 +2949,7 @@ function effFakaoHref(raw){
   return 'file:///'+encodeURI(p);
 }
 function renderFakao(){ if(document.getElementById('fkPomoTime')) fkPomoUpdate(); }
-var FAKAO_URL='https://docs.qq.com/sheet/DZkdpWmNpSHZJbVJr?tab=000001';
+var FAKAO_URL='https://docs.qq.com/sheet/DZnFRamhxc2pOT3JU?tab=000001';
 document.getElementById('fakaoOpen').addEventListener('click',function(e){
   e.preventDefault();
   var w=window.open(FAKAO_URL,'_blank');
@@ -3758,7 +3758,7 @@ function switchTab(name){
 document.querySelectorAll('.sidebar button.nav').forEach(function(b){if(!b.dataset.tab)return;b.onclick=function(){switchTab(b.dataset.tab);};});
 function renderAll(){rebuildCatColors();renderOverview();renderTasks();renderFit();renderFun();renderFin();renderRest();renderGoal();renderFakao();renderEng();renderFakaoCheckin();renderCalendar();renderWxDate();renderNotes();}
 /* 版本号：每次发布改动后在此 +0.1，便于核对 Chrome 是否为最新版 */
-var APP_VER='2.54';
+var APP_VER='2.55';
 var _av=document.getElementById('appVer');if(_av)_av.textContent='v'+APP_VER;
 /* 清理已弃用的习惯打卡旧数据（v1.28 起不再使用，仅清孤立 key，不影响任何功能） */
 try{localStorage.removeItem('wb_hab_habits');localStorage.removeItem('wb_hab_seeded');}catch(e){}
