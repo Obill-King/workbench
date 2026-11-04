@@ -1015,9 +1015,15 @@ if(!Array.isArray(S.notes))S.notes=[];
 if(!Array.isArray(S.noteDel))S.noteDel=[];
 if(!S.del||typeof S.del!=='object')S.del={};
 ['tasks','fit','bar','txns','goals','reviews','notes'].forEach(function(c){if(!S.del[c]||typeof S.del[c]!=='object')S.del[c]={};});
+/* v2.60b：支出大类官方色板——老 8 类沿用 v2.58 原色，新 5 类取互不撞色的色（含老 8 与新 5 之间均不撞）。
+   定义在初始化之前，供 defaultCatExp（种子）与下方迁移块共同使用。 */
+var EXP_COLOR={'餐饮':'#5b9bf3','交通':'#f59e0b','购物':'#ef4444','居住':'#16a34a','娱乐':'#a855f7','学习':'#06b6d4','医疗':'#ec4899','通讯':'#0d9488','人情':'#e11d48','宠物':'#65a30d','汽车':'#92400e','线上':'#ca8a04','其他':'#9ca3af'};
 if(!S.catExp)S.catExp=defaultCatExp();
 if(!S.catInc)S.catInc=defaultCatInc();
 if(!S.catSwitch)S.catSwitch=2027;
+/* v2.60b：支出大类官方色板强制对齐——老分类沿用 v2.58 原色、2027 全套 13 类互不撞色；纠正已存数据里的错色（面板无改色入口，强制安全）。
+   注：catExp 只存本地 wb_fin_catexp、不在 SYNC_KEYS 云同步清单，故直接 sv 本地即可；且此处在 SYNC 定义前执行，不能用 persist()（会触 syncPersistHook 读未定义的 SYNC）。 */
+(function(){var dirty=false;(S.catExp||[]).forEach(function(x){if(EXP_COLOR[x.n]&&x.c!==EXP_COLOR[x.n]){x.c=EXP_COLOR[x.n];dirty=true;}});if(dirty)sv('wb_fin_catexp',S.catExp);})();
 try{dedupeFit();}catch(_e){}  /* v2.43：启动时按日期去重健身记录（同日多 id 的历史脏数据） */
 try{dedupeTasks();}catch(_e){}  /* v2.45：启动时按 标题+日期+重复规则 去重任务（重复任务跨设备重复完成会产生同日多条） */
 if(!S.body)S.body={};
@@ -1101,19 +1107,19 @@ if(!S.weather._mig){S.weather._mig=true;if(S.weather.city==='北京')S.weather.c
    2027 起启用新大类，之前仅显示 old:true 的旧大类。历史记录的 cat 字段原样不动。 */
 var CAT_SWITCH_YEAR=2027;   /* 该年及以后启用新分类体系；之前只显示 old:true 的旧大类 */
 function defaultCatExp(){return [
-  {n:'餐饮',c:'#2563eb',old:true, sub:['外食','蔬菜','肉类','海鲜','水果','其他']},
-  {n:'交通',c:'#f59e0b',old:true, sub:['公交地铁','打车','加油','其他']},
-  {n:'居住',c:'#16a34a',old:true, sub:['水费','电费','燃气费','其他']},
-  {n:'购物',c:'#dc2626',old:true, sub:['服饰','日用品','数码','其他']},
-  {n:'娱乐',c:'#9333ea',old:true, sub:['休闲','旅行','其他']},
-  {n:'学习',c:'#0891b2',old:true, sub:['书籍','课程','其他']},
-  {n:'医疗',c:'#db2777',old:true, sub:['看病','保健','其他']},
-  {n:'通讯',c:'#0d9488',old:false,sub:['话费','网费','其他']},
-  {n:'人情',c:'#e11d48',old:false,sub:['礼金','红包','请客','其他']},
-  {n:'宠物',c:'#65a30d',old:false,sub:['食品','医疗','用品','其他']},
-  {n:'汽车',c:'#0284c7',old:false,sub:['油费','保养','停车','保险','其他']},
-  {n:'线上',c:'#ca8a04',old:false,sub:['网购','外卖','充值','其他']},
-  {n:'其他',c:'#6b7280',old:true, sub:[]}
+  {n:'餐饮',c:EXP_COLOR['餐饮'],old:true, sub:['外食','蔬菜','肉类','海鲜','水果','其他']},
+  {n:'交通',c:EXP_COLOR['交通'],old:true, sub:['公交地铁','打车','加油','其他']},
+  {n:'居住',c:EXP_COLOR['居住'],old:true, sub:['水费','电费','燃气费','其他']},
+  {n:'购物',c:EXP_COLOR['购物'],old:true, sub:['服饰','日用品','数码','其他']},
+  {n:'娱乐',c:EXP_COLOR['娱乐'],old:true, sub:['休闲','旅行','其他']},
+  {n:'学习',c:EXP_COLOR['学习'],old:true, sub:['书籍','课程','其他']},
+  {n:'医疗',c:EXP_COLOR['医疗'],old:true, sub:['看病','保健','其他']},
+  {n:'通讯',c:EXP_COLOR['通讯'],old:false,sub:['话费','网费','其他']},
+  {n:'人情',c:EXP_COLOR['人情'],old:false,sub:['礼金','红包','请客','其他']},
+  {n:'宠物',c:EXP_COLOR['宠物'],old:false,sub:['食品','医疗','用品','其他']},
+  {n:'汽车',c:EXP_COLOR['汽车'],old:false,sub:['油费','保养','停车','保险','其他']},
+  {n:'线上',c:EXP_COLOR['线上'],old:false,sub:['网购','外卖','充值','其他']},
+  {n:'其他',c:EXP_COLOR['其他'],old:true, sub:[]}
 ];}
 function defaultCatInc(){return [
   {n:'工资',c:'#2563eb'},
@@ -3854,7 +3860,7 @@ function switchTab(name){
 document.querySelectorAll('.sidebar button.nav').forEach(function(b){if(!b.dataset.tab)return;b.onclick=function(){switchTab(b.dataset.tab);};});
 function renderAll(){rebuildCatColors();renderOverview();renderTasks();renderFit();renderFun();renderFin();renderRest();renderGoal();renderFakao();renderEng();renderFakaoCheckin();renderCalendar();renderWxDate();renderNotes();}
 /* 版本号：每次发布改动后在此 +0.1，便于核对 Chrome 是否为最新版 */
-var APP_VER='2.60';
+var APP_VER='2.61';
 var _av=document.getElementById('appVer');if(_av)_av.textContent='v'+APP_VER;
 /* 清理已弃用的习惯打卡旧数据（v1.28 起不再使用，仅清孤立 key，不影响任何功能） */
 try{localStorage.removeItem('wb_hab_habits');localStorage.removeItem('wb_hab_seeded');}catch(e){}
